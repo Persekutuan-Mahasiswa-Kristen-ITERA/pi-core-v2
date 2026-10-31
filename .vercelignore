@@ -1,0 +1,10 @@
+# Never upload local env files (they hold keys); Vercel injects env vars itself.
+.env*
+!.env.example
+# Local tooling output
+.next
+node_modules
+supabase/.temp
+supabase/.branches
+test-results
+playwright-report
