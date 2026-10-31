@@ -6,7 +6,18 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run --project unit",
+    "test:integration": "node --env-file=.env.local ./node_modules/vitest/vitest.mjs run --project integration",
+    "test:e2e": "playwright test",
+    "db:start": "supabase start",
+    "db:reset": "supabase db reset",
+    "db:types": "supabase gen types typescript --local > src/lib/supabase/database.types.ts",
+    "seed:dev-users": "node --env-file=.env.local scripts/seed-dev-users.mjs",
+    "bootstrap:admin": "node --env-file=.env.local scripts/bootstrap-admin.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
