@@ -113,6 +113,13 @@ E2E: `pnpm build`, seed users with `SEED_PASSWORD`, then `E2E_PASSWORD="$SEED_PA
 
 ## Deployment (Vercel)
 
+Current setup: Vercel project `pi-core-v2` in team **PMK ITERA's projects** (`pmk-iteras-projects`), deployed from the
+CLI with a token for the PMK account (not git-connected, because the PMK Vercel account has no access to the
+personal repo). `pnpm deploy:preview` deploys the last commit as a **preview** (see `scripts/deploy-preview.sh` for why it
+uploads a clean `git archive`). Production deploys are a separate, owner-approved step.
+
+### Original plan (git-connected)
+
 1. Create the hosted Supabase project, push migrations, configure Auth (above), bootstrap the first admin.
 2. Import the GitHub repo in Vercel (framework: Next.js, install `pnpm install`, build `pnpm build`).
 3. Set the three env vars for Production and Preview. `SUPABASE_SECRET_KEY` without any `NEXT_PUBLIC_` prefix.

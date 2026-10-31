@@ -18,7 +18,8 @@
     "bootstrap:admin": "node --env-file=.env.local scripts/bootstrap-admin.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "dev:hosted": "node scripts/with-env.mjs .env.hosted.local next dev"
+    "dev:hosted": "node scripts/with-env.mjs .env.hosted.local next dev",
+    "deploy:preview": "bash scripts/deploy-preview.sh"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
