@@ -22,3 +22,13 @@ Consequence: the v1 app (Cloudflare Workers staging) no longer finds its tables 
 To restore v1 temporarily (only if v2 tables are moved out of the way first): `alter table pmk_core_v1.<t> set schema public`
 for each table, or restore the dump into a separate database. To delete the archive for good once v1 is retired:
 `drop schema pmk_core_v1 cascade;` (owner decision; the dump file remains the only copy afterwards).
+
+### 2026-11-01 — Auth settings and first admin
+
+- Auth pushed with a minimal config (only these keys declared, everything else left as it was): `enable_signup = false`
+  (was **true**), `minimum_password_length = 8` (was 6), `password_requirements = letters_digits`. Email provider stays
+  enabled. Verified: anonymous sign-up → `signup_disabled`; email login endpoint active; anon read of `members` → 42501.
+- First admin bootstrapped with `scripts/bootstrap-admin.mjs`: Febrian Yoel Anggara Saputra (admin, must change
+  password at first login). Temporary password was written only to a mode-600 file on the owner's machine.
+- Still to do: set Auth **Site URL** and redirect URLs to the Vercel URL once it exists (currently `http://localhost:3000`;
+  only affects email links, which PI-CORE does not send).
