@@ -5,7 +5,7 @@ and assignments for Persekutuan Mahasiswa Kristen ITERA. Installable PWA (iOS: S
 Chrome → Install app). PI-NEXUS will consume this data later; PI-LYNK, PI-INGRESS, PI-ARK and pmkitera.web.id are
 separate apps and are not touched by this repo.
 
-Docs: [Architecture & decisions](docs/ARCHITECTURE.md) · [Security & permission matrix](docs/SECURITY.md) ·
+Docs: [Architecture & decisions](docs/ARCHITECTURE.md) · [Operations log](docs/OPERATIONS.md) · [Security & permission matrix](docs/SECURITY.md) ·
 [PWA](docs/PWA.md) · [Design notes](docs/DESIGN-NOTES.md)
 
 ## Requirements
