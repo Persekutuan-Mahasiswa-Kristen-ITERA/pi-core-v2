@@ -32,3 +32,29 @@ for each table, or restore the dump into a separate database. To delete the arch
   password at first login). Temporary password was written only to a mode-600 file on the owner's machine.
 - Still to do: set Auth **Site URL** and redirect URLs to the Vercel URL once it exists (currently `http://localhost:3000`;
   only affects email links, which PI-CORE does not send).
+
+## Vercel
+
+Project `pi-core-v2` in team **PMK ITERA's projects** (`pmk-iteras-projects`, Hobby), next to `pmkitera-ark`, `pi-lynk`,
+`pmk-form` and `website-pmk`. Not git-connected (the PMK Vercel account cannot see the private repo
+`FYCode-dev12/pi-core-v2`); deployments are made with `pnpm deploy:preview` using a PMK account token stored on the
+owner's machine (`~/.config/vercel-pmk-token/token.txt`, mode 600). Env vars (Production + Preview):
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` (sensitive).
+
+### 2026-11-01 — first deployments
+
+- A project first created in the owner's personal team (`fyc-ode-s-team`) was blocked ("no Git account for the commit
+  author") and was deleted with the owner's approval.
+- In the PMK team, the first `vercel deploy` (no `--prod`) was created with target **production** — the CLI promotes a
+  brand-new project's first deployment. It was **cancelled while building**; nothing went live (production alias → 404).
+  All deploys since pass `--environment preview` explicitly.
+- Deploys from the working copy were blocked ("commit author doesn't have permission"); deploying a clean
+  `git archive` export without `.git` works and is what `scripts/deploy-preview.sh` does.
+- Deployment Protection (Vercel Authentication) was **turned off for this project only**, with the owner's approval,
+  so phones can fetch the manifest/service worker and installed apps are not stopped by a Vercel login wall. Access
+  control is PI-CORE's own login + RLS. Re-enable under Project → Settings → Deployment Protection if needed.
+- Verified on the preview URL: `/login` 200, protected routes redirect to `/login`, security headers present,
+  Chrome `Page.getInstallabilityErrors` → `[]`, service worker active.
+
+Still to do: real-device checks (docs/PWA.md), owner-approved production deploy, then set Supabase Auth Site URL to the
+production URL.
