@@ -20,7 +20,10 @@ export default async function ChangePasswordPage() {
       </p>
       <PasswordForm currentLabel="Temporary password" submitLabel="Save password" />
       <form action={signOut} className="mt-6 text-center">
-        <button type="submit" className="min-h-11 text-sm font-medium text-pmk-accent underline-offset-4 hover:underline">
+        <button
+          type="submit"
+          className="min-h-11 text-sm font-medium text-pmk-accent underline-offset-4 hover:underline"
+        >
           Log out
         </button>
       </form>

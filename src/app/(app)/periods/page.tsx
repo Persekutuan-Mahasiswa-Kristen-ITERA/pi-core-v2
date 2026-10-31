@@ -22,7 +22,9 @@ export default async function PeriodsPage() {
       <CreateBar href="/periods/new">Create Period</CreateBar>
       <ListPanel>
         {periods.length === 0 ? (
-          <EmptyState title="No periods yet">Create the first academic year. It becomes the active period automatically.</EmptyState>
+          <EmptyState title="No periods yet">
+            Create the first academic year. It becomes the active period automatically.
+          </EmptyState>
         ) : (
           <ul className="space-y-3">
             {periods.map((p) => (
@@ -44,7 +46,10 @@ export default async function PeriodsPage() {
                         description="Dashboard numbers and role member counts will use this period. Only one period can be active."
                         confirmLabel="Set Active"
                       >
-                        <button type="button" className="-my-2 min-h-11 text-left text-sm text-pmk-body underline-offset-4 hover:text-pmk-ink hover:underline">
+                        <button
+                          type="button"
+                          className="-my-2 min-h-11 text-left text-sm text-pmk-body underline-offset-4 hover:text-pmk-ink hover:underline"
+                        >
                           Set Active
                         </button>
                       </ConfirmAction>

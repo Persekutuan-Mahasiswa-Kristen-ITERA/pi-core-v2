@@ -18,18 +18,19 @@ export const accessLevelSchema = z.enum(["admin", "member"]);
 
 export const memberSchema = z.object({
   fullName: z.string().trim().min(2, "Enter the full name.").max(120, "Use at most 120 characters."),
-  email: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .pipe(z.email("Enter a valid email address.").max(254)),
+  email: z.string().trim().toLowerCase().pipe(z.email("Enter a valid email address.").max(254)),
   nim: optionalText(z.string().regex(/^[0-9]{6,12}$/, "NIM must be 6–12 digits.")),
   phone: z
     .string()
     .trim()
     .transform((v) => v.replace(/[\s-]/g, ""))
     .transform((v) => (v === "" ? null : v))
-    .pipe(z.string().regex(/^\+?[0-9]{8,15}$/, "Enter 8–15 digits, optionally starting with +.").nullable()),
+    .pipe(
+      z
+        .string()
+        .regex(/^\+?[0-9]{8,15}$/, "Enter 8–15 digits, optionally starting with +.")
+        .nullable(),
+    ),
   accessLevel: accessLevelSchema,
 });
 export type MemberInput = z.infer<typeof memberSchema>;
@@ -42,7 +43,11 @@ export const roleSchema = z.object({
 });
 export type RoleInput = z.infer<typeof roleSchema>;
 
-export const positionNameSchema = z.string().trim().min(2, "Enter a position name.").max(80, "Use at most 80 characters.");
+export const positionNameSchema = z
+  .string()
+  .trim()
+  .min(2, "Enter a position name.")
+  .max(80, "Use at most 80 characters.");
 
 const isoDate = optionalText(z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use a valid date."));
 

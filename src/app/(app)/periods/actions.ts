@@ -17,7 +17,8 @@ export async function createPeriod(_prev: ActionResult, formData: FormData): Pro
   try {
     const { supabase } = await requireAdminAction();
     const parsed = parseForm(periodSchema, formData, FIELDS);
-    if (!parsed.success) return { ok: false, message: "Check the highlighted fields.", fieldErrors: parsed.fieldErrors };
+    if (!parsed.success)
+      return { ok: false, message: "Check the highlighted fields.", fieldErrors: parsed.fieldErrors };
     const { label, startsOn, endsOn } = parsed.data;
     const { error } = await supabase.from("periods").insert({ label, starts_on: startsOn, ends_on: endsOn });
     if (error) return { ok: false, message: describeDbError(error, UNIQUE) };
@@ -32,7 +33,8 @@ export async function updatePeriod(id: string, _prev: ActionResult, formData: Fo
     const { supabase } = await requireAdminAction();
     const periodId = idSchema.parse(id);
     const parsed = parseForm(periodSchema, formData, FIELDS);
-    if (!parsed.success) return { ok: false, message: "Check the highlighted fields.", fieldErrors: parsed.fieldErrors };
+    if (!parsed.success)
+      return { ok: false, message: "Check the highlighted fields.", fieldErrors: parsed.fieldErrors };
     const { label, startsOn, endsOn } = parsed.data;
     const { data, error } = await supabase
       .from("periods")

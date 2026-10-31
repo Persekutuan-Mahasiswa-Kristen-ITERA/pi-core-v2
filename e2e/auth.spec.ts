@@ -42,5 +42,7 @@ test("a regular member cannot open admin screens", async ({ page }) => {
     await expect(page.getByText("Admins only")).toBeVisible();
   }
   // Directory is not offered in the bottom navigation.
-  await expect(page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Directory" })).toHaveCount(0);
+  await expect(page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Directory" })).toHaveCount(
+    0,
+  );
 });

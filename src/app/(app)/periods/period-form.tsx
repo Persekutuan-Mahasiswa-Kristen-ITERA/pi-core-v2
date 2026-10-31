@@ -20,7 +20,16 @@ export function PeriodForm({ action, defaults, submitLabel }: Props) {
     <form action={formAction} className="space-y-4" noValidate>
       <FormMessage state={state} />
       <Field name="label" label="Academic year" errors={errors?.label} hint="Format: 2026/2027">
-        {(a) => <input {...a} defaultValue={defaults?.label} placeholder="2026/2027" inputMode="numeric" className={fieldClass} required />}
+        {(a) => (
+          <input
+            {...a}
+            defaultValue={defaults?.label}
+            placeholder="2026/2027"
+            inputMode="numeric"
+            className={fieldClass}
+            required
+          />
+        )}
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field name="startsOn" label="Starts on (optional)" errors={errors?.startsOn}>
@@ -32,7 +41,10 @@ export function PeriodForm({ action, defaults, submitLabel }: Props) {
       </div>
       <div className="flex items-center gap-3 pt-2">
         <SubmitButton>{submitLabel}</SubmitButton>
-        <Link href="/periods" className="inline-flex min-h-11 items-center px-4 text-sm font-medium text-pmk-body hover:text-pmk-ink">
+        <Link
+          href="/periods"
+          className="inline-flex min-h-11 items-center px-4 text-sm font-medium text-pmk-body hover:text-pmk-ink"
+        >
           Cancel
         </Link>
       </div>

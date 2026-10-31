@@ -14,7 +14,8 @@ export default async function NewMemberPage() {
     <div className="mx-auto max-w-xl space-y-4">
       <SectionTitle>Create Member</SectionTitle>
       <p className="text-sm text-pmk-body">
-        PI-CORE creates the login and shows a temporary password once. The member chooses their own password at first login.
+        PI-CORE creates the login and shows a temporary password once. The member chooses their own password at first
+        login.
       </p>
       <MemberForm mode="create" action={createMember} />
     </div>

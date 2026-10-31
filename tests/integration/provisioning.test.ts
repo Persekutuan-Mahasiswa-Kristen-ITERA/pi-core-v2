@@ -29,7 +29,11 @@ describe("admin-only member provisioning", () => {
     const result = await provisionMember(admin.client, serviceClient(), data);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    const { data: row } = await serviceClient().from("members").select("must_change_password, access_level, created_by").eq("id", result.memberId).single();
+    const { data: row } = await serviceClient()
+      .from("members")
+      .select("must_change_password, access_level, created_by")
+      .eq("id", result.memberId)
+      .single();
     expect(row).toEqual({ must_change_password: true, access_level: "member", created_by: admin.userId });
 
     const login = await anonClient().auth.signInWithPassword({ email: data.email, password: result.temporaryPassword });

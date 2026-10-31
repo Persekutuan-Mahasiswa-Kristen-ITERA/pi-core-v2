@@ -51,7 +51,7 @@ export function AppShell({ isAdmin, orgName, children }: Props) {
       <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
         <SheetContent
           side="left"
-          className="w-[250px] max-w-[80vw] gap-0 border-none bg-pmk-gold p-0 pt-[var(--safe-top)] sm:max-w-[250px] [&>button]:hidden"
+          className="gap-0 border-none bg-pmk-gold p-0 pt-[var(--safe-top)] data-[side=left]:w-[250px] data-[side=left]:max-w-[80vw] data-[side=left]:sm:max-w-[250px] [&>button]:hidden"
         >
           <SheetTitle className="sr-only">Menu</SheetTitle>
           <SheetDescription className="sr-only">Navigate between PI-CORE sections</SheetDescription>

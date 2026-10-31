@@ -29,7 +29,11 @@ export type ProvisionResult =
  * 3. If step 2 fails, delete the auth user so no orphan login exists.
  */
 export async function provisionMember(actor: Client, admin: Client, input: MemberInput): Promise<ProvisionResult> {
-  const { data: existing, error: lookupError } = await actor.from("members").select("id").eq("email", input.email).maybeSingle();
+  const { data: existing, error: lookupError } = await actor
+    .from("members")
+    .select("id")
+    .eq("email", input.email)
+    .maybeSingle();
   if (lookupError) return { ok: false, message: describeDbError(lookupError) };
   if (existing) return { ok: false, message: MEMBER_UNIQUE.members_email_key, field: "email" };
 
@@ -42,7 +46,11 @@ export async function provisionMember(actor: Client, admin: Client, input: Membe
   });
   if (authError || !created.user) {
     if (authError?.code === "email_exists") {
-      return { ok: false, message: "A login with this email already exists but has no member profile. Ask the maintainer to resolve it.", field: "email" };
+      return {
+        ok: false,
+        message: "A login with this email already exists but has no member profile. Ask the maintainer to resolve it.",
+        field: "email",
+      };
     }
     return { ok: false, message: "Could not create the login for this member. Try again." };
   }

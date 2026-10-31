@@ -23,7 +23,10 @@ function denied(error: unknown): ActionResult<never> {
 }
 
 /** Picks an existing position (case-insensitive) or creates it under the chosen role. */
-async function resolvePosition(supabase: SupabaseClient<Database>, input: AssignmentInput): Promise<{ id: string } | { error: string }> {
+async function resolvePosition(
+  supabase: SupabaseClient<Database>,
+  input: AssignmentInput,
+): Promise<{ id: string } | { error: string }> {
   if (input.positionId) return { id: input.positionId };
   const name = input.newPositionName!;
   const find = () =>
@@ -49,7 +52,8 @@ async function save(id: string | null, formData: FormData): Promise<ActionResult
   if (!parsed.success) return { ok: false, message: "Check the highlighted fields.", fieldErrors: parsed.fieldErrors };
 
   const position = await resolvePosition(supabase, parsed.data);
-  if ("error" in position) return { ok: false, message: position.error, fieldErrors: { newPositionName: [position.error] } };
+  if ("error" in position)
+    return { ok: false, message: position.error, fieldErrors: { newPositionName: [position.error] } };
 
   const row = {
     member_id: parsed.data.memberId,
@@ -62,7 +66,8 @@ async function save(id: string | null, formData: FormData): Promise<ActionResult
     : await supabase.from("assignments").insert(row).select("id");
   if (error) {
     // 23503 here also covers a position that belongs to a different role (composite FK).
-    const message = error.code === "23503" ? "That position does not belong to the selected role." : describeDbError(error, ERRORS);
+    const message =
+      error.code === "23503" ? "That position does not belong to the selected role." : describeDbError(error, ERRORS);
     return { ok: false, message };
   }
   if (!data.length) return { ok: false, message: "Assignment not found." };

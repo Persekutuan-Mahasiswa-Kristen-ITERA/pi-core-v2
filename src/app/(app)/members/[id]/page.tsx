@@ -26,7 +26,10 @@ export default async function EditMemberPage({ params }: PageProps<"/members/[id
   return (
     <div className="mx-auto max-w-xl space-y-8">
       <section className="space-y-4">
-        <Link href="/members" className="inline-flex min-h-11 items-center text-sm font-medium text-pmk-accent hover:underline">
+        <Link
+          href="/members"
+          className="inline-flex min-h-11 items-center text-sm font-medium text-pmk-accent hover:underline"
+        >
           ← All members
         </Link>
         <SectionTitle>{member.full_name}</SectionTitle>
@@ -41,7 +44,13 @@ export default async function EditMemberPage({ params }: PageProps<"/members/[id
           mode="edit"
           action={updateMember.bind(null, member.id)}
           isSelf={isSelf}
-          defaults={{ fullName: member.full_name, email: member.email, nim: member.nim, phone: member.phone, accessLevel: member.access_level }}
+          defaults={{
+            fullName: member.full_name,
+            email: member.email,
+            nim: member.nim,
+            phone: member.phone,
+            accessLevel: member.access_level,
+          }}
         />
       </section>
 
@@ -49,7 +58,10 @@ export default async function EditMemberPage({ params }: PageProps<"/members/[id
         <div className="flex items-center justify-between gap-3">
           <SectionTitle id="assignments-title">Assignments</SectionTitle>
           {member.is_active ? (
-            <Link href={`/assignments?member=${member.id}`} className="inline-flex min-h-11 items-center text-sm font-semibold text-pmk-accent hover:underline">
+            <Link
+              href={`/assignments?member=${member.id}`}
+              className="inline-flex min-h-11 items-center text-sm font-semibold text-pmk-accent hover:underline"
+            >
               + Assign
             </Link>
           ) : null}
@@ -60,7 +72,10 @@ export default async function EditMemberPage({ params }: PageProps<"/members/[id
           <ul className="space-y-2">
             {assignments.map((a) => (
               <li key={a.id}>
-                <Link href={`/assignments/${a.id}`} className="block rounded-xl focus-visible:outline-2 focus-visible:outline-pmk-accent">
+                <Link
+                  href={`/assignments/${a.id}`}
+                  className="block rounded-xl focus-visible:outline-2 focus-visible:outline-pmk-accent"
+                >
                   <RowPill className="grid grid-cols-3 gap-2 text-sm hover:bg-pmk-tint-border/60">
                     <span className="font-medium text-pmk-ink">{a.role}</span>
                     <span>{a.position}</span>

@@ -23,7 +23,10 @@ export default async function RoleDetailPage({ params }: PageProps<"/roles/[id]"
 
   return (
     <div className="mx-auto max-w-xl space-y-5">
-      <Link href="/roles" className="inline-flex min-h-11 items-center text-sm font-medium text-pmk-accent hover:underline">
+      <Link
+        href="/roles"
+        className="inline-flex min-h-11 items-center text-sm font-medium text-pmk-accent hover:underline"
+      >
         ← All roles
       </Link>
       <TintCard className="p-5">
@@ -62,7 +65,10 @@ export default async function RoleDetailPage({ params }: PageProps<"/roles/[id]"
       </section>
 
       <div className="flex min-h-11 items-center justify-between rounded-xl border-2 border-pmk-tint-border bg-pmk-tint px-2">
-        <Link href={`/roles/${role.id}/edit`} className="inline-flex min-h-11 items-center gap-2 px-2 text-sm font-medium text-pmk-ink hover:underline">
+        <Link
+          href={`/roles/${role.id}/edit`}
+          className="inline-flex min-h-11 items-center gap-2 px-2 text-sm font-medium text-pmk-ink hover:underline"
+        >
           <SquarePen className="size-5 text-pmk-brown" aria-hidden />
           Edit Role
         </Link>
@@ -79,7 +85,10 @@ export default async function RoleDetailPage({ params }: PageProps<"/roles/[id]"
               : undefined
           }
         >
-          <button type="button" className="inline-flex min-h-11 items-center gap-2 px-2 text-sm font-medium text-pmk-ink hover:underline">
+          <button
+            type="button"
+            className="inline-flex min-h-11 items-center gap-2 px-2 text-sm font-medium text-pmk-ink hover:underline"
+          >
             Delete Role
             <Trash2 className="size-5 text-pmk-brown" aria-hidden />
           </button>

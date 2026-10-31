@@ -49,7 +49,9 @@ test("period → role → member → assignment, reflected on dashboard and role
   await page.getByLabel("New position name").fill("Koordinator");
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByText("Assignment added.")).toBeVisible();
-  await expect(page.getByRole("listitem").filter({ hasText: memberName }).filter({ hasText: "Koordinator" })).toBeVisible();
+  await expect(
+    page.getByRole("listitem").filter({ hasText: memberName }).filter({ hasText: "Koordinator" }),
+  ).toBeVisible();
 
   // Duplicate is rejected with a clear message
   await page.goto(`/assignments`);

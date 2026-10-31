@@ -15,11 +15,15 @@ function denied(error: unknown): ActionResult<never> {
   throw error;
 }
 
-export async function createRole(_prev: ActionResult<{ id: string }>, formData: FormData): Promise<ActionResult<{ id: string }>> {
+export async function createRole(
+  _prev: ActionResult<{ id: string }>,
+  formData: FormData,
+): Promise<ActionResult<{ id: string }>> {
   try {
     const { supabase } = await requireAdminAction();
     const parsed = parseForm(roleSchema, formData, ["name", "description"]);
-    if (!parsed.success) return { ok: false, message: "Check the highlighted fields.", fieldErrors: parsed.fieldErrors };
+    if (!parsed.success)
+      return { ok: false, message: "Check the highlighted fields.", fieldErrors: parsed.fieldErrors };
     const { data, error } = await supabase
       .from("roles")
       .insert({ name: parsed.data.name, description: parsed.data.description })
@@ -32,12 +36,17 @@ export async function createRole(_prev: ActionResult<{ id: string }>, formData: 
   }
 }
 
-export async function updateRole(id: string, _prev: ActionResult<{ id: string }>, formData: FormData): Promise<ActionResult<{ id: string }>> {
+export async function updateRole(
+  id: string,
+  _prev: ActionResult<{ id: string }>,
+  formData: FormData,
+): Promise<ActionResult<{ id: string }>> {
   try {
     const { supabase } = await requireAdminAction();
     const roleId = idSchema.parse(id);
     const parsed = parseForm(roleSchema, formData, ["name", "description"]);
-    if (!parsed.success) return { ok: false, message: "Check the highlighted fields.", fieldErrors: parsed.fieldErrors };
+    if (!parsed.success)
+      return { ok: false, message: "Check the highlighted fields.", fieldErrors: parsed.fieldErrors };
     const { data, error } = await supabase
       .from("roles")
       .update({ name: parsed.data.name, description: parsed.data.description })
@@ -63,7 +72,11 @@ export async function deleteRole(id: string): Promise<ActionResult> {
     if (countError) return { ok: false, message: describeDbError(countError) };
     if (count) return { ok: false, message: `This role still has ${count} assignment(s). Remove them first.` };
     const { data, error } = await supabase.from("roles").delete().eq("id", roleId).select("id");
-    if (error) return { ok: false, message: describeDbError(error, { foreign_key: "This role still has assignments. Remove them first." }) };
+    if (error)
+      return {
+        ok: false,
+        message: describeDbError(error, { foreign_key: "This role still has assignments. Remove them first." }),
+      };
     if (!data.length) return { ok: false, message: "Role not found." };
     return { ok: true, message: "Role deleted." };
   } catch (error) {
@@ -76,7 +89,8 @@ export async function addPosition(roleId: string, _prev: ActionResult, formData:
     const { supabase } = await requireAdminAction();
     const role = idSchema.parse(roleId);
     const name = positionNameSchema.safeParse(formData.get("name") ?? "");
-    if (!name.success) return { ok: false, message: "Check the position name.", fieldErrors: { name: [name.error.issues[0].message] } };
+    if (!name.success)
+      return { ok: false, message: "Check the position name.", fieldErrors: { name: [name.error.issues[0].message] } };
     const { error } = await supabase.from("positions").insert({ role_id: role, name: name.data });
     if (error) return { ok: false, message: describeDbError(error, POSITION_UNIQUE) };
     return { ok: true, message: `Position ${name.data} added.` };
@@ -85,7 +99,11 @@ export async function addPosition(roleId: string, _prev: ActionResult, formData:
   }
 }
 
-export async function renamePosition(positionId: string, _prev: ActionResult, formData: FormData): Promise<ActionResult> {
+export async function renamePosition(
+  positionId: string,
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
   try {
     const { supabase } = await requireAdminAction();
     const id = idSchema.parse(positionId);
@@ -105,7 +123,11 @@ export async function deletePosition(positionId: string): Promise<ActionResult> 
     const { supabase } = await requireAdminAction();
     const id = idSchema.parse(positionId);
     const { data, error } = await supabase.from("positions").delete().eq("id", id).select("id");
-    if (error) return { ok: false, message: describeDbError(error, { foreign_key: "This position is used by assignments. Remove them first." }) };
+    if (error)
+      return {
+        ok: false,
+        message: describeDbError(error, { foreign_key: "This position is used by assignments. Remove them first." }),
+      };
     if (!data.length) return { ok: false, message: "Position not found." };
     return { ok: true, message: "Position deleted." };
   } catch (error) {

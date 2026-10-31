@@ -22,28 +22,49 @@ beforeAll(async () => {
   otherRoleId = roles![1].id;
   const { data: positions } = await svc
     .from("positions")
-    .insert([{ role_id: roleId, name: "Ketua" }, { role_id: otherRoleId, name: "Anggota" }])
+    .insert([
+      { role_id: roleId, name: "Ketua" },
+      { role_id: otherRoleId, name: "Anggota" },
+    ])
     .select("id, role_id");
   const { data: period } = await svc.from("periods").select("id").eq("is_active", true).single();
   await svc.from("assignments").insert([
-    { member_id: alice.memberId, role_id: roleId, position_id: positions!.find((p) => p.role_id === roleId)!.id, period_id: period!.id },
-    { member_id: bob.memberId, role_id: otherRoleId, position_id: positions!.find((p) => p.role_id === otherRoleId)!.id, period_id: period!.id },
+    {
+      member_id: alice.memberId,
+      role_id: roleId,
+      position_id: positions!.find((p) => p.role_id === roleId)!.id,
+      period_id: period!.id,
+    },
+    {
+      member_id: bob.memberId,
+      role_id: otherRoleId,
+      position_id: positions!.find((p) => p.role_id === otherRoleId)!.id,
+      period_id: period!.id,
+    },
   ]);
 });
 
 afterAll(cleanup);
 
 describe("unauthenticated (anon key, no session)", () => {
-  it.each(["members", "roles", "positions", "periods", "assignments", "org_settings", "audit_log", "role_overview"] as const)(
-    "gets nothing from %s",
-    async (table) => {
-      // The table name is a runtime parameter here; the typed client cannot narrow a union.
-      const { data, error } = await anonClient().from(table as "members").select("*");
-      // Privileges are revoked from anon: PostgREST answers with a permission error and no rows.
-      expect(data ?? []).toEqual([]);
-      expect(error?.code).toBe("42501");
-    },
-  );
+  it.each([
+    "members",
+    "roles",
+    "positions",
+    "periods",
+    "assignments",
+    "org_settings",
+    "audit_log",
+    "role_overview",
+  ] as const)("gets nothing from %s", async (table) => {
+    // The table name is a runtime parameter here; the typed client cannot narrow a union.
+    const { data, error } = await anonClient()
+      .from(table as "members")
+      .select("*");
+    // Privileges are revoked from anon: PostgREST answers with a permission error and no rows.
+    expect(data ?? []).toEqual([]);
+    expect(error?.code).toBe("42501");
+  });
 
   it("cannot call set_active_period", async () => {
     const { error } = await anonClient().rpc("set_active_period", { p_period_id: roleId });
@@ -51,7 +72,10 @@ describe("unauthenticated (anon key, no session)", () => {
   });
 
   it("cannot sign up (public sign-up disabled)", async () => {
-    const { data, error } = await anonClient().auth.signUp({ email: `itest-signup-${RUN}@example.com`, password: "Signup12345" });
+    const { data, error } = await anonClient().auth.signUp({
+      email: `itest-signup-${RUN}@example.com`,
+      password: "Signup12345",
+    });
     expect(error).not.toBeNull();
     expect(data.user).toBeNull();
   });
@@ -78,9 +102,17 @@ describe("regular member", () => {
   });
 
   it("cannot escalate to admin by updating their own row", async () => {
-    const { data, error } = await alice.client.from("members").update({ access_level: "admin" }).eq("id", alice.memberId).select("id");
+    const { data, error } = await alice.client
+      .from("members")
+      .update({ access_level: "admin" })
+      .eq("id", alice.memberId)
+      .select("id");
     expect(error === null ? data : []).toEqual([]);
-    const { data: fresh } = await serviceClient().from("members").select("access_level").eq("id", alice.memberId).single();
+    const { data: fresh } = await serviceClient()
+      .from("members")
+      .select("access_level")
+      .eq("id", alice.memberId)
+      .single();
     expect(fresh!.access_level).toBe("member");
   });
 
@@ -89,7 +121,9 @@ describe("regular member", () => {
       alice.client.from("members").insert({ full_name: "Nope", email: `nope-${RUN}@example.com` }),
       alice.client.from("roles").insert({ name: `Nope ${RUN}` }),
       alice.client.from("periods").insert({ label: "2099/2100" }),
-      alice.client.from("assignments").insert({ member_id: alice.memberId, role_id: roleId, position_id: roleId, period_id: roleId }),
+      alice.client
+        .from("assignments")
+        .insert({ member_id: alice.memberId, role_id: roleId, position_id: roleId, period_id: roleId }),
     ]);
     for (const r of results) expect(r.error).not.toBeNull();
   });
@@ -97,7 +131,11 @@ describe("regular member", () => {
   it("cannot delete or change roles and assignments", async () => {
     const del = await alice.client.from("roles").delete().eq("id", roleId).select("id");
     expect(del.data ?? []).toEqual([]);
-    const upd = await alice.client.from("assignments").update({ role_id: otherRoleId }).eq("member_id", alice.memberId).select("id");
+    const upd = await alice.client
+      .from("assignments")
+      .update({ role_id: otherRoleId })
+      .eq("member_id", alice.memberId)
+      .select("id");
     expect(upd.data ?? []).toEqual([]);
     const { count } = await serviceClient().from("roles").select("id", { count: "exact", head: true }).eq("id", roleId);
     expect(count).toBe(1);
@@ -139,9 +177,16 @@ describe("admin", () => {
   });
 
   it("writes audit rows attributed to the acting admin", async () => {
-    const { data: role } = await admin.client.from("roles").insert({ name: `Itest Audited ${RUN}` }).select("id, created_by").single();
+    const { data: role } = await admin.client
+      .from("roles")
+      .insert({ name: `Itest Audited ${RUN}` })
+      .select("id, created_by")
+      .single();
     expect(role!.created_by).toBe(admin.userId);
-    const { data: audit } = await admin.client.from("audit_log").select("actor_id, action, table_name").eq("record_id", role!.id);
+    const { data: audit } = await admin.client
+      .from("audit_log")
+      .select("actor_id, action, table_name")
+      .eq("record_id", role!.id);
     expect(audit).toEqual([{ actor_id: admin.userId, action: "INSERT", table_name: "roles" }]);
   });
 
@@ -155,9 +200,9 @@ describe("admin", () => {
     await withDb(async (db) => {
       await db.query("begin");
       try {
-        await expect(db.query(`update public.members set access_level = 'member' where access_level = 'admin' and is_active`)).rejects.toThrow(
-          /last active admin/,
-        );
+        await expect(
+          db.query(`update public.members set access_level = 'member' where access_level = 'admin' and is_active`),
+        ).rejects.toThrow(/last active admin/);
       } finally {
         await db.query("rollback");
       }

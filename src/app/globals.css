@@ -2,7 +2,6 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-
 @theme inline {
   --color-pmk-brown: var(--pmk-brown);
   --color-pmk-accent: var(--pmk-accent);
@@ -54,16 +53,16 @@
   color-scheme: light;
 
   /* Brand palette (raw) */
-  --pmk-brown: #5a3e1b;        /* primary buttons, Shalom banner, login header (90%) */
-  --pmk-accent: #a15912;       /* icons, active nav item, hamburger, bell */
-  --pmk-gold: #e6c65c;         /* drawer background */
-  --pmk-gold-strong: #c9a227;  /* active-period check + label */
-  --pmk-cream: #f8f7f6;        /* app background */
-  --pmk-tint: #efe7df;         /* rgba(161,89,18,.1) on cream: cards, rows, search, pills */
-  --pmk-tint-border: #dfcbb6;  /* rgba(161,89,18,.2) on cream: card / pill borders */
-  --pmk-ink: #0f172a;          /* headings */
-  --pmk-body: #475569;         /* body text */
-  --pmk-muted: #64748b;        /* labels, inactive nav, active directory tab */
+  --pmk-brown: #5a3e1b; /* primary buttons, Shalom banner, login header (90%) */
+  --pmk-accent: #a15912; /* icons, active nav item, hamburger, bell */
+  --pmk-gold: #e6c65c; /* drawer background */
+  --pmk-gold-strong: #c9a227; /* active-period check + label */
+  --pmk-cream: #f8f7f6; /* app background */
+  --pmk-tint: #efe7df; /* rgba(161,89,18,.1) on cream: cards, rows, search, pills */
+  --pmk-tint-border: #dfcbb6; /* rgba(161,89,18,.2) on cream: card / pill borders */
+  --pmk-ink: #0f172a; /* headings */
+  --pmk-body: #475569; /* body text */
+  --pmk-muted: #64748b; /* labels, inactive nav, active directory tab */
   --pmk-positive: #059669;
   --pmk-negative: #e11d48;
 

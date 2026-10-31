@@ -31,7 +31,12 @@ export default async function EditAssignmentPage({ params }: PageProps<"/assignm
         members={members.map((m) => ({ id: m.id, label: `${m.full_name} · ${m.email}` }))}
         roles={roles.map((r) => ({ id: r.id, name: r.name, positions: r.positions }))}
         periods={periods.map((p) => ({ id: p.id, label: p.is_active ? `${p.label} (active)` : p.label }))}
-        defaults={{ memberId: assignment.member_id, roleId: assignment.role_id, positionId: assignment.position_id, periodId: assignment.period_id }}
+        defaults={{
+          memberId: assignment.member_id,
+          roleId: assignment.role_id,
+          positionId: assignment.position_id,
+          periodId: assignment.period_id,
+        }}
       />
     </div>
   );

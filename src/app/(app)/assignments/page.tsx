@@ -17,11 +17,16 @@ export default async function AssignmentsPage({ searchParams }: PageProps<"/assi
   const { allowed } = await requireAdminPage();
   if (!allowed) return <ForbiddenState />;
   const sp = await searchParams;
-  const [members, roles, periods] = await Promise.all([listActiveMembersForPicker(), listRolesWithPositions(), listPeriods()]);
+  const [members, roles, periods] = await Promise.all([
+    listActiveMembersForPicker(),
+    listRolesWithPositions(),
+    listPeriods(),
+  ]);
   const activePeriod = periods.find((p) => p.is_active) ?? null;
 
   const requestedPeriod = typeof sp.period === "string" ? sp.period : undefined;
-  const listPeriodId = requestedPeriod === "all" ? null : (idSchema.safeParse(requestedPeriod).data ?? activePeriod?.id ?? null);
+  const listPeriodId =
+    requestedPeriod === "all" ? null : (idSchema.safeParse(requestedPeriod).data ?? activePeriod?.id ?? null);
   const assignments = await listAssignments(listPeriodId);
   const preselectedMember = idSchema.safeParse(typeof sp.member === "string" ? sp.member : undefined).data;
 
@@ -49,21 +54,39 @@ export default async function AssignmentsPage({ searchParams }: PageProps<"/assi
           />
         </div>
         {assignments.length === 0 ? (
-          <EmptyState title="No assignments in this period">Use the form above to assign a member a role and position.</EmptyState>
+          <EmptyState title="No assignments in this period">
+            Use the form above to assign a member a role and position.
+          </EmptyState>
         ) : (
           <ul className="space-y-2.5">
             {assignments.map((a) => (
               <li key={a.id}>
-                <RowPill className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,0.9fr)_auto] items-center gap-2 py-1 pl-4 pr-1 text-sm">
-                  <span className="truncate font-medium text-pmk-ink" title={a.memberName}>
-                    {a.memberName}
-                    {!a.memberActive ? <span className="text-xs text-pmk-muted"> (inactive)</span> : null}
+                <RowPill className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 py-1.5 pl-4 pr-1 text-sm sm:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,0.9fr)_auto]">
+                  <span className="min-w-0 sm:contents">
+                    <span className="flex justify-between gap-2 sm:contents">
+                      <span className="truncate font-medium text-pmk-ink" title={a.memberName}>
+                        {a.memberName}
+                        {!a.memberActive ? <span className="text-xs text-pmk-muted"> (inactive)</span> : null}
+                      </span>
+                      <span className="shrink-0 text-xs sm:hidden">{a.period}</span>
+                    </span>
+                    <span className="block truncate text-xs sm:hidden">
+                      {a.role} · {a.position}
+                    </span>
+                    <span className="hidden truncate sm:block" title={a.role}>
+                      {a.role}
+                    </span>
+                    <span className="hidden truncate sm:block" title={a.position}>
+                      {a.position}
+                    </span>
+                    <span className="hidden truncate sm:block">{a.period}</span>
                   </span>
-                  <span className="truncate" title={a.role}>{a.role}</span>
-                  <span className="truncate" title={a.position}>{a.position}</span>
-                  <span className="truncate">{a.period}</span>
                   <span className="flex">
-                    <Link href={`/assignments/${a.id}`} className="grid size-11 place-items-center rounded-full text-pmk-brown hover:bg-white" aria-label={`Edit assignment of ${a.memberName}`}>
+                    <Link
+                      href={`/assignments/${a.id}`}
+                      className="grid size-11 place-items-center rounded-full text-pmk-brown hover:bg-white"
+                      aria-label={`Edit assignment of ${a.memberName}`}
+                    >
                       <SquarePen className="size-5" aria-hidden />
                     </Link>
                     <ConfirmAction
@@ -73,7 +96,11 @@ export default async function AssignmentsPage({ searchParams }: PageProps<"/assi
                       confirmLabel="Remove"
                       destructive
                     >
-                      <button type="button" className="grid size-11 place-items-center rounded-full text-pmk-brown hover:bg-white" aria-label={`Remove assignment of ${a.memberName}`}>
+                      <button
+                        type="button"
+                        className="grid size-11 place-items-center rounded-full text-pmk-brown hover:bg-white"
+                        aria-label={`Remove assignment of ${a.memberName}`}
+                      >
                         <Trash2 className="size-5" aria-hidden />
                       </button>
                     </ConfirmAction>

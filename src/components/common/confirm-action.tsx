@@ -30,7 +30,16 @@ type Props = {
 };
 
 /** Confirmation dialog for destructive or significant actions. */
-export function ConfirmAction({ action, title, description, confirmLabel, destructive, redirectTo, blockedReason, children }: Props) {
+export function ConfirmAction({
+  action,
+  title,
+  description,
+  confirmLabel,
+  destructive,
+  redirectTo,
+  blockedReason,
+  children,
+}: Props) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
@@ -65,17 +74,17 @@ export function ConfirmAction({ action, title, description, confirmLabel, destru
             {blockedReason ? "Close" : "Cancel"}
           </AlertDialogCancel>
           {blockedReason ? null : (
-          <AlertDialogAction
-            onClick={run}
-            disabled={pending}
-            className={
-              destructive
-                ? "h-11 rounded-full bg-destructive text-white hover:bg-destructive/90"
-                : "h-11 rounded-full"
-            }
-          >
-            {pending ? "Working…" : confirmLabel}
-          </AlertDialogAction>
+            <AlertDialogAction
+              onClick={run}
+              disabled={pending}
+              className={
+                destructive
+                  ? "h-11 rounded-full bg-destructive text-white hover:bg-destructive/90"
+                  : "h-11 rounded-full"
+              }
+            >
+              {pending ? "Working…" : confirmLabel}
+            </AlertDialogAction>
           )}
         </AlertDialogFooter>
       </AlertDialogContent>

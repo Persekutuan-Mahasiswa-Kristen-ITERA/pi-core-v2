@@ -12,7 +12,8 @@ export default async function ReportsPage() {
       <ChartNoAxesColumnIncreasing className="size-10 text-pmk-accent" aria-hidden />
       <h2 className="text-lg font-bold text-pmk-ink">Reports are coming later</h2>
       <p className="max-w-sm text-sm text-pmk-body">
-        This version of PI-CORE manages members, roles, periods and assignments. Reports will be added in a future release.
+        This version of PI-CORE manages members, roles, periods and assignments. Reports will be added in a future
+        release.
       </p>
     </div>
   );

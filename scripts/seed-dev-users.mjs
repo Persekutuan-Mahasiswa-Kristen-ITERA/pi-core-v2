@@ -32,8 +32,21 @@ const admin = createClient(url, secret, { auth: { persistSession: false, autoRef
 
 export const DEV_USERS = [
   { email: "admin@example.com", fullName: "Admin Contoh", accessLevel: "admin", assign: [["BPH", "Ketua Umum"]] },
-  { email: "maria@example.com", fullName: "Maria Contoh", accessLevel: "member", assign: [["Sekretaris", "Sekretaris Umum"]] },
-  { email: "yohanes@example.com", fullName: "Yohanes Contoh", accessLevel: "member", assign: [["Kepala Departemen", "Kepala Departemen Musik"], ["Panitia", "Ketua Panitia Natal"]] },
+  {
+    email: "maria@example.com",
+    fullName: "Maria Contoh",
+    accessLevel: "member",
+    assign: [["Sekretaris", "Sekretaris Umum"]],
+  },
+  {
+    email: "yohanes@example.com",
+    fullName: "Yohanes Contoh",
+    accessLevel: "member",
+    assign: [
+      ["Kepala Departemen", "Kepala Departemen Musik"],
+      ["Panitia", "Ketua Panitia Natal"],
+    ],
+  },
   { email: "ruth@example.com", fullName: "Ruth Contoh", accessLevel: "member", assign: [] },
 ];
 
@@ -46,11 +59,21 @@ for (const user of DEV_USERS) {
     console.log(`skip ${user.email} (exists)`);
     continue;
   }
-  const { data: created, error } = await admin.auth.admin.createUser({ email: user.email, password, email_confirm: true });
+  const { data: created, error } = await admin.auth.admin.createUser({
+    email: user.email,
+    password,
+    email_confirm: true,
+  });
   if (error) throw error;
   const { data: member, error: insertError } = await admin
     .from("members")
-    .insert({ user_id: created.user.id, full_name: user.fullName, email: user.email, access_level: user.accessLevel, must_change_password: false })
+    .insert({
+      user_id: created.user.id,
+      full_name: user.fullName,
+      email: user.email,
+      access_level: user.accessLevel,
+      must_change_password: false,
+    })
     .select("id")
     .single();
   if (insertError) throw insertError;

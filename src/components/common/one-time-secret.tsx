@@ -5,13 +5,23 @@ import { Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /** Shows a temporary password once. It is not stored anywhere after this screen. */
-export function OneTimeSecret({ email, secret, children }: { email: string; secret: string; children?: React.ReactNode }) {
+export function OneTimeSecret({
+  email,
+  secret,
+  children,
+}: {
+  email: string;
+  secret: string;
+  children?: React.ReactNode;
+}) {
   const [copied, setCopied] = useState(false);
   return (
     <div className="space-y-3 rounded-xl border-2 border-pmk-gold bg-white p-4" role="status">
       <p className="font-semibold text-pmk-ink">Temporary password for {email}</p>
       <div className="flex items-center gap-2">
-        <code className="flex-1 select-all break-all rounded-lg bg-pmk-tint px-3 py-2 font-mono text-base text-pmk-ink">{secret}</code>
+        <code className="flex-1 select-all break-all rounded-lg bg-pmk-tint px-3 py-2 font-mono text-base text-pmk-ink">
+          {secret}
+        </code>
         <Button
           type="button"
           variant="outline"

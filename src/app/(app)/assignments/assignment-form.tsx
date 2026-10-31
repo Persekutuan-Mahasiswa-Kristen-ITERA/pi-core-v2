@@ -58,17 +58,25 @@ export function AssignmentForm({ action, members, roles, periods, defaults, mode
     <form action={formAction} className="space-y-3" noValidate>
       <FormMessage state={state} />
       <div>
-        <label htmlFor="field-memberId" className="sr-only">Member</label>
+        <label htmlFor="field-memberId" className="sr-only">
+          Member
+        </label>
         <select {...a11y("memberId")} defaultValue={defaults.memberId ?? ""} className={pillClass} required>
-          <option value="" disabled>＋ Assign Member</option>
+          <option value="" disabled>
+            ＋ Assign Member
+          </option>
           {members.map((m) => (
-            <option key={m.id} value={m.id}>{m.label}</option>
+            <option key={m.id} value={m.id}>
+              {m.label}
+            </option>
           ))}
         </select>
         <FieldError id="field-memberId-error" messages={errors?.memberId} />
       </div>
       <div>
-        <label htmlFor="field-roleId" className="sr-only">Role</label>
+        <label htmlFor="field-roleId" className="sr-only">
+          Role
+        </label>
         <select
           {...a11y("roleId")}
           value={roleId}
@@ -79,15 +87,21 @@ export function AssignmentForm({ action, members, roles, periods, defaults, mode
           className={pillClass}
           required
         >
-          <option value="" disabled>＋ Role</option>
+          <option value="" disabled>
+            ＋ Role
+          </option>
           {roles.map((r) => (
-            <option key={r.id} value={r.id}>{r.name}</option>
+            <option key={r.id} value={r.id}>
+              {r.name}
+            </option>
           ))}
         </select>
         <FieldError id="field-roleId-error" messages={errors?.roleId} />
       </div>
       <div>
-        <label htmlFor="field-positionId" className="sr-only">Position</label>
+        <label htmlFor="field-positionId" className="sr-only">
+          Position
+        </label>
         <select
           {...a11y("positionId")}
           value={positionId}
@@ -96,9 +110,13 @@ export function AssignmentForm({ action, members, roles, periods, defaults, mode
           disabled={!roleId}
           required
         >
-          <option value="" disabled>{roleId ? "＋ Position" : "＋ Position (choose a role first)"}</option>
+          <option value="" disabled>
+            {roleId ? "＋ Position" : "＋ Position (choose a role first)"}
+          </option>
           {positions.map((p) => (
-            <option key={p.id} value={p.id}>{p.name}</option>
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
           ))}
           <option value="__new">New position…</option>
         </select>
@@ -108,17 +126,29 @@ export function AssignmentForm({ action, members, roles, periods, defaults, mode
             <label htmlFor="field-newPositionName" className="mb-1 block text-sm font-semibold text-pmk-ink">
               New position name
             </label>
-            <input {...a11y("newPositionName")} placeholder="e.g. Kepala Departemen Musik" className={pillClass} maxLength={80} autoFocus />
+            <input
+              {...a11y("newPositionName")}
+              placeholder="e.g. Kepala Departemen Musik"
+              className={pillClass}
+              maxLength={80}
+              autoFocus
+            />
             <FieldError id="field-newPositionName-error" messages={errors?.newPositionName} />
           </div>
         ) : null}
       </div>
       <div>
-        <label htmlFor="field-periodId" className="sr-only">Period</label>
+        <label htmlFor="field-periodId" className="sr-only">
+          Period
+        </label>
         <select {...a11y("periodId")} defaultValue={defaults.periodId ?? ""} className={pillClass} required>
-          <option value="" disabled>＋ Period</option>
+          <option value="" disabled>
+            ＋ Period
+          </option>
           {periods.map((p) => (
-            <option key={p.id} value={p.id}>{p.label}</option>
+            <option key={p.id} value={p.id}>
+              {p.label}
+            </option>
           ))}
         </select>
         <FieldError id="field-periodId-error" messages={errors?.periodId} />
@@ -126,7 +156,10 @@ export function AssignmentForm({ action, members, roles, periods, defaults, mode
       <div className="flex items-center gap-3 pt-1">
         <SubmitButton className="bg-pmk-brown px-9">Save</SubmitButton>
         {mode === "edit" ? (
-          <Link href="/assignments" className="inline-flex min-h-11 items-center px-4 text-sm font-medium text-pmk-body hover:text-pmk-ink">
+          <Link
+            href="/assignments"
+            className="inline-flex min-h-11 items-center px-4 text-sm font-medium text-pmk-body hover:text-pmk-ink"
+          >
             Cancel
           </Link>
         ) : null}

@@ -54,15 +54,40 @@ export function LoginForm({ next, inactive }: { next: string; inactive: boolean 
         <label htmlFor="email" className="sr-only">
           Email
         </label>
-        <Mail className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-[#7d7d7d]" aria-hidden />
-        <input id="email" name="email" type="email" inputMode="email" autoComplete="username" autoCapitalize="none" spellCheck={false} placeholder="email" required className={inputClass} />
+        <Mail
+          className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-[#7d7d7d]"
+          aria-hidden
+        />
+        <input
+          id="email"
+          name="email"
+          type="email"
+          inputMode="email"
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
+          placeholder="email"
+          required
+          className={inputClass}
+        />
       </div>
       <div className="relative">
         <label htmlFor="password" className="sr-only">
           Password
         </label>
-        <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-[#7d7d7d]" aria-hidden />
-        <input id="password" name="password" type="password" autoComplete="current-password" placeholder="password" required className={inputClass} />
+        <LockKeyhole
+          className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-[#7d7d7d]"
+          aria-hidden
+        />
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          placeholder="password"
+          required
+          className={inputClass}
+        />
       </div>
 
       <div aria-live="polite" className="-my-3 min-h-5 text-center text-sm font-medium text-destructive">

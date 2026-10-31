@@ -20,17 +20,27 @@ afterAll(async () => {
 
 describe("periods: exactly one active", () => {
   it("new periods start inactive while another is active", async () => {
-    const { data } = await admin.client.from("periods").insert({ label: testPeriodLabels[0] }).select("is_active").single();
+    const { data } = await admin.client
+      .from("periods")
+      .insert({ label: testPeriodLabels[0] })
+      .select("is_active")
+      .single();
     expect(data!.is_active).toBe(false);
   });
 
   it("is_active cannot be written directly, only through set_active_period()", async () => {
-    const { error } = await admin.client.from("periods").update({ is_active: true } as never).eq("label", testPeriodLabels[0]);
+    const { error } = await admin.client
+      .from("periods")
+      .update({ is_active: true } as never)
+      .eq("label", testPeriodLabels[0]);
     expect(error?.code).toBe("42501");
   });
 
   it("the database rejects a second active period even for the service role", async () => {
-    const { error } = await serviceClient().from("periods").update({ is_active: true }).eq("label", testPeriodLabels[0]);
+    const { error } = await serviceClient()
+      .from("periods")
+      .update({ is_active: true })
+      .eq("label", testPeriodLabels[0]);
     expect(error?.code).toBe("23505");
   });
 
@@ -61,9 +71,17 @@ describe("assignments", () => {
       .select("id, name");
     roleId = roles!.find((r) => r.name.startsWith("Itest Assign"))!.id;
     otherRoleId = roles!.find((r) => r.name.startsWith("Itest Other"))!.id;
-    const { data: position } = await admin.client.from("positions").insert({ role_id: roleId, name: "Ketua" }).select("id").single();
+    const { data: position } = await admin.client
+      .from("positions")
+      .insert({ role_id: roleId, name: "Ketua" })
+      .select("id")
+      .single();
     positionId = position!.id;
-    const { data: period } = await admin.client.from("periods").insert({ label: testPeriodLabels[1] }).select("id").single();
+    const { data: period } = await admin.client
+      .from("periods")
+      .insert({ label: testPeriodLabels[1] })
+      .select("id")
+      .single();
     periodId = period!.id;
   });
 
@@ -73,7 +91,11 @@ describe("assignments", () => {
     const dup = await admin.client.from("assignments").insert(row);
     expect(dup.error?.code).toBe("23505");
 
-    const { data: p2 } = await admin.client.from("positions").insert({ role_id: roleId, name: "Wakil" }).select("id").single();
+    const { data: p2 } = await admin.client
+      .from("positions")
+      .insert({ role_id: roleId, name: "Wakil" })
+      .select("id")
+      .single();
     expect((await admin.client.from("assignments").insert({ ...row, position_id: p2!.id })).error).toBeNull();
   });
 
@@ -95,7 +117,10 @@ describe("assignments", () => {
     await admin.client.from("positions").insert({ role_id: otherRoleId, name: "Unused" });
     const { error } = await admin.client.from("roles").delete().eq("id", otherRoleId);
     expect(error).toBeNull();
-    const { count } = await serviceClient().from("positions").select("id", { count: "exact", head: true }).eq("role_id", otherRoleId);
+    const { count } = await serviceClient()
+      .from("positions")
+      .select("id", { count: "exact", head: true })
+      .eq("role_id", otherRoleId);
     expect(count).toBe(0);
   });
 
@@ -110,10 +135,18 @@ describe("assignments", () => {
 
   it("role_overview counts distinct active members in the ACTIVE period only", async () => {
     // Assignments above are in a non-active period, so the active-period count is 0.
-    const { data } = await admin.client.from("role_overview").select("active_member_count, assignment_count").eq("id", roleId).single();
+    const { data } = await admin.client
+      .from("role_overview")
+      .select("active_member_count, assignment_count")
+      .eq("id", roleId)
+      .single();
     expect(data).toEqual({ active_member_count: 0, assignment_count: 2 });
     await admin.client.rpc("set_active_period", { p_period_id: periodId });
-    const { data: after } = await admin.client.from("role_overview").select("active_member_count").eq("id", roleId).single();
+    const { data: after } = await admin.client
+      .from("role_overview")
+      .select("active_member_count")
+      .eq("id", roleId)
+      .single();
     // Two assignments, one member: counted once.
     expect(after!.active_member_count).toBe(1);
   });

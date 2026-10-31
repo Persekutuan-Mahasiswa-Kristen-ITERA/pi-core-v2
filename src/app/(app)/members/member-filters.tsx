@@ -40,7 +40,10 @@ export function MemberFilters({ roles, periods }: { roles: Option[]; periods: Op
         <label htmlFor="member-search" className="sr-only">
           Search member by name or email
         </label>
-        <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-pmk-brown" aria-hidden />
+        <Search
+          className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-pmk-brown"
+          aria-hidden
+        />
         <input
           id="member-search"
           name="q"
@@ -50,12 +53,22 @@ export function MemberFilters({ roles, periods }: { roles: Option[]; periods: Op
           enterKeyHint="search"
           className="h-11 w-full rounded-xl bg-pmk-tint pl-12 pr-10 text-center text-base font-medium text-pmk-ink placeholder:text-pmk-ink focus-visible:outline-2 focus-visible:outline-pmk-accent sm:text-sm"
         />
-        {pending ? <Loader2 className="absolute right-4 top-1/2 size-4 -translate-y-1/2 animate-spin text-pmk-muted" aria-label="Loading" /> : null}
+        {pending ? (
+          <Loader2
+            className="absolute right-4 top-1/2 size-4 -translate-y-1/2 animate-spin text-pmk-muted"
+            aria-label="Loading"
+          />
+        ) : null}
       </div>
       <div className="flex flex-wrap items-center gap-x-3 px-2">
         <label className="flex min-w-[9rem] flex-1 items-center gap-1 text-xs text-pmk-body">
           <span className="shrink-0">Filter Role :</span>
-          <select name="role" defaultValue={params.get("role") ?? ""} onChange={(e) => apply(e.currentTarget.form!)} className={selectClass}>
+          <select
+            name="role"
+            defaultValue={params.get("role") ?? ""}
+            onChange={(e) => apply(e.currentTarget.form!)}
+            className={selectClass}
+          >
             <option value="">[ALL]</option>
             {roles.map((r) => (
               <option key={r.id} value={r.id}>
@@ -66,7 +79,12 @@ export function MemberFilters({ roles, periods }: { roles: Option[]; periods: Op
         </label>
         <label className="flex min-w-[9rem] flex-1 items-center gap-1 text-xs text-pmk-body">
           <span className="shrink-0">Filter Period :</span>
-          <select name="period" defaultValue={params.get("period") ?? ""} onChange={(e) => apply(e.currentTarget.form!)} className={selectClass}>
+          <select
+            name="period"
+            defaultValue={params.get("period") ?? ""}
+            onChange={(e) => apply(e.currentTarget.form!)}
+            className={selectClass}
+          >
             <option value="">[ALL]</option>
             {periods.map((p) => (
               <option key={p.id} value={p.id}>
@@ -77,7 +95,12 @@ export function MemberFilters({ roles, periods }: { roles: Option[]; periods: Op
         </label>
         <label className="flex min-w-[9rem] flex-1 items-center gap-1 text-xs text-pmk-body">
           <span className="shrink-0">Status :</span>
-          <select name="status" defaultValue={params.get("status") ?? ""} onChange={(e) => apply(e.currentTarget.form!)} className={selectClass}>
+          <select
+            name="status"
+            defaultValue={params.get("status") ?? ""}
+            onChange={(e) => apply(e.currentTarget.form!)}
+            className={selectClass}
+          >
             <option value="">Active</option>
             <option value="inactive">Deactivated</option>
           </select>

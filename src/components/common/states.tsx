@@ -2,9 +2,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { ShieldAlert } from "lucide-react";
 
-export function EmptyState({ title, children, className }: { title: string; children?: React.ReactNode; className?: string }) {
+export function EmptyState({
+  title,
+  children,
+  className,
+}: {
+  title: string;
+  children?: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div className={cn("flex flex-col items-center gap-2 rounded-xl border border-dashed border-pmk-tint-border px-6 py-10 text-center", className)}>
+    <div
+      className={cn(
+        "flex flex-col items-center gap-2 rounded-xl border border-dashed border-pmk-tint-border px-6 py-10 text-center",
+        className,
+      )}
+    >
       <p className="font-semibold text-pmk-ink">{title}</p>
       {children ? <div className="max-w-sm text-sm text-pmk-body">{children}</div> : null}
     </div>

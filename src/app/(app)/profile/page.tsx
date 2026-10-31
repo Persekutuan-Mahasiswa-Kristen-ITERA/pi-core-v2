@@ -50,7 +50,9 @@ export default async function ProfilePage() {
                   <span>{a.position}</span>
                   <span className="text-right">
                     {a.period}
-                    {a.activePeriod ? <span className="block text-xs font-semibold text-pmk-accent">Active</span> : null}
+                    {a.activePeriod ? (
+                      <span className="block text-xs font-semibold text-pmk-accent">Active</span>
+                    ) : null}
                   </span>
                 </RowPill>
               </li>

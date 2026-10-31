@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarCheck2, Settings, ShieldHalf, UserRoundCheck, UserRoundSearch, UsersRound, type LucideIcon } from "lucide-react";
+import {
+  CalendarCheck2,
+  Settings,
+  ShieldHalf,
+  UserRoundCheck,
+  UserRoundSearch,
+  UsersRound,
+  type LucideIcon,
+} from "lucide-react";
 import { requireMember } from "@/lib/auth";
 import { getDashboardStats, listAssignmentsForMember } from "@/lib/queries";
 import { SectionTitle, TintCard, RowPill } from "@/components/common/surfaces";
@@ -19,7 +27,7 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <section
         aria-label="Greeting"
-        className="mt-4 flex min-h-[82px] items-center rounded-[40px] bg-pmk-brown px-6 py-5 text-white shadow-[inset_45px_7px_20px_-7px_rgba(0,0,0,0.25)]"
+        className="mt-4 flex min-h-[82px] items-center rounded-[40px] bg-pmk-brown px-6 py-5 text-white"
       >
         <p className="text-2xl font-bold">Shalom {firstName}!</p>
       </section>
@@ -36,7 +44,12 @@ async function AdminDashboard() {
       <section aria-label="Statistics" className="grid grid-cols-2 gap-4 lg:grid-cols-3">
         <StatCard icon={UsersRound} label="Total Members" value={numberFormat.format(stats.totalMembers)} />
         <StatCard icon={CalendarCheck2} label="Active Period" value={stats.activePeriod?.label ?? "None set"} />
-        <StatCard icon={ShieldHalf} label="Available Roles" value={numberFormat.format(stats.availableRoles)} className="col-span-2 lg:col-span-1" />
+        <StatCard
+          icon={ShieldHalf}
+          label="Available Roles"
+          value={numberFormat.format(stats.availableRoles)}
+          className="col-span-2 lg:col-span-1"
+        />
       </section>
       <section aria-labelledby="quick-access" className="space-y-4">
         <SectionTitle id="quick-access">Quick Access</SectionTitle>
@@ -78,7 +91,17 @@ async function MemberDashboard({ memberId }: { memberId: string }) {
   );
 }
 
-function StatCard({ icon: Icon, label, value, className }: { icon: LucideIcon; label: string; value: string; className?: string }) {
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  className,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  className?: string;
+}) {
   return (
     <TintCard className={`flex min-h-[134px] flex-col gap-1 p-5 ${className ?? ""}`}>
       <Icon className="mb-2 size-5 text-pmk-accent" aria-hidden />

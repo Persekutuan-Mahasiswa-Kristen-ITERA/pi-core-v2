@@ -15,11 +15,16 @@ test("iOS meta tags and viewport-fit are present", async ({ page }) => {
   await page.goto("/login");
   await expect(page.locator('meta[name="viewport"]')).toHaveAttribute("content", /viewport-fit=cover/);
   await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute("href", /apple-touch-icon\.png/);
-  await expect(page.locator('meta[name="mobile-web-app-capable"], meta[name="apple-mobile-web-app-capable"]').first()).toHaveAttribute("content", "yes");
+  await expect(
+    page.locator('meta[name="mobile-web-app-capable"], meta[name="apple-mobile-web-app-capable"]').first(),
+  ).toHaveAttribute("content", "yes");
   await expect(page.locator('link[rel="manifest"]')).toHaveAttribute("href", "/manifest.webmanifest");
 });
 
-test("Chrome reports the app as installable and the service worker serves the offline page", async ({ page, context }) => {
+test("Chrome reports the app as installable and the service worker serves the offline page", async ({
+  page,
+  context,
+}) => {
   await page.goto("/login");
   const ready = await page.evaluate(async () => {
     const reg = await navigator.serviceWorker.ready;
@@ -53,6 +58,11 @@ test("the service worker never caches pages or data", async ({ page }) => {
   });
   // Only the offline page and static/public assets are allowed in Cache Storage.
   for (const path of cached) {
-    expect(path === "/offline" || path.startsWith("/_next/static/") || path.startsWith("/icons/") || path.startsWith("/brand/")).toBe(true);
+    expect(
+      path === "/offline" ||
+        path.startsWith("/_next/static/") ||
+        path.startsWith("/icons/") ||
+        path.startsWith("/brand/"),
+    ).toBe(true);
   }
 });

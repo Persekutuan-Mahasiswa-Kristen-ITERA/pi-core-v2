@@ -54,7 +54,12 @@ describe("generateTemporaryPassword", () => {
 
 describe("describeDbError", () => {
   it("maps unique violations by constraint name", () => {
-    expect(describeDbError({ code: "23505", message: 'duplicate key value violates unique constraint "members_email_key"' }, { members_email_key: "Email taken" })).toBe("Email taken");
+    expect(
+      describeDbError(
+        { code: "23505", message: 'duplicate key value violates unique constraint "members_email_key"' },
+        { members_email_key: "Email taken" },
+      ),
+    ).toBe("Email taken");
   });
   it("maps the last-admin guard and hides unknown errors", () => {
     expect(describeDbError({ code: "P0001", hint: "last_admin" })).toMatch(/at least one active admin/);

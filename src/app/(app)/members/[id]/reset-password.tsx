@@ -37,7 +37,8 @@ export function ResetPassword({ name, action }: { name: string; action: () => Pr
         <AlertDialogHeader>
           <AlertDialogTitle>Reset password for {name}?</AlertDialogTitle>
           <AlertDialogDescription>
-            Their current password stops working. You will get a temporary password to share privately, and they must choose a new one at next login.
+            Their current password stops working. You will get a temporary password to share privately, and they must
+            choose a new one at next login.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

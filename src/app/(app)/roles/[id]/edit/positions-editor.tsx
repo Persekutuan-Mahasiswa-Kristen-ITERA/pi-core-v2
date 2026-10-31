@@ -43,7 +43,13 @@ function PositionRow({ position }: { position: Position }) {
       <label htmlFor={`position-${position.id}`} className="sr-only">
         Position name
       </label>
-      <input id={`position-${position.id}`} name="name" defaultValue={position.name} className={`${fieldClass} bg-white`} maxLength={80} />
+      <input
+        id={`position-${position.id}`}
+        name="name"
+        defaultValue={position.name}
+        className={`${fieldClass} bg-white`}
+        maxLength={80}
+      />
       <span className="shrink-0 text-xs text-pmk-body" title="Assignments using this position">
         {position.usage} used
       </span>
@@ -56,9 +62,17 @@ function PositionRow({ position }: { position: Position }) {
         description="This cannot be undone."
         confirmLabel="Delete"
         destructive
-        blockedReason={position.usage > 0 ? `${position.usage} assignment(s) use this position. Remove or change them first.` : undefined}
+        blockedReason={
+          position.usage > 0
+            ? `${position.usage} assignment(s) use this position. Remove or change them first.`
+            : undefined
+        }
       >
-        <button type="button" className="grid size-11 shrink-0 place-items-center rounded-full text-pmk-brown hover:bg-white" aria-label={`Delete position ${position.name}`}>
+        <button
+          type="button"
+          className="grid size-11 shrink-0 place-items-center rounded-full text-pmk-brown hover:bg-white"
+          aria-label={`Delete position ${position.name}`}
+        >
           <Trash2 className="size-5" aria-hidden />
         </button>
       </ConfirmAction>
@@ -84,7 +98,14 @@ function AddPositionForm({ roleId }: { roleId: string }) {
         <label htmlFor="new-position" className="sr-only">
           New position name
         </label>
-        <input id="new-position" name="name" placeholder="New position, e.g. Ketua Umum" className={fieldClass} maxLength={80} required />
+        <input
+          id="new-position"
+          name="name"
+          placeholder="New position, e.g. Ketua Umum"
+          className={fieldClass}
+          maxLength={80}
+          required
+        />
         <SubmitButton className="shrink-0 px-5 shadow-none" pendingText="Adding…">
           Add
         </SubmitButton>

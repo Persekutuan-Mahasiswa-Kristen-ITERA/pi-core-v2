@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { Toaster as Sonner, type ToasterProps } from "sonner"
-import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
+import { Toaster as Sonner, type ToasterProps } from "sonner";
+import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react";
 
 // Light-only: the PMK prototype has no dark theme, so next-themes is not used.
 const Toaster = ({ ...props }: ToasterProps) => {
@@ -27,7 +27,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{ classNames: { toast: "cn-toast" } }}
       {...props}
     />
-  )
-}
+  );
+};
 
-export { Toaster }
+export { Toaster };

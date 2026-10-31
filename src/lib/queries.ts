@@ -46,7 +46,11 @@ export async function listPeriods() {
 
 export async function getPeriod(id: string) {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("periods").select("id, label, starts_on, ends_on, is_active").eq("id", id).maybeSingle();
+  const { data, error } = await supabase
+    .from("periods")
+    .select("id, label, starts_on, ends_on, is_active")
+    .eq("id", id)
+    .maybeSingle();
   if (error) fail("period", error);
   return data;
 }
@@ -66,7 +70,11 @@ export async function getRoleDetail(id: string) {
   const supabase = await createClient();
   const activePeriod = await getActivePeriod();
   const [role, positions, assignments] = await Promise.all([
-    supabase.from("role_overview").select("id, name, description, active_member_count, assignment_count").eq("id", id).maybeSingle(),
+    supabase
+      .from("role_overview")
+      .select("id, name, description, active_member_count, assignment_count")
+      .eq("id", id)
+      .maybeSingle(),
     supabase.from("positions").select("id, name, assignments(count)").eq("role_id", id).order("name"),
     activePeriod
       ? supabase
@@ -87,7 +95,12 @@ export async function getRoleDetail(id: string) {
     activePeriod,
     positions: positions.data.map((p) => ({ id: p.id, name: p.name, usage: p.assignments[0]?.count ?? 0 })),
     members: (assignments.data ?? [])
-      .map((a) => ({ assignmentId: a.id, memberId: a.members.id, fullName: a.members.full_name, position: a.positions?.name ?? "—" }))
+      .map((a) => ({
+        assignmentId: a.id,
+        memberId: a.members.id,
+        fullName: a.members.full_name,
+        position: a.positions?.name ?? "—",
+      }))
       .sort((a, b) => a.fullName.localeCompare(b.fullName)),
   };
 }
@@ -104,7 +117,13 @@ export async function listRolesWithPositions() {
   return data;
 }
 
-export type MemberListFilters = { q?: string; roleId?: string; periodId?: string; status?: "active" | "inactive"; page?: number };
+export type MemberListFilters = {
+  q?: string;
+  roleId?: string;
+  periodId?: string;
+  status?: "active" | "inactive";
+  page?: number;
+};
 
 export async function listMembers(filters: MemberListFilters) {
   const supabase = await createClient();
@@ -180,7 +199,13 @@ export async function listAssignmentsForMember(memberId: string) {
     .eq("member_id", memberId);
   if (error) fail("member assignments", error);
   return data
-    .map((a) => ({ id: a.id, role: a.roles.name, position: a.positions?.name ?? "—", period: a.periods.label, activePeriod: a.periods.is_active }))
+    .map((a) => ({
+      id: a.id,
+      role: a.roles.name,
+      position: a.positions?.name ?? "—",
+      period: a.periods.label,
+      activePeriod: a.periods.is_active,
+    }))
     .sort((a, b) => b.period.localeCompare(a.period) || a.role.localeCompare(b.role));
 }
 
@@ -188,7 +213,9 @@ export async function listAssignments(periodId: string | null) {
   const supabase = await createClient();
   let query = supabase
     .from("assignments")
-    .select("id, member_id, role_id, position_id, period_id, members(full_name, is_active), roles(name, sort_order), positions(name), periods(label)");
+    .select(
+      "id, member_id, role_id, position_id, period_id, members(full_name, is_active), roles(name, sort_order), positions(name), periods(label)",
+    );
   if (periodId) query = query.eq("period_id", periodId);
   const { data, error } = await query;
   if (error) fail("assignments", error);
@@ -202,7 +229,9 @@ export async function listAssignments(periodId: string | null) {
       position: a.positions?.name ?? "—",
       period: a.periods.label,
     }))
-    .sort((a, b) => a.roleOrder - b.roleOrder || a.role.localeCompare(b.role) || a.memberName.localeCompare(b.memberName));
+    .sort(
+      (a, b) => a.roleOrder - b.roleOrder || a.role.localeCompare(b.role) || a.memberName.localeCompare(b.memberName),
+    );
 }
 
 export async function getAssignment(id: string) {
@@ -218,7 +247,11 @@ export async function getAssignment(id: string) {
 
 export async function listActiveMembersForPicker() {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("members").select("id, full_name, email").eq("is_active", true).order("full_name");
+  const { data, error } = await supabase
+    .from("members")
+    .select("id, full_name, email")
+    .eq("is_active", true)
+    .order("full_name");
   if (error) fail("member picker", error);
   return data;
 }

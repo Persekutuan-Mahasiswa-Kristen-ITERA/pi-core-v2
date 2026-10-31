@@ -37,7 +37,11 @@ export type TestUser = { userId: string; memberId: string; email: string; client
 
 const createdUserIds: string[] = [];
 
-export async function createUser(label: string, accessLevel: "admin" | "member", opts: { mustChangePassword?: boolean } = {}): Promise<TestUser> {
+export async function createUser(
+  label: string,
+  accessLevel: "admin" | "member",
+  opts: { mustChangePassword?: boolean } = {},
+): Promise<TestUser> {
   const admin = serviceClient();
   const email = `itest-${label}-${RUN}@example.com`;
   const { data, error } = await admin.auth.admin.createUser({ email, password: TEST_PASSWORD, email_confirm: true });
@@ -45,7 +49,13 @@ export async function createUser(label: string, accessLevel: "admin" | "member",
   createdUserIds.push(data.user.id);
   const { data: member, error: mErr } = await admin
     .from("members")
-    .insert({ user_id: data.user.id, full_name: `Itest ${label}`, email, access_level: accessLevel, must_change_password: opts.mustChangePassword ?? false })
+    .insert({
+      user_id: data.user.id,
+      full_name: `Itest ${label}`,
+      email,
+      access_level: accessLevel,
+      must_change_password: opts.mustChangePassword ?? false,
+    })
     .select("id")
     .single();
   if (mErr) throw mErr;
@@ -69,7 +79,10 @@ export async function withDb<T>(fn: (db: pg.Client) => Promise<T>): Promise<T> {
 export async function cleanup() {
   await withDb(async (db) => {
     const like = `%${RUN}%`;
-    await db.query(`delete from public.assignments where member_id in (select id from public.members where email like $1)`, [like]);
+    await db.query(
+      `delete from public.assignments where member_id in (select id from public.members where email like $1)`,
+      [like],
+    );
     await db.query(
       `delete from public.assignments where role_id in (select id from public.roles where name like $1)
          or period_id in (select id from public.periods where label in (select unnest($2::text[])))`,

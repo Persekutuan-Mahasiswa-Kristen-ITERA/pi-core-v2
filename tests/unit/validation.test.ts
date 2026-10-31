@@ -8,7 +8,13 @@ describe("memberSchema", () => {
 
   it("normalizes email and trims names; empty optionals become null", () => {
     const r = memberSchema.parse(base);
-    expect(r).toEqual({ fullName: "Maria Contoh", email: "maria@example.com", nim: null, phone: null, accessLevel: "member" });
+    expect(r).toEqual({
+      fullName: "Maria Contoh",
+      email: "maria@example.com",
+      nim: null,
+      phone: null,
+      accessLevel: "member",
+    });
   });
 
   it("rejects bad email, NIM and phone", () => {
@@ -75,6 +81,9 @@ describe("passwordChangeSchema", () => {
   });
   it("requires matching confirmation and a different password", () => {
     expect(passwordChangeSchema.safeParse({ ...ok, confirmPassword: "other123" }).success).toBe(false);
-    expect(passwordChangeSchema.safeParse({ ...ok, newPassword: ok.currentPassword, confirmPassword: ok.currentPassword }).success).toBe(false);
+    expect(
+      passwordChangeSchema.safeParse({ ...ok, newPassword: ok.currentPassword, confirmPassword: ok.currentPassword })
+        .success,
+    ).toBe(false);
   });
 });

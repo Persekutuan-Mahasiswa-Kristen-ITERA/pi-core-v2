@@ -29,7 +29,13 @@ export const DRAWER_ITEMS: NavItem[] = [
 /** Bottom navigation (Home, Directory, Reports, Profile). */
 export const BOTTOM_ITEMS: (NavItem & { match: string[] })[] = [
   { href: "/", label: "Home", icon: House, match: ["/"] },
-  { href: "/members", label: "Directory", icon: UsersRound, adminOnly: true, match: ["/members", "/roles", "/periods"] },
+  {
+    href: "/members",
+    label: "Directory",
+    icon: UsersRound,
+    adminOnly: true,
+    match: ["/members", "/roles", "/periods"],
+  },
   { href: "/reports", label: "Reports", icon: ChartNoAxesColumnIncreasing, match: ["/reports"] },
   { href: "/profile", label: "Profile", icon: CircleUserRound, match: ["/profile"] },
 ];

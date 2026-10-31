@@ -13,7 +13,15 @@ export function OrgForm({ orgName }: { orgName: string }) {
     <form action={formAction} className="w-full space-y-3" noValidate>
       <FormMessage state={state} />
       <Field name="orgName" label="Organization name" errors={state.ok ? undefined : state.fieldErrors?.orgName}>
-        {(a) => <input {...a} defaultValue={orgName} className={`${fieldClass} bg-white text-center font-bold text-pmk-body`} maxLength={120} required />}
+        {(a) => (
+          <input
+            {...a}
+            defaultValue={orgName}
+            className={`${fieldClass} bg-white text-center font-bold text-pmk-body`}
+            maxLength={120}
+            required
+          />
+        )}
       </Field>
       <div className="flex justify-center">
         <SubmitButton className="h-11">Save name</SubmitButton>

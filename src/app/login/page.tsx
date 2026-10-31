@@ -18,11 +18,11 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
 
   return (
     <div className="flex min-h-dvh flex-col bg-white">
-      <header
-        className="relative flex min-h-[299px] flex-col items-center justify-center gap-5 rounded-bl-[124px] bg-pmk-brown/90 px-8 pb-10 pt-[calc(2.5rem+var(--safe-top))] text-center shadow-[1px_7px_8px_5px_rgba(110,57,16,0.25),inset_29px_7px_20px_-7px_rgba(0,0,0,0.25)]"
-      >
+      <header className="relative flex min-h-[299px] flex-col items-center justify-center gap-5 rounded-bl-[124px] bg-pmk-brown/90 px-8 pb-10 pt-[calc(2.5rem+var(--safe-top))] text-center shadow-[1px_7px_8px_5px_rgba(110,57,16,0.25),inset_29px_7px_20px_-7px_rgba(0,0,0,0.25)]">
         <Image src="/brand/pmk-logo.png" alt="PMK ITERA logo" width={88} height={88} priority unoptimized />
-        <p className="max-w-[18rem] font-display text-xl uppercase leading-snug tracking-[1.4px] text-white">{APP_NAME}</p>
+        <p className="max-w-[18rem] font-display text-xl uppercase leading-snug tracking-[1.4px] text-white">
+          {APP_NAME}
+        </p>
       </header>
 
       <main className="mx-auto flex w-full max-w-sm flex-1 flex-col px-8 pb-[calc(1.5rem+var(--safe-bottom))] pt-12">

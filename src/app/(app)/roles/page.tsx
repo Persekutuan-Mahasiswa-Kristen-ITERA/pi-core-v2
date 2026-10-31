@@ -19,7 +19,8 @@ export default async function RolesPage() {
       <DirectoryTabs current="/roles" />
       <CreateBar href="/roles/new">Create Role</CreateBar>
       <p className="mb-3 text-xs text-pmk-body">
-        Total Members counts active members assigned in the active period{activePeriod ? ` (${activePeriod.label})` : ""}.
+        Total Members counts active members assigned in the active period
+        {activePeriod ? ` (${activePeriod.label})` : ""}.
       </p>
       {roles.length === 0 ? (
         <EmptyState title="No roles yet">Create organizational roles such as BPH, Sekretaris or Panitia.</EmptyState>

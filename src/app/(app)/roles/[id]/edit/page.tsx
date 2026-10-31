@@ -33,7 +33,8 @@ export default async function EditRolePage({ params }: PageProps<"/roles/[id]/ed
       <section className="space-y-3" aria-labelledby="positions-title">
         <SectionTitle id="positions-title">Positions</SectionTitle>
         <p className="text-sm text-pmk-body">
-          Positions are the titles inside this role (e.g. Ketua Umum). Assignments pick one of them. A position in use cannot be deleted.
+          Positions are the titles inside this role (e.g. Ketua Umum). Assignments pick one of them. A position in use
+          cannot be deleted.
         </p>
         <PositionsEditor roleId={role.id!} positions={positions} />
       </section>

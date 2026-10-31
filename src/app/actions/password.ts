@@ -25,8 +25,13 @@ export async function changeOwnPassword(_prev: ActionResult, formData: FormData)
     password: parsed.data.currentPassword,
   });
   if (verifyError) {
-    if (verifyError.status === 429) return { ok: false, message: "Too many attempts. Wait a few minutes and try again." };
-    return { ok: false, message: "Check the highlighted fields.", fieldErrors: { currentPassword: ["Current password is incorrect."] } };
+    if (verifyError.status === 429)
+      return { ok: false, message: "Too many attempts. Wait a few minutes and try again." };
+    return {
+      ok: false,
+      message: "Check the highlighted fields.",
+      fieldErrors: { currentPassword: ["Current password is incorrect."] },
+    };
   }
   await verifier.auth.signOut({ scope: "local" });
 
@@ -37,14 +42,18 @@ export async function changeOwnPassword(_prev: ActionResult, formData: FormData)
   if (updateError) {
     return {
       ok: false,
-      message: updateError.code === "weak_password" ? "That password is too weak. Try a longer one." : "Could not change the password. Try again.",
+      message:
+        updateError.code === "weak_password"
+          ? "That password is too weak. Try a longer one."
+          : "Could not change the password. Try again.",
     };
   }
 
   const wasForced = member.mustChangePassword;
   if (wasForced) {
     const { error } = await admin.from("members").update({ must_change_password: false }).eq("id", member.id);
-    if (error) return { ok: false, message: "Password changed, but the account could not be unlocked. Contact an admin." };
+    if (error)
+      return { ok: false, message: "Password changed, but the account could not be unlocked. Contact an admin." };
     redirect("/");
   }
   return { ok: true, message: "Password changed." };

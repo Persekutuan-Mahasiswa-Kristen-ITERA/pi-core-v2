@@ -7,7 +7,12 @@ import { Label } from "@/components/ui/label";
 import { FieldError } from "@/components/common/states";
 import { cn } from "@/lib/utils";
 
-export function SubmitButton({ children, pendingText, className, ...props }: React.ComponentProps<typeof Button> & { pendingText?: string }) {
+export function SubmitButton({
+  children,
+  pendingText,
+  className,
+  ...props
+}: React.ComponentProps<typeof Button> & { pendingText?: string }) {
   const { pending } = useFormStatus();
   return (
     <Button
@@ -37,7 +42,12 @@ type FieldProps = {
   label: string;
   errors?: string[];
   hint?: string;
-  children: (a11y: { id: string; name: string; "aria-invalid"?: boolean; "aria-describedby"?: string }) => React.ReactNode;
+  children: (a11y: {
+    id: string;
+    name: string;
+    "aria-invalid"?: boolean;
+    "aria-describedby"?: string;
+  }) => React.ReactNode;
 };
 
 /** Label + control + hint + error, with the aria wiring done once. */
@@ -65,7 +75,10 @@ export function Field({ name, label, errors, hint, children }: FieldProps) {
 export function FormMessage({ state }: { state: { ok: boolean; message?: string } }) {
   if (!state.message || state.ok) return null;
   return (
-    <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm font-medium text-destructive">
+    <p
+      role="alert"
+      className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm font-medium text-destructive"
+    >
       {state.message}
     </p>
   );

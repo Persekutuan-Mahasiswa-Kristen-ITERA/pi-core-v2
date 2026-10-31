@@ -9,8 +9,13 @@ export async function updateOrgSettings(_prev: ActionResult, formData: FormData)
   try {
     const { supabase } = await requireAdminAction();
     const parsed = parseForm(orgSettingsSchema, formData, ["orgName"]);
-    if (!parsed.success) return { ok: false, message: "Check the highlighted fields.", fieldErrors: parsed.fieldErrors };
-    const { data, error } = await supabase.from("org_settings").update({ org_name: parsed.data.orgName }).eq("id", true).select("id");
+    if (!parsed.success)
+      return { ok: false, message: "Check the highlighted fields.", fieldErrors: parsed.fieldErrors };
+    const { data, error } = await supabase
+      .from("org_settings")
+      .update({ org_name: parsed.data.orgName })
+      .eq("id", true)
+      .select("id");
     if (error) return { ok: false, message: describeDbError(error) };
     if (!data.length) return { ok: false, message: "Settings row is missing. Run the migrations." };
     return { ok: true, message: "Organization name saved." };
