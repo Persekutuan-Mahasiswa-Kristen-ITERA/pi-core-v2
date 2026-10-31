@@ -37,7 +37,8 @@ describe("unauthenticated (anon key, no session)", () => {
   it.each(["members", "roles", "positions", "periods", "assignments", "org_settings", "audit_log", "role_overview"] as const)(
     "gets nothing from %s",
     async (table) => {
-      const { data, error } = await anonClient().from(table).select("*");
+      // The table name is a runtime parameter here; the typed client cannot narrow a union.
+      const { data, error } = await anonClient().from(table as "members").select("*");
       // Privileges are revoked from anon: PostgREST answers with a permission error and no rows.
       expect(data ?? []).toEqual([]);
       expect(error?.code).toBe("42501");
