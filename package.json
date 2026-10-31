@@ -18,7 +18,7 @@
     "bootstrap:admin": "node --env-file=.env.local scripts/bootstrap-admin.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "dev:hosted": "node --env-file=.env.hosted.local ./node_modules/next/dist/bin/next dev"
+    "dev:hosted": "node scripts/with-env.mjs .env.hosted.local next dev"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",

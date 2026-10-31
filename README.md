@@ -69,7 +69,8 @@ Then in the Supabase dashboard → Authentication:
 `.env.hosted.local` (git-ignored) holds the hosted project's URL, publishable key and secret key. Fetch them with
 `pnpm exec supabase projects api-keys --project-ref <ref> --reveal -o json` — **without `--reveal` the secret key comes
 back masked** and the API answers `401 Invalid API key`. `pnpm dev:hosted` runs the dev server against the hosted
-project instead of local Docker (careful: that is real data).
+project instead of local Docker (careful: that is real data). It prints the Supabase host it uses; Next.js still lists
+`.env.local` under "Environments", but variables loaded from `.env.hosted.local` take precedence.
 
 ## First admin (bootstrap)
 
