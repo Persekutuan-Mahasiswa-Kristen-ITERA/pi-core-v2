@@ -83,14 +83,14 @@ isOneToOne: false
                   ]
                 },"members": {
                   Row: {
-                    "access_level": Database["public"]['Enums']["access_level"],"created_at": string,"created_by": string | null,"deactivated_at": string | null,"email": string,"full_name": string,"id": string,"is_active": boolean,"must_change_password": boolean,"nim": string | null,"phone": string | null,"updated_at": string,"updated_by": string | null,"user_id": string | null
+                    "access_level": Database["public"]['Enums']["access_level"],"created_at": string,"created_by": string | null,"deactivated_at": string | null,"email": string,"full_name": string,"id": string,"is_active": boolean,"member_type": Database["public"]['Enums']["member_type"],"must_change_password": boolean,"nim": string | null,"nip": string | null,"phone": string | null,"updated_at": string,"updated_by": string | null,"user_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "access_level"?: Database["public"]['Enums']["access_level"],"created_at"?: string,"created_by"?: string | null,"deactivated_at"?: string | null,"email": string,"full_name": string,"id"?: string,"is_active"?: boolean,"must_change_password"?: boolean,"nim"?: string | null,"phone"?: string | null,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string | null
+                    "access_level"?: Database["public"]['Enums']["access_level"],"created_at"?: string,"created_by"?: string | null,"deactivated_at"?: string | null,"email": string,"full_name": string,"id"?: string,"is_active"?: boolean,"member_type"?: Database["public"]['Enums']["member_type"],"must_change_password"?: boolean,"nim"?: string | null,"nip"?: string | null,"phone"?: string | null,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string | null
                   }
                   Update: {
-                    "access_level"?: Database["public"]['Enums']["access_level"],"created_at"?: string,"created_by"?: string | null,"deactivated_at"?: string | null,"email"?: string,"full_name"?: string,"id"?: string,"is_active"?: boolean,"must_change_password"?: boolean,"nim"?: string | null,"phone"?: string | null,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string | null
+                    "access_level"?: Database["public"]['Enums']["access_level"],"created_at"?: string,"created_by"?: string | null,"deactivated_at"?: string | null,"email"?: string,"full_name"?: string,"id"?: string,"is_active"?: boolean,"member_type"?: Database["public"]['Enums']["member_type"],"must_change_password"?: boolean,"nim"?: string | null,"nip"?: string | null,"phone"?: string | null,"updated_at"?: string,"updated_by"?: string | null,"user_id"?: string | null
                   }
                   Relationships: [
                     
@@ -231,7 +231,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "access_level": "super_admin"|"admin"|"member","org_unit_type": "organization"|"bph"|"department"|"bureau"|"division"
+            "access_level": "super_admin"|"admin"|"member","member_type": "student"|"lecturer","org_unit_type": "organization"|"bph"|"department"|"bureau"|"division"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -351,7 +351,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "access_level": ["super_admin", "admin", "member"],"org_unit_type": ["organization", "bph", "department", "bureau", "division"]
+            "access_level": ["super_admin", "admin", "member"],"member_type": ["student", "lecturer"],"org_unit_type": ["organization", "bph", "department", "bureau", "division"]
           }
         }
 } as const

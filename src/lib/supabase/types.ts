@@ -5,6 +5,8 @@ export type Tables<T extends keyof Database["public"]["Tables"]> = Database["pub
 /** Stored on the member row and set by a super admin. */
 export type AccessLevel = Database["public"]["Enums"]["access_level"];
 export type OrgUnitType = Database["public"]["Enums"]["org_unit_type"];
+/** student = mahasiswa (NIM, can hold positions); lecturer = dosen (NIP/NIDN, e.g. the pembina; no positions). */
+export type MemberType = Database["public"]["Enums"]["member_type"];
 /**
  * What the caller may actually do: the stored level, raised to "admin" while the member holds a
  * position that carries an admin-granting role in the active period. Computed by the database

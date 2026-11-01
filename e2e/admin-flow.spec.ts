@@ -113,6 +113,29 @@ test("super admin: role → position → member → assignment, reflected on das
   await logout(page);
 });
 
+test("super admin creates a dosen (pembina) with NIP; dosen are not offered for positions", async ({ page }) => {
+  const name = `E2E Dosen ${RUN}`;
+  await login(page, ADMIN_EMAIL, PASSWORD);
+  await expect(page.getByText("Shalom Admin!")).toBeVisible();
+  await page.goto("/members/new");
+  await page.getByRole("radio", { name: /Dosen/ }).check();
+  await expect(page.getByLabel("NIM (optional)")).toHaveCount(0);
+  await page.getByLabel("NIP / NIDN (optional)").fill("198001012010011999");
+  await page.getByLabel("Full name").fill(name);
+  await page.getByLabel("Email").fill(`e2e-dosen-${RUN}@example.com`);
+  await page.getByLabel("PI-CORE access").selectOption("super_admin");
+  await page.getByRole("button", { name: "Create member" }).click();
+  await expect(page.getByText(`Temporary password for e2e-dosen-${RUN}@example.com`)).toBeVisible();
+  await expect(page.getByRole("link", { name: "Assign a position" })).toHaveCount(0);
+
+  await page.goto(`/members?q=${encodeURIComponent(name)}`);
+  await expect(page.getByRole("main").getByRole("listitem").filter({ hasText: name })).toContainText("SUPER ADMIN");
+  await expect(page.getByRole("main").getByRole("listitem").filter({ hasText: name })).toContainText("Dosen");
+  await page.goto("/assignments");
+  await expect(page.getByLabel("Member", { exact: true }).locator("option", { hasText: name })).toHaveCount(0);
+  await logout(page);
+});
+
 test("a Kepala Departemen is an admin through their position, but not a super admin", async ({ page }) => {
   await login(page, POSITION_ADMIN_EMAIL, PASSWORD);
   await expect(page.getByText("Shalom Yohanes!")).toBeVisible();

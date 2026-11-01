@@ -11,7 +11,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AccessLevel, Database, EffectiveAccess } from "@/lib/supabase/types";
 import { idSchema, memberSchema, parseForm } from "@/lib/validation";
 
-const FIELDS = ["fullName", "email", "nim", "phone", "accessLevel"] as const;
+const FIELDS = ["memberType", "fullName", "email", "nim", "nip", "phone", "accessLevel"] as const;
 
 export type IssuedPassword = { memberId: string; email: string; temporaryPassword: string };
 
@@ -104,7 +104,9 @@ export async function updateMember(id: string, _prev: ActionResult, formData: Fo
       .update({
         full_name: input.fullName,
         email: input.email,
+        member_type: input.memberType,
         nim: input.nim,
+        nip: input.nip,
         phone: input.phone,
         access_level: accessLevel,
       })
@@ -116,7 +118,9 @@ export async function updateMember(id: string, _prev: ActionResult, formData: Fo
           ? "email"
           : message === MEMBER_UNIQUE.members_nim_key
             ? "nim"
-            : null;
+            : message === MEMBER_UNIQUE.members_nip_key
+              ? "nip"
+              : null;
       return { ok: false, message, fieldErrors: field ? { [field]: [message] } : undefined };
     }
 

@@ -40,7 +40,7 @@ const createdUserIds: string[] = [];
 export async function createUser(
   label: string,
   accessLevel: AccessLevel,
-  opts: { mustChangePassword?: boolean } = {},
+  opts: { mustChangePassword?: boolean; memberType?: "student" | "lecturer" } = {},
 ): Promise<TestUser> {
   const admin = serviceClient();
   const email = `itest-${label}-${RUN}@example.com`;
@@ -54,6 +54,7 @@ export async function createUser(
       full_name: `Itest ${label}`,
       email,
       access_level: accessLevel,
+      member_type: opts.memberType ?? "student",
       must_change_password: opts.mustChangePassword ?? false,
     })
     .select("id")

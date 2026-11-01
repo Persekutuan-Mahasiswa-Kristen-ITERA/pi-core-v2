@@ -31,7 +31,11 @@ export default async function DashboardPage() {
       >
         <p className="text-2xl font-bold">Shalom {firstName}!</p>
       </section>
-      {isAdmin ? <AdminDashboard /> : <MemberDashboard memberId={member.id} />}
+      {isAdmin ? (
+        <AdminDashboard />
+      ) : (
+        <MemberDashboard memberId={member.id} isLecturer={member.memberType === "lecturer"} />
+      )}
     </div>
   );
 }
@@ -63,7 +67,7 @@ async function AdminDashboard() {
   );
 }
 
-async function MemberDashboard({ memberId }: { memberId: string }) {
+async function MemberDashboard({ memberId, isLecturer }: { memberId: string; isLecturer: boolean }) {
   const assignments = await listAssignmentsForMember(memberId);
   const current = assignments.filter((a) => a.activePeriod);
   const activeLabel = current[0]?.period;
@@ -72,7 +76,9 @@ async function MemberDashboard({ memberId }: { memberId: string }) {
       <SectionTitle id="my-assignments">Your assignments{activeLabel ? ` · ${activeLabel}` : ""}</SectionTitle>
       {current.length === 0 ? (
         <EmptyState title="No assignment in the active period">
-          When an admin assigns you a position, it will appear here. Past assignments are under Profile.
+          {isLecturer
+            ? "Dosen do not hold organizational positions in PI-CORE."
+            : "When an admin assigns you a position, it will appear here. Past assignments are under Profile."}
         </EmptyState>
       ) : (
         <ul className="space-y-2">

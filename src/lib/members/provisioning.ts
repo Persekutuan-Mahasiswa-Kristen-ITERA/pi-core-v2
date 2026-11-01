@@ -9,6 +9,7 @@ type Client = SupabaseClient<Database>;
 const MEMBER_UNIQUE = {
   members_email_key: "A member with this email already exists.",
   members_nim_key: "A member with this NIM already exists.",
+  members_nip_key: "A member with this NIP/NIDN already exists.",
 };
 
 /** Ban length used for deactivated accounts (~100 years). Lifted again on reactivation. */
@@ -16,7 +17,7 @@ export const DEACTIVATED_BAN = "876000h";
 
 export type ProvisionResult =
   | { ok: true; memberId: string; email: string; temporaryPassword: string }
-  | { ok: false; message: string; field?: "email" | "nim" };
+  | { ok: false; message: string; field?: "email" | "nim" | "nip" };
 
 /**
  * Admin-only account provisioning. The caller has already been verified as an admin; the member
@@ -61,7 +62,9 @@ export async function provisionMember(actor: Client, admin: Client, input: Membe
       user_id: created.user.id,
       full_name: input.fullName,
       email: input.email,
+      member_type: input.memberType,
       nim: input.nim,
+      nip: input.nip,
       phone: input.phone,
       access_level: input.accessLevel ?? "member",
       must_change_password: true,
@@ -72,7 +75,9 @@ export async function provisionMember(actor: Client, admin: Client, input: Membe
   if (insertError || !member) {
     await admin.auth.admin.deleteUser(created.user.id);
     const message = insertError ? describeDbError(insertError, MEMBER_UNIQUE) : "Could not save the member.";
-    return { ok: false, message, field: message === MEMBER_UNIQUE.members_nim_key ? "nim" : undefined };
+    const field =
+      message === MEMBER_UNIQUE.members_nim_key ? "nim" : message === MEMBER_UNIQUE.members_nip_key ? "nip" : undefined;
+    return { ok: false, message, field };
   }
 
   return { ok: true, memberId: member.id, email: input.email, temporaryPassword };

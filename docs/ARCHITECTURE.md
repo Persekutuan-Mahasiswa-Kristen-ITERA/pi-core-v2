@@ -140,6 +140,14 @@ read-only directory — that is a deliberate privacy decision for the owner.
 - Re-issuing the cookies server-side avoids Safari ITP's 7-day cap on `document.cookie` cookies, which would
   otherwise log out installed iOS apps after a week of not opening them (see `docs/PWA.md`).
 
+### D-11 Mahasiswa and dosen (2026-11-02, owner)
+
+`members.member_type` is `student` (mahasiswa, identified by NIM) or `lecturer` (dosen, identified by NIP/NIDN,
+8–20 digits). The pembina is a dosen. A check constraint ties the number to the type (no NIM for dosen, no NIP for
+mahasiswa). Dosen can hold any access level, typically super admin, but **no positions**: the assignment trigger
+rejects them (`member_lecturer`) and the assignment form does not list them. Super admin access never depends on a
+position, so this costs the pembina nothing.
+
 ## Audit log
 
 `audit_log` gets one row per INSERT/UPDATE/DELETE on members, org_units, roles, positions, position_roles, periods,

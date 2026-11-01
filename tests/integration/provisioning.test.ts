@@ -16,7 +16,9 @@ afterAll(cleanup);
 const input = (label: string) => ({
   fullName: `Provisioned ${label}`,
   email: `itest-prov-${label}-${RUN}@example.com`,
+  memberType: "student" as const,
   nim: null,
+  nip: null,
   phone: null,
   accessLevel: "member" as const,
 });
@@ -63,5 +65,22 @@ describe("admin-only member provisioning", () => {
     const allowed = input("bysuper");
     const ok = await provisionMember(superAdmin.client, serviceClient(), { ...allowed, accessLevel: "admin" });
     expect(ok.ok).toBe(true);
+  });
+
+  it("creates a dosen (lecturer) super admin identified by NIP, with no NIM", async () => {
+    const data = {
+      ...input("dosen"),
+      memberType: "lecturer" as const,
+      nip: `19${RUN.replace(/\D/g, "").padEnd(16, "7")}`.slice(0, 18),
+    };
+    const result = await provisionMember(superAdmin.client, serviceClient(), { ...data, accessLevel: "super_admin" });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const { data: row } = await serviceClient()
+      .from("members")
+      .select("member_type, nim, nip, access_level")
+      .eq("id", result.memberId)
+      .single();
+    expect(row).toEqual({ member_type: "lecturer", nim: null, nip: data.nip, access_level: "super_admin" });
   });
 });

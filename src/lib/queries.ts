@@ -231,13 +231,13 @@ export async function listMembers(filters: MemberListFilters) {
     ? supabase
         .from("members")
         .select(
-          "id, full_name, email, access_level, is_active, assignments!inner(id, org_unit_id, position_id, period_id, positions!assignments_position_type_fk(name, position_roles(roles(grants_admin))), org_units(name), periods(label, is_active))",
+          "id, full_name, email, member_type, access_level, is_active, assignments!inner(id, org_unit_id, position_id, period_id, positions!assignments_position_type_fk(name, position_roles(roles(grants_admin))), org_units(name), periods(label, is_active))",
           { count: "exact" },
         )
     : supabase
         .from("members")
         .select(
-          "id, full_name, email, access_level, is_active, assignments(id, org_unit_id, position_id, period_id, positions!assignments_position_type_fk(name, position_roles(roles(grants_admin))), org_units(name), periods(label, is_active))",
+          "id, full_name, email, member_type, access_level, is_active, assignments(id, org_unit_id, position_id, period_id, positions!assignments_position_type_fk(name, position_roles(roles(grants_admin))), org_units(name), periods(label, is_active))",
           { count: "exact" },
         );
 
@@ -271,6 +271,7 @@ export async function listMembers(filters: MemberListFilters) {
         // filter narrows the embedded assignments; the badge is informational, RLS decides.
         isAdmin: m.access_level !== "member" || positionAdmin,
         isActive: m.is_active,
+        isLecturer: m.member_type === "lecturer",
         assignment: primary ? `${primary.positions?.name ?? "—"} · ${primary.org_units?.name ?? "—"}` : null,
         period: primary?.periods?.label ?? null,
         extraAssignments: Math.max(0, sorted.length - 1),
@@ -283,7 +284,9 @@ export async function getMember(id: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("members")
-    .select("id, user_id, full_name, email, nim, phone, access_level, is_active, must_change_password, created_at")
+    .select(
+      "id, user_id, member_type, full_name, email, nim, nip, phone, access_level, is_active, must_change_password, created_at",
+    )
     .eq("id", id)
     .maybeSingle();
   if (error) fail("member", error);
@@ -367,6 +370,7 @@ export async function listActiveMembersForPicker() {
     .from("members")
     .select("id, full_name, email")
     .eq("is_active", true)
+    .eq("member_type", "student") // dosen hold no positions
     .order("full_name");
   if (error) fail("member picker", error);
   return data;

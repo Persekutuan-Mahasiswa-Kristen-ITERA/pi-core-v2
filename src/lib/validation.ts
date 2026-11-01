@@ -19,25 +19,37 @@ export const accessLevelSchema = z.enum(["super_admin", "admin", "member"]);
 /** Checkbox: present ("on") = true, missing = false. */
 const checkbox = z.string().transform((v) => v === "on" || v === "true");
 
-export const memberSchema = z.object({
-  fullName: z.string().trim().min(2, "Enter the full name.").max(120, "Use at most 120 characters."),
-  email: z.string().trim().toLowerCase().pipe(z.email("Enter a valid email address.").max(254)),
-  nim: optionalText(z.string().regex(/^[0-9]{6,12}$/, "NIM must be 6–12 digits.")),
-  phone: z
-    .string()
-    .trim()
-    .transform((v) => v.replace(/[\s-]/g, ""))
-    .transform((v) => (v === "" ? null : v))
-    .pipe(
-      z
-        .string()
-        .regex(/^\+?[0-9]{8,15}$/, "Enter 8–15 digits, optionally starting with +.")
-        .nullable(),
-    ),
-  // Only super admins see this field; for everyone else it is absent and the action keeps the
-  // current level (or "member" on create). The database enforces the same rule.
-  accessLevel: z.union([z.literal(""), accessLevelSchema]).transform((v) => (v === "" ? null : v)),
-});
+export const memberTypeSchema = z.enum(["student", "lecturer"], "Choose Mahasiswa or Dosen.");
+
+export const memberSchema = z
+  .object({
+    memberType: memberTypeSchema,
+    fullName: z.string().trim().min(2, "Enter the full name.").max(120, "Use at most 120 characters."),
+    email: z.string().trim().toLowerCase().pipe(z.email("Enter a valid email address.").max(254)),
+    nim: optionalText(z.string().regex(/^[0-9]{6,12}$/, "NIM must be 6–12 digits.")),
+    nip: optionalText(z.string().regex(/^[0-9]{8,20}$/, "NIP/NIDN must be 8–20 digits.")),
+    phone: z
+      .string()
+      .trim()
+      .transform((v) => v.replace(/[\s-]/g, ""))
+      .transform((v) => (v === "" ? null : v))
+      .pipe(
+        z
+          .string()
+          .regex(/^\+?[0-9]{8,15}$/, "Enter 8–15 digits, optionally starting with +.")
+          .nullable(),
+      ),
+    // Only super admins see this field; for everyone else it is absent and the action keeps the
+    // current level (or "member" on create). The database enforces the same rule.
+    accessLevel: z.union([z.literal(""), accessLevelSchema]).transform((v) => (v === "" ? null : v)),
+  })
+  // Students are identified by NIM, lecturers (dosen) by NIP/NIDN; the other number is dropped, as the
+  // database requires (members_identifier_matches_type).
+  .transform((v) => ({
+    ...v,
+    nim: v.memberType === "student" ? v.nim : null,
+    nip: v.memberType === "lecturer" ? v.nip : null,
+  }));
 export type MemberInput = z.infer<typeof memberSchema>;
 
 export const idSchema = z.uuid("Invalid id.");

@@ -93,7 +93,7 @@ export default async function MembersPage({ searchParams }: PageProps<"/members"
                       ) : null}
                     </Link>
                     <span className="block truncate text-xs sm:text-[inherit]" title={m.assignment ?? undefined}>
-                      {m.assignment ?? "No assignment"}
+                      {m.assignment ?? (m.isLecturer ? "Dosen" : "No assignment")}
                       {m.extraAssignments ? <span className="text-pmk-muted"> +{m.extraAssignments}</span> : null}
                       <span className="sm:hidden"> · {m.period ?? "—"}</span>
                     </span>

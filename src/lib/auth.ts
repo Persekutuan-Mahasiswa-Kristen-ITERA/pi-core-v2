@@ -2,14 +2,16 @@ import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { AccessLevel, EffectiveAccess } from "@/lib/supabase/types";
+import type { AccessLevel, EffectiveAccess, MemberType } from "@/lib/supabase/types";
 
 export type CurrentMember = {
   id: string;
   userId: string;
   fullName: string;
   email: string;
+  memberType: MemberType;
   nim: string | null;
+  nip: string | null;
   phone: string | null;
   /** Stored level (set by a super admin). */
   accessLevel: AccessLevel;
@@ -35,7 +37,9 @@ export const getSessionState = cache(async (): Promise<SessionState> => {
 
   const { data: row } = await supabase
     .from("members")
-    .select("id, user_id, full_name, email, nim, phone, access_level, is_active, must_change_password")
+    .select(
+      "id, user_id, member_type, full_name, email, nim, nip, phone, access_level, is_active, must_change_password",
+    )
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -51,7 +55,9 @@ export const getSessionState = cache(async (): Promise<SessionState> => {
       userId,
       fullName: row.full_name,
       email: row.email,
+      memberType: row.member_type,
       nim: row.nim,
+      nip: row.nip,
       phone: row.phone,
       accessLevel: row.access_level,
       access: access === "super_admin" || access === "admin" ? access : "member",

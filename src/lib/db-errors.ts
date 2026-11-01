@@ -19,6 +19,7 @@ export function describeDbError(error: PgLikeError, context: Record<string, stri
     case "P0001":
       if (error.hint === "last_super_admin") return "PI-CORE needs at least one active super admin.";
       if (error.hint === "member_inactive") return "Deactivated members cannot receive assignments.";
+      if (error.hint === "member_lecturer") return "Dosen do not hold organizational positions.";
       if (error.hint === "unit_type_mismatch") return "That position does not exist in this kind of unit.";
       if (error.hint === "unit_inactive") return "That unit is inactive. Reactivate it under Structure first.";
       if (error.hint === "org_unit_parent") return "That kind of unit cannot be placed there.";

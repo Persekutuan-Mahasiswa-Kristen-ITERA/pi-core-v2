@@ -21,7 +21,7 @@ pnpm install
 pnpm db:start                 # local Supabase in Docker; applies migrations + supabase/seed.sql
 pnpm exec supabase status -o env   # copy API_URL, PUBLISHABLE_KEY, SECRET_KEY, DB_URL into .env.local
 cp .env.example .env.local    # then fill it in (see below)
-SEED_PASSWORD='choose-one-123' pnpm seed:dev-users   # fake local accounts: admin@ (super admin), yohanes@ (admin via Kepala Departemen), maria@, ruth@
+SEED_PASSWORD='choose-one-123' pnpm seed:dev-users   # fake local accounts: admin@ (super admin), pembina@ (dosen, super admin), yohanes@ (admin via Kepala Departemen), maria@, ruth@
 pnpm dev                      # http://localhost:3000
 ```
 

@@ -30,7 +30,7 @@ if (!secret || !password || password.length < 8 || !/[A-Za-z]/.test(password) ||
 
 const admin = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
 
-// One account per access path: super admin, admin through a position (Kepala Departemen carries
+// One account per access path: super admin, dosen super admin (pembina), admin through a position (Kepala Departemen carries
 // Organization Admin), member with a non-admin position, member without assignments.
 // `assign` = [unit name, position name] in the active period.
 export const DEV_USERS = [
@@ -48,6 +48,15 @@ export const DEV_USERS = [
     assign: [["Departemen Pelayanan Khusus", "Kepala Departemen"]],
   },
   { email: "ruth@example.com", fullName: "Ruth Contoh", accessLevel: "member", assign: [] },
+  // The pembina is a dosen: identified by NIP, super admin, no position.
+  {
+    email: "pembina@example.com",
+    fullName: "Pembina Contoh",
+    accessLevel: "super_admin",
+    memberType: "lecturer",
+    nip: "198001012010011001",
+    assign: [],
+  },
 ];
 
 const { data: period } = await admin.from("periods").select("id").eq("is_active", true).single();
@@ -73,6 +82,8 @@ for (const user of DEV_USERS) {
       full_name: user.fullName,
       email: user.email,
       access_level: user.accessLevel,
+      member_type: user.memberType ?? "student",
+      nip: user.nip ?? null,
       must_change_password: false,
     })
     .select("id")

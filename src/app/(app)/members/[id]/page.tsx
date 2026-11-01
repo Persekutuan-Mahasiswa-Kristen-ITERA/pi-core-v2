@@ -54,9 +54,11 @@ export default async function EditMemberPage({ params }: PageProps<"/members/[id
             action={updateMember.bind(null, member.id)}
             canSetAccess={isSuperAdmin && !isSelf}
             defaults={{
+              memberType: member.member_type,
               fullName: member.full_name,
               email: member.email,
               nim: member.nim,
+              nip: member.nip,
               phone: member.phone,
               accessLevel: member.access_level,
             }}
@@ -67,7 +69,7 @@ export default async function EditMemberPage({ params }: PageProps<"/members/[id
       <section className="space-y-3" aria-labelledby="assignments-title">
         <div className="flex items-center justify-between gap-3">
           <SectionTitle id="assignments-title">Assignments</SectionTitle>
-          {member.is_active ? (
+          {member.is_active && member.member_type === "student" ? (
             <Link
               href={`/assignments?member=${member.id}`}
               className="inline-flex min-h-11 items-center text-sm font-semibold text-pmk-accent hover:underline"
@@ -77,7 +79,9 @@ export default async function EditMemberPage({ params }: PageProps<"/members/[id
           ) : null}
         </div>
         {assignments.length === 0 ? (
-          <EmptyState title="No assignments" />
+          <EmptyState title="No assignments">
+            {member.member_type === "lecturer" ? "Dosen do not hold organizational positions." : null}
+          </EmptyState>
         ) : (
           <ul className="space-y-2">
             {assignments.map((a) => (

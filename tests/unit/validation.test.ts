@@ -14,17 +14,36 @@ import {
 const uuid = "4f1c2a3b-5d6e-4f70-8a9b-0c1d2e3f4a5b";
 
 describe("memberSchema", () => {
-  const base = { fullName: "  Maria Contoh ", email: " Maria@Example.COM ", nim: "", phone: "", accessLevel: "member" };
+  const base = {
+    memberType: "student",
+    fullName: "  Maria Contoh ",
+    email: " Maria@Example.COM ",
+    nim: "",
+    nip: "",
+    phone: "",
+    accessLevel: "member",
+  };
 
   it("normalizes email and trims names; empty optionals become null", () => {
     const r = memberSchema.parse(base);
     expect(r).toEqual({
+      memberType: "student",
       fullName: "Maria Contoh",
       email: "maria@example.com",
       nim: null,
+      nip: null,
       phone: null,
       accessLevel: "member",
     });
+  });
+
+  it("keeps NIM for students and NIP/NIDN for dosen, dropping the other number", () => {
+    const student = memberSchema.parse({ ...base, nim: "124140031", nip: "198001012010011001" });
+    expect([student.nim, student.nip]).toEqual(["124140031", null]);
+    const dosen = memberSchema.parse({ ...base, memberType: "lecturer", nim: "124140031", nip: "198001012010011001" });
+    expect([dosen.nim, dosen.nip]).toEqual([null, "198001012010011001"]);
+    expect(memberSchema.safeParse({ ...base, memberType: "lecturer", nip: "12AB" }).success).toBe(false);
+    expect(memberSchema.safeParse({ ...base, memberType: "staff" }).success).toBe(false);
   });
 
   it("rejects bad email, NIM and phone", () => {

@@ -24,8 +24,10 @@ export default async function ProfilePage() {
         </div>
         <dl className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <dt className="text-xs text-pmk-body">NIM</dt>
-            <dd className="font-medium text-pmk-ink">{member.nim ?? "—"}</dd>
+            <dt className="text-xs text-pmk-body">{member.memberType === "lecturer" ? "NIP / NIDN" : "NIM"}</dt>
+            <dd className="font-medium text-pmk-ink">
+              {(member.memberType === "lecturer" ? member.nip : member.nim) ?? "—"}
+            </dd>
           </div>
           <div>
             <dt className="text-xs text-pmk-body">Phone</dt>

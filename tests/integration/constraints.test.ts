@@ -210,6 +210,31 @@ describe("assignments", () => {
     expect(error?.hint).toBe("member_inactive");
   });
 
+  it("refuses to give a dosen (lecturer) a position, whatever their access level", async () => {
+    const pembina = await createUser("pembina", "super_admin", { memberType: "lecturer" });
+    const { error } = await insertAssignment(
+      pembina.memberId,
+      s.unit("Doa"),
+      s.position("division", "Staff"),
+      periodId,
+    );
+    expect(error?.hint).toBe("member_lecturer");
+    // ...while their super admin access does not depend on a position
+    expect((await pembina.client.rpc("current_access")).data).toBe("super_admin");
+  });
+
+  it("ties the identifier to the member type: no NIM for dosen, no NIP for mahasiswa", async () => {
+    const svc = serviceClient();
+    const dosenWithNim = await svc
+      .from("members")
+      .insert({ full_name: "Dosen Nim", email: `itest-dn-${RUN}@example.com`, member_type: "lecturer", nim: "123456" });
+    expect(dosenWithNim.error?.code).toBe("23514");
+    const studentWithNip = await svc
+      .from("members")
+      .insert({ full_name: "Mhs Nip", email: `itest-mn-${RUN}@example.com`, nip: "198001012010011001" });
+    expect(studentWithNip.error?.code).toBe("23514");
+  });
+
   it("blocks deleting a position or unit that has assignments", async () => {
     const pos = await serviceClient().from("positions").delete().eq("id", s.position("division", "Staff"));
     expect(pos.error?.code).toBe("23503");
