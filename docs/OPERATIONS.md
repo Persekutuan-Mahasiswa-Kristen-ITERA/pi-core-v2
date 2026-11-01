@@ -59,11 +59,12 @@ owner's machine (`~/.config/vercel-pmk-token/token.txt`, mode 600). Env vars (Pr
 Still to do: real-device checks (docs/PWA.md), owner-approved production deploy, then set Supabase Auth Site URL to the
 production URL.
 
-## Pending: organization structure migration (branch `feat/org-structure-v1`)
+### 2026-11-01 — organization structure, super admins (branch `feat/org-structure-v1`)
 
-Not yet applied to the hosted project. `20261101100000_access_level_super_admin.sql` and
-`20261101100100_org_structure.sql` replace roles/positions/assignments with the v1 structure, add super admins and
-position-derived admin access, and turn every existing `admin` into `super_admin` (on hosted: the bootstrapped first
-admin). The second migration **refuses to run** if roles, positions or assignments contain rows, so it cannot drop
-data silently. Before `supabase db push`: check those three tables are empty on hosted, then push, then deploy a
-preview built from the same commit (the old app code does not work against the new schema).
+- `supabase db push` (run by the owner) applied `20261101100000_access_level_super_admin` and
+  `20261101100100_org_structure`: v1 structure (26 units, 13 positions, 7 roles, 21 mappings), super admin level,
+  admin access through active-period positions. The existing first admin became `super_admin`. The migration's
+  empty-table guard passed (roles/positions/assignments had no rows). `migration list` shows local = remote.
+- Preview deployed from commit `4d4d979`: `https://pi-core-v2-21wkvc6ak-pmk-iteras-projects.vercel.app`
+  (`/login` 200, protected routes redirect to `/login`, manifest 200).
+- Note: `supabase/.temp/project-ref` had disappeared; `supabase link --project-ref jegddvztnjfvtbbyyutb` restored it.
