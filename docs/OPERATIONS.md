@@ -69,8 +69,9 @@ production URL.
   (`/login` 200, protected routes redirect to `/login`, manifest 200).
 - Note: `supabase/.temp/project-ref` had disappeared; `supabase link --project-ref jegddvztnjfvtbbyyutb` restored it.
 
-### Pending — `20261102090000_member_type` (dosen / NIP)
+### 2026-11-02 — `20261102090000_member_type` (dosen / NIP)
 
-Adds `members.member_type` (mahasiswa / dosen) and `nip`; dosen cannot receive assignments. Additive: existing
-members become `student`. Apply with `pnpm exec supabase db push --linked --yes` **before** deploying app code from
-this commit or later (the app reads the new columns).
+Applied by the owner with `supabase db push --linked`. Adds `members.member_type` (mahasiswa / dosen) and `nip`;
+dosen cannot receive assignments. Additive: existing members became `student`. `migration list`: all five
+migrations local = remote. The preview from `4d4d979` keeps working (it does not read the new columns; inserts get
+the `student` default). The repo is pushed to GitHub (`feat/org-structure-v1`); the owner connects Vercel to it.
