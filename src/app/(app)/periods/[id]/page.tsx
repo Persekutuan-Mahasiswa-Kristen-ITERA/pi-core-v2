@@ -4,7 +4,8 @@ import { requireAdminPage } from "@/lib/auth";
 import { getPeriod } from "@/lib/queries";
 import { idSchema } from "@/lib/validation";
 import { ForbiddenState } from "@/components/common/states";
-import { SectionTitle } from "@/components/common/surfaces";
+import { PageHeader } from "@/components/common/surfaces";
+import { FormCard } from "@/components/common/form-controls";
 import { updatePeriod } from "../actions";
 import { PeriodForm } from "../period-form";
 
@@ -18,14 +19,19 @@ export default async function EditPeriodPage({ params }: PageProps<"/periods/[id
   const period = await getPeriod(id.data);
   if (!period) notFound();
   return (
-    <div className="mx-auto max-w-xl space-y-4">
-      <SectionTitle>Edit {period.label}</SectionTitle>
-      {period.is_active ? <p className="text-sm text-pmk-body">This is the active period.</p> : null}
-      <PeriodForm
-        action={updatePeriod.bind(null, period.id)}
-        defaults={{ label: period.label, startsOn: period.starts_on, endsOn: period.ends_on }}
-        submitLabel="Save changes"
+    <div className="max-w-2xl">
+      <PageHeader
+        title={`Edit ${period.label}`}
+        description={period.is_active ? "This is the active period." : undefined}
+        back={{ href: "/periods", label: "Periods" }}
       />
+      <FormCard>
+        <PeriodForm
+          action={updatePeriod.bind(null, period.id)}
+          defaults={{ label: period.label, startsOn: period.starts_on, endsOn: period.ends_on }}
+          submitLabel="Save changes"
+        />
+      </FormCard>
     </div>
   );
 }

@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 export function PeriodFilter({ value, periods }: { value: string; periods: { id: string; label: string }[] }) {
   const router = useRouter();
   return (
-    <label className="flex items-center gap-2 text-sm text-pmk-body">
-      Period
+    <label className="flex items-center gap-2 text-sm text-pmk-muted">
+      <span className="sr-only sm:not-sr-only">Period</span>
       <select
         value={value}
         onChange={(e) => router.replace(`/assignments?period=${encodeURIComponent(e.target.value)}`)}
-        className="h-11 rounded-lg border border-pmk-tint-border bg-pmk-tint px-3 text-sm font-medium text-pmk-ink focus-visible:outline-2 focus-visible:outline-pmk-accent"
+        className="h-9 rounded-[10px] border border-pmk-control bg-white pl-3 pr-8 text-sm text-pmk-ink focus-visible:border-pmk-accent focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-pmk-accent/15"
       >
         <option value="all">All periods</option>
         {periods.map((p) => (

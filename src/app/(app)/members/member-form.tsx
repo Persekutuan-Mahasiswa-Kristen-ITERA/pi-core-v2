@@ -62,14 +62,14 @@ export function MemberForm(props: Props) {
           {memberType === "student" ? (
             <Link
               href={`/assignments?member=${state.data.memberId}`}
-              className="inline-flex min-h-11 items-center rounded-full bg-pmk-brown px-6 text-sm font-semibold text-white"
+              className="inline-flex h-11 items-center rounded-full bg-pmk-brown px-6 text-sm font-semibold text-white hover:bg-pmk-brown-hover"
             >
               Assign a position
             </Link>
           ) : null}
           <Link
             href="/members"
-            className="inline-flex min-h-11 items-center px-4 text-sm font-medium text-pmk-body hover:text-pmk-ink"
+            className="inline-flex h-11 items-center rounded-full px-4 text-sm font-medium text-pmk-muted hover:bg-pmk-tint hover:text-pmk-ink"
           >
             Back to members
           </Link>
@@ -108,7 +108,7 @@ export function MemberForm(props: Props) {
         )}
       </Field>
       <fieldset className="space-y-2">
-        <legend className="text-sm font-semibold text-pmk-ink">Member type</legend>
+        <legend className="mb-2 text-sm font-medium text-pmk-ink">Member type</legend>
         <div className="grid grid-cols-2 gap-2">
           {(
             [
@@ -118,7 +118,7 @@ export function MemberForm(props: Props) {
           ).map(([value, label, note]) => (
             <label
               key={value}
-              className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl bg-pmk-tint px-4 py-3 has-checked:ring-2 has-checked:ring-pmk-accent"
+              className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border border-pmk-control bg-white px-4 py-3 transition-colors hover:bg-pmk-tint has-checked:border-pmk-accent has-checked:bg-pmk-tint has-checked:ring-1 has-checked:ring-pmk-accent"
             >
               <input
                 type="radio"
@@ -130,7 +130,7 @@ export function MemberForm(props: Props) {
               />
               <span className="text-sm">
                 <span className="block font-semibold text-pmk-ink">{label}</span>
-                <span className="text-xs text-pmk-body">{note}</span>
+                <span className="text-xs text-pmk-muted">{note}</span>
               </span>
             </label>
           ))}
@@ -181,7 +181,7 @@ export function MemberForm(props: Props) {
         </Field>
       ) : (
         <div className="space-y-1">
-          <p className="text-sm font-semibold text-pmk-ink">PI-CORE access</p>
+          <p className="text-sm font-medium text-pmk-ink">PI-CORE access</p>
           <p className="text-sm text-pmk-body">
             {d ? ACCESS_LABEL[d.accessLevel] : "Member"}. {ACCESS_NOTE}
           </p>
@@ -194,7 +194,7 @@ export function MemberForm(props: Props) {
         </SubmitButton>
         <Link
           href="/members"
-          className="inline-flex min-h-11 items-center px-4 text-sm font-medium text-pmk-body hover:text-pmk-ink"
+          className="inline-flex h-11 items-center rounded-full px-4 text-sm font-medium text-pmk-muted hover:bg-pmk-tint hover:text-pmk-ink"
         >
           Cancel
         </Link>

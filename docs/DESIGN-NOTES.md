@@ -55,7 +55,7 @@ body color `#475569` (6.2:1) instead.
 | Settings           | Each auth method has a one-line note                                                   | Makes "not enabled" explicit for Google                               |
 | Drawer             | Integrations shown disabled with a "Soon" badge; Profile added                         | Integrations out of scope; Profile has no other entry from the drawer |
 | Bell               | Opens "No notifications" popover                                                       | Least misleading treatment of an icon with no feature                 |
-| Reports            | "Reports are coming later" page                                                        | Tab exists in the design; no Reports design or scope                  |
+| Reports            | Removed from the navigation (2026-11 refresh)                                          | No Reports design or scope yet                                        |
 | Desktop ≥1024px    | Drawer becomes a persistent gold sidebar; bottom nav hidden; content up to 1024px wide | No desktop frames; derived from the mobile drawer                     |
 | Typos              | "Posiion", "Sekertaris", "Creat Period", "Connnected" are not reproduced               | Copy fixes                                                            |
 

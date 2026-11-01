@@ -1,15 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Manrope, Poppins } from "next/font/google";
+import { Figtree } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { ServiceWorkerRegistration } from "@/components/pwa/service-worker-registration";
 import { APP_NAME, APP_SHORT_NAME, THEME_COLOR, BACKGROUND_COLOR } from "@/lib/app-config";
 import "./globals.css";
 
-const manrope = Manrope({ variable: "--font-manrope", subsets: ["latin"] });
-// Login wordmark + org title in the prototype.
-const poppins = Poppins({ variable: "--font-poppins", subsets: ["latin"], weight: ["400", "500"] });
-// Login form fields in the prototype.
-const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
+// One family for the whole app: a friendly grotesk with open word spacing and tabular figures.
+// Variable font, so one file covers every weight.
+const figtree = Figtree({ variable: "--font-figtree", subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
   title: { default: APP_SHORT_NAME, template: `%s · ${APP_SHORT_NAME}` },
@@ -18,7 +16,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: APP_SHORT_NAME,
-    // Dark status-bar text on the cream app background.
+    // Dark status-bar text on the light chrome.
     statusBarStyle: "default",
   },
   formatDetection: { telephone: false },
@@ -42,11 +40,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${manrope.variable} ${poppins.variable} ${inter.variable} antialiased`}
-      style={{ backgroundColor: BACKGROUND_COLOR }}
-    >
+    <html lang="en" className={`${figtree.variable} antialiased`} style={{ backgroundColor: BACKGROUND_COLOR }}>
       <body className="min-h-dvh">
         {children}
         <Toaster position="top-center" richColors closeButton />

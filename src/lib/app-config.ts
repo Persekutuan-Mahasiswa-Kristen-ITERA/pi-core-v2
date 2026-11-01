@@ -1,8 +1,8 @@
 export const APP_NAME = "PMK ITERA Centralized Organization & Role Engine";
 export const APP_SHORT_NAME = "PI-CORE";
-/** Cream app background — matches the top bar so iOS/Android status bars blend in. */
-export const THEME_COLOR = "#f8f7f6";
-export const BACKGROUND_COLOR = "#f8f7f6";
+/** Chrome colour (phone top bar), so iOS/Android status bars blend in. */
+export const THEME_COLOR = "#f1efec";
+export const BACKGROUND_COLOR = "#f1efec";
 
 /** Authentication methods shown on Settings. Read-only in the MVP; not a feature flag. */
 export const AUTH_METHODS = [

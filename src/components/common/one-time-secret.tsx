@@ -16,10 +16,10 @@ export function OneTimeSecret({
 }) {
   const [copied, setCopied] = useState(false);
   return (
-    <div className="space-y-3 rounded-xl border-2 border-pmk-gold bg-white p-4" role="status">
+    <div className="space-y-3 rounded-2xl border border-pmk-gold/60 bg-[#fbf7ec] p-5" role="status">
       <p className="font-semibold text-pmk-ink">Temporary password for {email}</p>
       <div className="flex items-center gap-2">
-        <code className="flex-1 select-all break-all rounded-lg bg-pmk-tint px-3 py-2 font-mono text-base text-pmk-ink">
+        <code className="flex-1 select-all break-all rounded-[10px] border border-pmk-tint-border bg-white px-3 py-2 font-mono text-base text-pmk-ink">
           {secret}
         </code>
         <Button

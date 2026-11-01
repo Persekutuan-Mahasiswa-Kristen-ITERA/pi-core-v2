@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { FieldError } from "@/components/common/states";
-import { FormMessage, SubmitButton } from "@/components/common/form-controls";
+import { FormMessage, SubmitButton, fieldClass } from "@/components/common/form-controls";
 import { initialActionState, type ActionResult } from "@/lib/action-result";
 import type { OrgUnitType } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
@@ -25,8 +25,8 @@ type Props = {
   mode: "create" | "edit";
 };
 
-const pillClass =
-  "h-11 w-full appearance-none rounded-xl border-2 border-pmk-tint-border bg-pmk-tint px-6 text-base font-medium text-pmk-ink focus-visible:border-pmk-accent focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-pmk-accent/20 aria-invalid:border-destructive sm:text-sm";
+const pillClass = fieldClass;
+const labelClass = "mb-2 block text-sm font-medium text-pmk-ink";
 
 /** Keeps tree order; one group per top-level unit. */
 function groupUnits(units: UnitOption[]) {
@@ -67,15 +67,17 @@ export function AssignmentForm({ action, members, units, positions, periods, def
   });
 
   return (
-    <form action={formAction} className="space-y-3" noValidate>
-      <FormMessage state={state} />
+    <form action={formAction} className="grid gap-4 sm:grid-cols-2" noValidate>
+      <div className="sm:col-span-2 empty:hidden">
+        <FormMessage state={state} />
+      </div>
       <div>
-        <label htmlFor="field-memberId" className="sr-only">
+        <label htmlFor="field-memberId" className={labelClass}>
           Member
         </label>
         <select {...a11y("memberId")} defaultValue={defaults.memberId ?? ""} className={pillClass} required>
           <option value="" disabled>
-            ＋ Assign Member
+            Choose a member
           </option>
           {members.map((m) => (
             <option key={m.id} value={m.id}>
@@ -86,7 +88,7 @@ export function AssignmentForm({ action, members, units, positions, periods, def
         <FieldError id="field-memberId-error" messages={errors?.memberId} />
       </div>
       <div>
-        <label htmlFor="field-orgUnitId" className="sr-only">
+        <label htmlFor="field-orgUnitId" className={labelClass}>
           Unit
         </label>
         <select
@@ -100,7 +102,7 @@ export function AssignmentForm({ action, members, units, positions, periods, def
           required
         >
           <option value="" disabled>
-            ＋ Unit
+            Choose a unit
           </option>
           {groupUnits(units).map(([group, list]) => (
             <optgroup key={group} label={group}>
@@ -117,19 +119,19 @@ export function AssignmentForm({ action, members, units, positions, periods, def
         <FieldError id="field-orgUnitId-error" messages={errors?.orgUnitId} />
       </div>
       <div>
-        <label htmlFor="field-positionId" className="sr-only">
+        <label htmlFor="field-positionId" className={labelClass}>
           Position
         </label>
         <select
           {...a11y("positionId")}
           value={positionId}
           onChange={(e) => setPositionId(e.target.value)}
-          className={cn(pillClass, !unitId && "opacity-60")}
+          className={cn(pillClass, !unitId && "text-pmk-muted")}
           disabled={!unitId}
           required
         >
           <option value="" disabled>
-            {unitId ? "＋ Position" : "＋ Position (choose a unit first)"}
+            {unitId ? "Choose a position" : "Choose a unit first"}
           </option>
           {unitPositions.map((p) => (
             <option key={p.id} value={p.id}>
@@ -140,12 +142,12 @@ export function AssignmentForm({ action, members, units, positions, periods, def
         <FieldError id="field-positionId-error" messages={errors?.positionId} />
       </div>
       <div>
-        <label htmlFor="field-periodId" className="sr-only">
+        <label htmlFor="field-periodId" className={labelClass}>
           Period
         </label>
         <select {...a11y("periodId")} defaultValue={defaults.periodId ?? ""} className={pillClass} required>
           <option value="" disabled>
-            ＋ Period
+            Choose a period
           </option>
           {periods.map((p) => (
             <option key={p.id} value={p.id}>
@@ -155,12 +157,12 @@ export function AssignmentForm({ action, members, units, positions, periods, def
         </select>
         <FieldError id="field-periodId-error" messages={errors?.periodId} />
       </div>
-      <div className="flex items-center gap-3 pt-1">
-        <SubmitButton className="bg-pmk-brown px-9">Save</SubmitButton>
+      <div className="flex items-center gap-3 pt-1 sm:col-span-2">
+        <SubmitButton className="px-8">Save</SubmitButton>
         {mode === "edit" ? (
           <Link
             href="/assignments"
-            className="inline-flex min-h-11 items-center px-4 text-sm font-medium text-pmk-body hover:text-pmk-ink"
+            className="inline-flex h-11 items-center rounded-full px-4 text-sm font-medium text-pmk-muted hover:bg-pmk-tint hover:text-pmk-ink"
           >
             Cancel
           </Link>

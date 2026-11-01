@@ -59,7 +59,7 @@ export function UnitForm({ action, create, defaults, submitLabel }: Props) {
         <SubmitButton>{submitLabel}</SubmitButton>
         <Link
           href="/structure"
-          className="inline-flex min-h-11 items-center px-4 text-sm font-medium text-pmk-body hover:text-pmk-ink"
+          className="inline-flex h-11 items-center rounded-full px-4 text-sm font-medium text-pmk-muted hover:bg-pmk-tint hover:text-pmk-ink"
         >
           Cancel
         </Link>

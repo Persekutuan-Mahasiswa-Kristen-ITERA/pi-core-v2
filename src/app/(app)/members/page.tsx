@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SquarePen, Trash2, RotateCcw } from "lucide-react";
+import { Plus, SquarePen, UserRoundX, RotateCcw } from "lucide-react";
 import { requireAdminPage } from "@/lib/auth";
-import { listMembers, listPeriods, listRoleOverview } from "@/lib/queries";
+import { MEMBERS_PAGE_SIZE, listMembers, listPeriods, listRoleOverview } from "@/lib/queries";
 import { idSchema } from "@/lib/validation";
-import { DirectoryTabs } from "@/components/common/directory-tabs";
-import { CreateBar, ListPanel, RowPill } from "@/components/common/surfaces";
+import { LinkButton, PageHeader, RowList, Tag } from "@/components/common/surfaces";
 import { EmptyState, ForbiddenState } from "@/components/common/states";
 import { ConfirmAction } from "@/components/common/confirm-action";
 import { MemberFilters } from "./member-filters";
@@ -44,141 +43,142 @@ export default async function MembersPage({ searchParams }: PageProps<"/members"
     return `/members${next.size ? `?${next}` : ""}`;
   };
 
+  const filtered = Boolean(q || roleId || periodId);
+  const iconButton =
+    "grid size-10 place-items-center rounded-full text-pmk-muted transition-colors hover:bg-pmk-tint hover:text-pmk-ink focus-visible:outline-2 focus-visible:outline-pmk-accent";
+
   return (
     <>
-      <DirectoryTabs current="/members" />
-      <CreateBar href="/members/new">Create Member</CreateBar>
-      <ListPanel className="space-y-3">
-        <MemberFilters
-          roles={roles.map((r) => ({ id: r.id!, label: r.name! }))}
-          periods={periods.map((p) => ({ id: p.id, label: p.label }))}
-        />
-        <p className="px-2 text-xs text-pmk-body" aria-live="polite">
-          {result.total} {status === "inactive" ? "deactivated " : ""}member{result.total === 1 ? "" : "s"}
-        </p>
-        {result.rows.length === 0 ? (
-          <EmptyState
-            title={
-              q || roleId || periodId
-                ? "No members match"
-                : status === "inactive"
-                  ? "No deactivated members"
-                  : "No members yet"
-            }
+      <PageHeader
+        title="Members"
+        description={`${result.total} ${status === "inactive" ? "deactivated" : filtered ? "matching" : "active"} member${result.total === 1 ? "" : "s"}`}
+        actions={
+          <LinkButton href="/members/new">
+            <Plus aria-hidden /> Create Member
+          </LinkButton>
+        }
+      />
+      <MemberFilters
+        roles={roles.map((r) => ({ id: r.id!, label: r.name! }))}
+        periods={periods.map((p) => ({ id: p.id, label: p.label }))}
+      />
+      <p className="sr-only" aria-live="polite">
+        {result.total} member{result.total === 1 ? "" : "s"}
+      </p>
+      {result.rows.length === 0 ? (
+        <EmptyState
+          title={filtered ? "No members match" : status === "inactive" ? "No deactivated members" : "No members yet"}
+        >
+          {filtered
+            ? "Try another name or clear the filters."
+            : status === "inactive"
+              ? null
+              : "Create the first member account."}
+        </EmptyState>
+      ) : (
+        <>
+          <div
+            className="hidden grid-cols-[minmax(0,1.3fr)_minmax(0,1.4fr)_6rem_5.5rem] gap-4 px-4 pb-2 text-xs text-pmk-muted md:grid"
+            aria-hidden
           >
-            {q || roleId || periodId
-              ? "Try another name or clear the filters."
-              : status === "inactive"
-                ? null
-                : "Create the first member account."}
-          </EmptyState>
-        ) : (
-          <ul className="space-y-3">
+            <span>Name</span>
+            <span>Position · Unit</span>
+            <span>Period</span>
+            <span />
+          </div>
+          <RowList>
             {result.rows.map((m) => (
-              <li key={m.id}>
-                {/* Phones: name over "role · period" (real names do not fit three columns at 390px).
-                    sm and up: the prototype's three columns. */}
-                <RowPill className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 py-1.5 pl-4 pr-1 text-sm sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.8fr)_auto] sm:text-base">
-                  <span className="min-w-0 sm:contents">
+              <li
+                key={m.id}
+                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 py-2.5 pl-4 pr-2 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1.4fr)_6rem_5.5rem] md:gap-x-4"
+              >
+                <div className="min-w-0 md:contents">
+                  <div className="flex min-w-0 items-center gap-2">
                     <Link
                       href={`/members/${m.id}`}
-                      className="block truncate font-medium text-pmk-ink hover:underline"
+                      className="truncate text-sm font-medium text-pmk-ink hover:underline"
                       title={m.email}
                     >
                       {m.fullName}
-                      {m.accessLevel === "super_admin" ? (
-                        <span className="ml-1 text-[11px] font-semibold text-pmk-accent">SUPER ADMIN</span>
-                      ) : m.isAdmin ? (
-                        <span className="ml-1 text-[11px] font-semibold text-pmk-accent">ADMIN</span>
-                      ) : null}
                     </Link>
-                    <span className="block truncate text-xs sm:text-[inherit]" title={m.assignment ?? undefined}>
-                      {m.assignment ?? (m.isLecturer ? "Dosen" : "No assignment")}
-                      {m.extraAssignments ? <span className="text-pmk-muted"> +{m.extraAssignments}</span> : null}
-                      <span className="sm:hidden"> · {m.period ?? "—"}</span>
-                    </span>
-                    <span className="hidden truncate sm:block">{m.period ?? "—"}</span>
-                  </span>
-                  <span className="flex items-center">
-                    <Link
-                      href={`/members/${m.id}`}
-                      className="grid size-11 place-items-center rounded-full text-pmk-brown hover:bg-white"
-                      aria-label={`Edit ${m.fullName}`}
-                    >
-                      <SquarePen className="size-5" aria-hidden />
-                    </Link>
-                    {m.accessLevel === "super_admin" && !isSuperAdmin ? (
-                      <span className="size-11" aria-hidden />
-                    ) : m.isActive ? (
-                      m.id === actor.id ? (
-                        <span className="size-11" aria-hidden />
-                      ) : (
-                        <ConfirmAction
-                          action={deactivateMember.bind(null, m.id)}
-                          title={`Deactivate ${m.fullName}?`}
-                          description="They will no longer be able to log in. Their profile and assignment history are kept and can be restored later."
-                          confirmLabel="Deactivate"
-                          destructive
-                        >
-                          <button
-                            type="button"
-                            className="grid size-11 place-items-center rounded-full text-pmk-brown hover:bg-white"
-                            aria-label={`Deactivate ${m.fullName}`}
-                          >
-                            <Trash2 className="size-5" aria-hidden />
-                          </button>
-                        </ConfirmAction>
-                      )
+                    {m.accessLevel === "super_admin" ? (
+                      <Tag tone="gold">Super admin</Tag>
+                    ) : m.isAdmin ? (
+                      <Tag>Admin</Tag>
+                    ) : null}
+                  </div>
+                  <p
+                    className="mt-0.5 truncate text-xs text-pmk-muted md:mt-0 md:text-sm md:text-pmk-body"
+                    title={m.assignment ?? undefined}
+                  >
+                    {m.assignment ?? (m.isLecturer ? "Dosen" : "No assignment")}
+                    {m.extraAssignments ? <span className="text-pmk-muted"> +{m.extraAssignments}</span> : null}
+                    <span className="md:hidden"> · {m.period ?? "—"}</span>
+                  </p>
+                  <span className="tnum hidden text-sm text-pmk-body md:block">{m.period ?? "—"}</span>
+                </div>
+                <div className="flex items-center justify-end">
+                  <Link href={`/members/${m.id}`} className={iconButton} aria-label={`Edit ${m.fullName}`}>
+                    <SquarePen className="size-4" aria-hidden />
+                  </Link>
+                  {m.accessLevel === "super_admin" && !isSuperAdmin ? (
+                    <span className="size-10" aria-hidden />
+                  ) : m.isActive ? (
+                    m.id === actor.id ? (
+                      <span className="size-10" aria-hidden />
                     ) : (
                       <ConfirmAction
-                        action={reactivateMember.bind(null, m.id)}
-                        title={`Reactivate ${m.fullName}?`}
-                        description="They will be able to log in again with their existing password."
-                        confirmLabel="Reactivate"
+                        action={deactivateMember.bind(null, m.id)}
+                        title={`Deactivate ${m.fullName}?`}
+                        description="They will no longer be able to log in. Their profile and assignment history are kept and can be restored later."
+                        confirmLabel="Deactivate"
+                        destructive
                       >
-                        <button
-                          type="button"
-                          className="grid size-11 place-items-center rounded-full text-pmk-brown hover:bg-white"
-                          aria-label={`Reactivate ${m.fullName}`}
-                        >
-                          <RotateCcw className="size-5" aria-hidden />
+                        <button type="button" className={iconButton} aria-label={`Deactivate ${m.fullName}`}>
+                          <UserRoundX className="size-4" aria-hidden />
                         </button>
                       </ConfirmAction>
-                    )}
-                  </span>
-                </RowPill>
+                    )
+                  ) : (
+                    <ConfirmAction
+                      action={reactivateMember.bind(null, m.id)}
+                      title={`Reactivate ${m.fullName}?`}
+                      description="They will be able to log in again with their existing password."
+                      confirmLabel="Reactivate"
+                    >
+                      <button type="button" className={iconButton} aria-label={`Reactivate ${m.fullName}`}>
+                        <RotateCcw className="size-4" aria-hidden />
+                      </button>
+                    </ConfirmAction>
+                  )}
+                </div>
               </li>
             ))}
-          </ul>
-        )}
-        {result.pageCount > 1 ? (
-          <nav aria-label="Pagination" className="flex items-center justify-between pt-1 text-sm">
-            {result.page > 1 ? (
-              <Link
-                href={pageHref(result.page - 1)}
-                className="inline-flex min-h-11 items-center px-3 font-semibold text-pmk-accent"
-              >
-                ← Previous
-              </Link>
-            ) : (
-              <span />
-            )}
-            <span className="text-pmk-body">
-              Page {result.page} of {result.pageCount}
-            </span>
-            {result.page < result.pageCount ? (
-              <Link
-                href={pageHref(result.page + 1)}
-                className="inline-flex min-h-11 items-center px-3 font-semibold text-pmk-accent"
-              >
-                Next →
-              </Link>
-            ) : (
-              <span />
-            )}
-          </nav>
-        ) : null}
-      </ListPanel>
+          </RowList>
+        </>
+      )}
+      {result.pageCount > 1 ? (
+        <nav aria-label="Pagination" className="mt-4 flex items-center justify-between text-sm">
+          {result.page > 1 ? (
+            <LinkButton href={pageHref(result.page - 1)} variant="secondary">
+              Previous
+            </LinkButton>
+          ) : (
+            <span />
+          )}
+          <span className="tnum text-pmk-muted">
+            {(result.page - 1) * MEMBERS_PAGE_SIZE + 1}–{Math.min(result.page * MEMBERS_PAGE_SIZE, result.total)} of{" "}
+            {result.total}
+          </span>
+          {result.page < result.pageCount ? (
+            <LinkButton href={pageHref(result.page + 1)} variant="secondary">
+              Next
+            </LinkButton>
+          ) : (
+            <span />
+          )}
+        </nav>
+      ) : null}
     </>
   );
 }

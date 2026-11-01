@@ -1,7 +1,7 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { sanitizeSearchTerm } from "@/lib/search";
-import { flattenUnitTree, unitLabel, type FlatUnit } from "@/lib/org-structure";
+import { buildCoverage, flattenUnitTree, unitLabel, type FlatUnit } from "@/lib/org-structure";
 
 /**
  * Read model. Every function uses the caller's RLS-bound client, so a non-admin calling one of
@@ -17,15 +17,52 @@ function fail(context: string, error: { message: string }): never {
 
 export async function getDashboardStats() {
   const supabase = await createClient();
-  const [members, roles, period] = await Promise.all([
+  const [members, lecturers, roles, period] = await Promise.all([
     supabase.from("members").select("id", { count: "exact", head: true }).eq("is_active", true),
+    supabase
+      .from("members")
+      .select("id", { count: "exact", head: true })
+      .eq("is_active", true)
+      .eq("member_type", "lecturer"),
     supabase.from("roles").select("id", { count: "exact", head: true }),
     supabase.from("periods").select("id, label").eq("is_active", true).maybeSingle(),
   ]);
   if (members.error) fail("members count", members.error);
+  if (lecturers.error) fail("lecturer count", lecturers.error);
   if (roles.error) fail("roles count", roles.error);
   if (period.error) fail("active period", period.error);
-  return { totalMembers: members.count ?? 0, availableRoles: roles.count ?? 0, activePeriod: period.data };
+  return {
+    totalMembers: members.count ?? 0,
+    lecturers: lecturers.count ?? 0,
+    availableRoles: roles.count ?? 0,
+    activePeriod: period.data,
+  };
+}
+
+/** Leadership seats of the active period, grouped by BPH / department / bureau (dashboard). */
+export async function getStructureCoverage(periodId: string) {
+  const supabase = await createClient();
+  const [units, positions, assignments] = await Promise.all([
+    listOrgUnits(),
+    supabase.from("positions").select("id, name, unit_type, rank, is_unique_per_unit"),
+    supabase
+      .from("assignments")
+      .select("org_unit_id, position_id, member_id, members(full_name)")
+      .eq("period_id", periodId),
+  ]);
+  if (positions.error) fail("positions", positions.error);
+  if (assignments.error) fail("assignments", assignments.error);
+  const groups = buildCoverage(
+    units,
+    positions.data,
+    assignments.data.map((a) => ({
+      org_unit_id: a.org_unit_id,
+      position_id: a.position_id,
+      holder: a.members.full_name,
+    })),
+  );
+  const people = new Set(assignments.data.map((a) => a.member_id)).size;
+  return { groups, people, assignmentCount: assignments.data.length };
 }
 
 export async function getActivePeriod() {

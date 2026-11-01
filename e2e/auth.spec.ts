@@ -4,7 +4,7 @@ import { ADMIN_EMAIL, MEMBER_EMAIL, PASSWORD, login, logout } from "./helpers";
 test("unauthenticated visitors are sent to login, keeping a safe return path", async ({ page }) => {
   await page.goto("/members");
   await expect(page).toHaveURL(/\/login\?next=%2Fmembers$/);
-  await expect(page.getByRole("heading", { name: "LOGIN" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Log in" })).toBeVisible();
 });
 
 test("login failures do not reveal whether the email exists", async ({ page }) => {
@@ -25,7 +25,7 @@ test("an open redirect in ?next is ignored", async ({ page }) => {
 
 test("admin logs in to the dashboard and logs out", async ({ page }) => {
   await login(page, ADMIN_EMAIL, PASSWORD);
-  await expect(page.getByText("Shalom Admin!")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Shalom Admin!" })).toBeVisible();
   await expect(page.getByText("Total Members")).toBeVisible();
   await expect(page.getByText("Active Period")).toBeVisible();
   await expect(page.getByText("Available Roles")).toBeVisible();
@@ -36,13 +36,11 @@ test("admin logs in to the dashboard and logs out", async ({ page }) => {
 
 test("a regular member cannot open admin screens", async ({ page }) => {
   await login(page, MEMBER_EMAIL, PASSWORD);
-  await expect(page.getByText("Shalom Maria!")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Shalom Maria!" })).toBeVisible();
   for (const path of ["/members", "/roles", "/periods", "/assignments", "/structure", "/settings", "/members/new"]) {
     await page.goto(path);
     await expect(page.getByText("Admins only")).toBeVisible();
   }
-  // Directory is not offered in the bottom navigation.
-  await expect(page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Directory" })).toHaveCount(
-    0,
-  );
+  // Members is not offered in the bottom navigation.
+  await expect(page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Members" })).toHaveCount(0);
 });

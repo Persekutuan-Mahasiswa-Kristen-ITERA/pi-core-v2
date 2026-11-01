@@ -59,6 +59,15 @@ owner's machine (`~/.config/vercel-pmk-token/token.txt`, mode 600). Env vars (Pr
 Still to do: real-device checks (docs/PWA.md), owner-approved production deploy, then set Supabase Auth Site URL to the
 production URL.
 
+### 2026-11-02 — git-connected, functions moved to Singapore
+
+- The repo moved to `Persekutuan-Mahasiswa-Kristen-ITERA/pi-core-v2` and the owner connected it to the Vercel project;
+  `main` deploys to production (`https://pi-core-v2.vercel.app`). Supabase Auth Site URL is set to that URL.
+- Functions ran in **iad1 (Washington, US)** while the database is in **ap-southeast-1 (Singapore)**: every query
+  crossed the Pacific (about 200 ms a round trip, several per page). `vercel.json` now pins `"regions": ["sin1"]`, next
+  to the database. Check after a deploy: the deployment's Functions tab shows region `sin1`.
+
+
 ### 2026-11-01 — organization structure, super admins (branch `feat/org-structure-v1`)
 
 - `supabase db push` (run by the owner) applied `20261101100000_access_level_super_admin` and

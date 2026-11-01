@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { CHILD_TYPES, flattenUnitTree, unitLabel, type UnitRow } from "@/lib/org-structure";
+import {
+  CHILD_TYPES,
+  buildCoverage,
+  flattenUnitTree,
+  unitLabel,
+  type SeatPosition,
+  type UnitRow,
+} from "@/lib/org-structure";
 
 const unit = (
   id: string,
@@ -64,5 +71,48 @@ describe("CHILD_TYPES mirrors the database tree rule", () => {
     expect(CHILD_TYPES.department).toEqual(["division"]);
     expect(CHILD_TYPES.organization).not.toContain("division");
     expect(CHILD_TYPES.bureau).toEqual([]);
+  });
+});
+
+describe("buildCoverage", () => {
+  const POSITIONS: SeatPosition[] = [
+    { id: "ketum", name: "Ketua Umum", unit_type: "bph", rank: 10, is_unique_per_unit: true },
+    { id: "kadep", name: "Kepala Departemen", unit_type: "department", rank: 40, is_unique_per_unit: true },
+    { id: "sekdep", name: "Sekretaris Departemen", unit_type: "department", rank: 50, is_unique_per_unit: true },
+    { id: "kadiv", name: "Kepala Divisi", unit_type: "division", rank: 60, is_unique_per_unit: true },
+    { id: "staff", name: "Staff", unit_type: "division", rank: 70, is_unique_per_unit: false },
+  ];
+  const units = flattenUnitTree(UNITS);
+
+  it("counts one seat per one-holder position per active unit, grouped by top-level unit", () => {
+    const groups = buildCoverage(units, POSITIONS, [
+      { org_unit_id: "d1", position_id: "kadep", holder: "Yohanes" },
+      { org_unit_id: "div-musik", position_id: "staff", holder: "Maria" },
+      { org_unit_id: "div-musik", position_id: "staff", holder: "Ruth" },
+    ]);
+    expect(groups.map((g) => g.name)).toEqual(["BPH PMK ITERA", "Departemen Pelayanan Khusus", "Departemen CMIT"]);
+    const [bph, pk, cmit] = groups;
+    expect(bph.seats).toHaveLength(1);
+    expect(bph.filled).toBe(0);
+    // Kepala + Sekretaris Departemen, plus Kepala Divisi Musik
+    expect(pk.seats.map((s) => `${s.position}@${s.unitName}`)).toEqual([
+      "Kepala Departemen@Departemen Pelayanan Khusus",
+      "Sekretaris Departemen@Departemen Pelayanan Khusus",
+      "Kepala Divisi@Musik",
+    ]);
+    expect(pk.filled).toBe(1);
+    expect(pk.seats[0].holder).toBe("Yohanes");
+    expect(pk.staff).toBe(2);
+    // Two divisions under CMIT: 2 department seats + 2 division heads, in tree order (Pubdok before IT)
+    expect(cmit.seats.map((s) => s.unitName)).toEqual(["Departemen CMIT", "Departemen CMIT", "Pubdok", "IT"]);
+  });
+
+  it("leaves out inactive units and everything under an inactive top-level unit", () => {
+    const withInactive = flattenUnitTree(
+      UNITS.map((u) => (u.id === "d2" || u.id === "div-musik" ? { ...u, is_active: false } : u)),
+    );
+    const groups = buildCoverage(withInactive, POSITIONS, []);
+    expect(groups.map((g) => g.name)).toEqual(["BPH PMK ITERA", "Departemen Pelayanan Khusus"]);
+    expect(groups[1].seats.map((s) => s.position)).toEqual(["Kepala Departemen", "Sekretaris Departemen"]);
   });
 });

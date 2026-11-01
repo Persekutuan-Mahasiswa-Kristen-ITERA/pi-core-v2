@@ -5,7 +5,8 @@ import { requireSuperAdminPage } from "@/lib/auth";
 import { getRoleDetail } from "@/lib/queries";
 import { idSchema } from "@/lib/validation";
 import { ForbiddenState } from "@/components/common/states";
-import { SectionTitle } from "@/components/common/surfaces";
+import { PageHeader } from "@/components/common/surfaces";
+import { FormCard } from "@/components/common/form-controls";
 import { updateRole } from "../../actions";
 import { RoleForm } from "../../role-form";
 
@@ -20,15 +21,21 @@ export default async function EditRolePage({ params }: PageProps<"/roles/[id]/ed
   if (!detail) notFound();
   const { role } = detail;
   return (
-    <div className="mx-auto max-w-xl space-y-4">
-      <SectionTitle>Edit Role</SectionTitle>
-      <RoleForm
-        action={updateRole.bind(null, role.id!)}
-        defaults={{ name: role.name!, description: role.description, grantsAdmin: role.grants_admin! }}
-        submitLabel="Save changes"
-        cancelHref={`/roles/${role.id}`}
+    <div className="max-w-2xl space-y-4">
+      <PageHeader
+        title={`Edit ${role.name}`}
+        back={{ href: `/roles/${role.id}`, label: role.name! }}
+        className="mb-0 lg:mb-2"
       />
-      <p className="text-sm text-pmk-body">
+      <FormCard>
+        <RoleForm
+          action={updateRole.bind(null, role.id!)}
+          defaults={{ name: role.name!, description: role.description, grantsAdmin: role.grants_admin! }}
+          submitLabel="Save changes"
+          cancelHref={`/roles/${role.id}`}
+        />
+      </FormCard>
+      <p className="text-sm text-pmk-muted">
         Which positions carry this role is set on each position under{" "}
         <Link href="/structure" className="font-semibold text-pmk-accent hover:underline">
           Structure

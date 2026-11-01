@@ -3,7 +3,7 @@ import { safeRedirectPath } from "@/lib/safe-redirect";
 import { escapeLike, sanitizeSearchTerm } from "@/lib/search";
 import { generateTemporaryPassword } from "@/lib/password";
 import { describeDbError } from "@/lib/db-errors";
-import { isActivePath, titleForPath } from "@/components/shell/nav-config";
+import { isActivePath } from "@/components/shell/nav-config";
 
 describe("safeRedirectPath (open redirect protection)", () => {
   it.each([
@@ -70,10 +70,10 @@ describe("describeDbError", () => {
 });
 
 describe("navigation", () => {
-  it("titles and active state", () => {
-    expect(titleForPath("/members/123")).toBe("Members");
-    expect(titleForPath("/")).toBe("Dashboard");
-    expect(isActivePath("/roles/1", ["/members", "/roles", "/periods"])).toBe(true);
-    expect(isActivePath("/profile", ["/"])).toBe(false);
+  it("active state", () => {
+    expect(isActivePath("/members/123", { href: "/members" })).toBe(true);
+    expect(isActivePath("/roles/1", { href: "/members", match: ["/roles", "/periods"] })).toBe(true);
+    expect(isActivePath("/profile", { href: "/" })).toBe(false);
+    expect(isActivePath("/", { href: "/" })).toBe(true);
   });
 });

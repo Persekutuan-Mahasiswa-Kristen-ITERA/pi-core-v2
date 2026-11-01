@@ -7,7 +7,8 @@ import { idSchema } from "@/lib/validation";
 import { Button } from "@/components/ui/button";
 import { ConfirmAction } from "@/components/common/confirm-action";
 import { ForbiddenState } from "@/components/common/states";
-import { SectionTitle } from "@/components/common/surfaces";
+import { PageHeader, SectionTitle } from "@/components/common/surfaces";
+import { FormCard } from "@/components/common/form-controls";
 import { deleteUnit, setUnitActive, updateUnit } from "../../actions";
 import { UnitForm } from "../../unit-form";
 
@@ -27,22 +28,31 @@ export default async function EditUnitPage({ params }: PageProps<"/structure/uni
       : undefined;
 
   return (
-    <div className="mx-auto max-w-xl space-y-8">
-      <section className="space-y-4">
-        <SectionTitle>Edit {UNIT_TYPE_LABEL[unit.type].toLowerCase()}</SectionTitle>
+    <div className="max-w-2xl space-y-8">
+      <section>
+        <PageHeader
+          title={unit.name}
+          description={`${UNIT_TYPE_LABEL[unit.type]} · ${childCount} sub-unit${childCount === 1 ? "" : "s"} · ${assignmentCount} assignment${assignmentCount === 1 ? "" : "s"} across all periods`}
+          back={{ href: "/structure", label: "Structure" }}
+        />
         {!unit.is_active ? (
-          <p role="status" className="rounded-xl bg-pmk-tint px-4 py-3 text-sm font-medium text-pmk-ink">
+          <p role="status" className="mb-4 rounded-[10px] bg-pmk-tint px-4 py-3 text-sm font-medium text-pmk-ink">
             Inactive: no new assignments can be made in this unit.
           </p>
         ) : null}
-        <UnitForm
-          action={updateUnit.bind(null, unit.id)}
-          defaults={{ name: unit.name, sortOrder: unit.sort_order }}
-          submitLabel="Save changes"
-        />
+        <FormCard>
+          <UnitForm
+            action={updateUnit.bind(null, unit.id)}
+            defaults={{ name: unit.name, sortOrder: unit.sort_order }}
+            submitLabel="Save changes"
+          />
+        </FormCard>
       </section>
-      <section className="space-y-3" aria-labelledby="unit-status">
+      <section className="rounded-2xl border border-pmk-tint-border p-5" aria-labelledby="unit-status">
         <SectionTitle id="unit-status">Status</SectionTitle>
+        <p className="mb-4 mt-1 text-sm text-pmk-muted">
+          Deactivate a unit to stop new assignments while keeping its history. Only an empty unit can be deleted.
+        </p>
         <div className="flex flex-wrap gap-3">
           {unit.is_active ? (
             <ConfirmAction

@@ -8,13 +8,13 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
     console.error(error);
   }, [error]);
   return (
-    <div role="alert" className="flex flex-col items-center gap-3 px-6 py-16 text-center">
-      <p className="text-lg font-bold text-pmk-ink">Something went wrong</p>
-      <p className="max-w-sm text-sm text-pmk-body">
+    <div role="alert" className="max-w-lg py-10">
+      <h1 className="text-[22px] font-semibold text-pmk-ink">Something went wrong</h1>
+      <p className="mb-5 mt-2 text-sm text-pmk-muted">
         The data could not be loaded. Check your connection and try again.
         {error.digest ? <span className="mt-1 block text-xs text-pmk-muted">Reference: {error.digest}</span> : null}
       </p>
-      <Button className="h-11 rounded-full px-8" onClick={reset}>
+      <Button className="h-11 rounded-full px-6" onClick={reset}>
         Try again
       </Button>
     </div>

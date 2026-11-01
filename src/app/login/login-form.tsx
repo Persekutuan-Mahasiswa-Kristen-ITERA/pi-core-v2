@@ -10,7 +10,7 @@ import { reissueSessionCookies } from "./actions";
 const GENERIC_ERROR = "Email or password is incorrect.";
 
 const inputClass =
-  "h-12 w-full rounded-xl border border-transparent bg-white pl-12 pr-4 font-[family-name:var(--font-inter)] text-base text-pmk-ink shadow-[4px_4px_4px_rgba(0,0,0,0.25)] outline-none placeholder:text-[#8a8a8a] focus-visible:border-pmk-accent focus-visible:ring-3 focus-visible:ring-pmk-accent/25";
+  "h-12 w-full rounded-[10px] border border-pmk-control bg-white pl-11 pr-4 text-base text-pmk-ink outline-none transition-colors placeholder:text-pmk-muted hover:border-pmk-muted/60 focus-visible:border-pmk-accent focus-visible:ring-3 focus-visible:ring-pmk-accent/15";
 
 export function LoginForm({ next, inactive }: { next: string; inactive: boolean }) {
   const router = useRouter();
@@ -49,58 +49,62 @@ export function LoginForm({ next, inactive }: { next: string; inactive: boolean 
   }
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-8">
-      <div className="relative">
-        <label htmlFor="email" className="sr-only">
+    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+      <div>
+        <label htmlFor="email" className="mb-2 block text-sm font-medium text-pmk-ink">
           Email
         </label>
-        <Mail
-          className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-[#7d7d7d]"
-          aria-hidden
-        />
-        <input
-          id="email"
-          name="email"
-          type="email"
-          inputMode="email"
-          autoComplete="username"
-          autoCapitalize="none"
-          spellCheck={false}
-          placeholder="email"
-          required
-          className={inputClass}
-        />
+        <div className="relative">
+          <Mail
+            className="pointer-events-none absolute left-3.5 top-1/2 size-[18px] -translate-y-1/2 text-pmk-muted"
+            aria-hidden
+          />
+          <input
+            id="email"
+            name="email"
+            type="email"
+            inputMode="email"
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+            placeholder="name@student.itera.ac.id"
+            required
+            className={inputClass}
+          />
+        </div>
       </div>
-      <div className="relative">
-        <label htmlFor="password" className="sr-only">
+      <div>
+        <label htmlFor="password" className="mb-2 block text-sm font-medium text-pmk-ink">
           Password
         </label>
-        <LockKeyhole
-          className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-[#7d7d7d]"
-          aria-hidden
-        />
-        <input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          placeholder="password"
-          required
-          className={inputClass}
-        />
+        <div className="relative">
+          <LockKeyhole
+            className="pointer-events-none absolute left-3.5 top-1/2 size-[18px] -translate-y-1/2 text-pmk-muted"
+            aria-hidden
+          />
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            placeholder="Your password"
+            required
+            className={inputClass}
+          />
+        </div>
       </div>
 
-      <div aria-live="polite" className="-my-3 min-h-5 text-center text-sm font-medium text-destructive">
+      <div aria-live="polite" className="min-h-5 text-sm font-medium text-destructive">
         {error}
       </div>
 
       <button
         type="submit"
         disabled={pending}
-        className="mx-auto inline-flex h-12 min-w-36 items-center justify-center gap-2 rounded-full bg-pmk-brown px-8 font-[family-name:var(--font-inter)] text-sm text-white shadow-[0_4px_4px_rgba(0,0,0,0.25)] hover:bg-pmk-brown/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pmk-accent disabled:opacity-70"
+        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-pmk-brown px-8 text-sm font-semibold text-white transition-colors hover:bg-pmk-brown-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pmk-accent disabled:cursor-wait disabled:opacity-80"
       >
         {pending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
-        {pending ? "LOGGING IN…" : "LOG IN"}
+        {pending ? "Logging in…" : "Log in"}
       </button>
     </form>
   );
