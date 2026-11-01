@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   action: (prev: ActionResult<{ id: string }>, formData: FormData) => Promise<ActionResult<{ id: string }>>;
-  defaults?: { name: string; description: string | null };
+  defaults?: { name: string; description: string | null; grantsAdmin: boolean };
   submitLabel: string;
   cancelHref: string;
 };
@@ -25,7 +25,7 @@ export function RoleForm({ action, defaults, submitLabel, cancelHref }: Props) {
         name="name"
         label="Role name"
         errors={errors?.name}
-        hint="Organizational category, e.g. BPH or Panitia. Roles never grant admin access."
+        hint="A group of positions with the same responsibilities, e.g. BPH or Sekretaris."
       >
         {(a) => <input {...a} defaultValue={defaults?.name} className={fieldClass} required maxLength={60} />}
       </Field>
@@ -40,6 +40,20 @@ export function RoleForm({ action, defaults, submitLabel, cancelHref }: Props) {
           />
         )}
       </Field>
+      <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl bg-pmk-tint px-4 py-3">
+        <input
+          type="checkbox"
+          name="grantsAdmin"
+          defaultChecked={defaults?.grantsAdmin ?? false}
+          className="mt-0.5 size-5 shrink-0 accent-pmk-brown"
+        />
+        <span className="text-sm">
+          <span className="block font-semibold text-pmk-ink">Gives admin access</span>
+          <span className="text-pmk-body">
+            Members holding a position with this role in the active period can manage members, periods and assignments.
+          </span>
+        </span>
+      </label>
       <div className="flex items-center gap-3 pt-2">
         <SubmitButton>{submitLabel}</SubmitButton>
         <Link

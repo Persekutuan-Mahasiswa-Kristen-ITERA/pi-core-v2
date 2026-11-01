@@ -25,14 +25,14 @@ export type Database = {
           Tables: {
             "assignments": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"id": string,"member_id": string,"period_id": string,"position_id": string,"role_id": string,"updated_at": string,"updated_by": string | null
+                    "created_at": string,"created_by": string | null,"id": string,"is_unique_per_unit": boolean,"member_id": string,"org_unit_id": string,"period_id": string,"position_id": string,"unit_type": Database["public"]['Enums']["org_unit_type"],"updated_at": string,"updated_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"member_id": string,"period_id": string,"position_id": string,"role_id": string,"updated_at"?: string,"updated_by"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"is_unique_per_unit": boolean,"member_id": string,"org_unit_id": string,"period_id": string,"position_id": string,"unit_type": Database["public"]['Enums']["org_unit_type"],"updated_at"?: string,"updated_by"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"member_id"?: string,"period_id"?: string,"position_id"?: string,"role_id"?: string,"updated_at"?: string,"updated_by"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"is_unique_per_unit"?: boolean,"member_id"?: string,"org_unit_id"?: string,"period_id"?: string,"position_id"?: string,"unit_type"?: Database["public"]['Enums']["org_unit_type"],"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -48,23 +48,23 @@ isOneToOne: false
       referencedRelation: "periods"
       referencedColumns: ["id"]
     },{
-      foreignKeyName: "assignments_position_matches_role"
-      columns: ["position_id","role_id"]
+      foreignKeyName: "assignments_position_type_fk"
+      columns: ["position_id","unit_type"]
 isOneToOne: false
       referencedRelation: "positions"
-      referencedColumns: ["id","role_id"]
+      referencedColumns: ["id","unit_type"]
     },{
-      foreignKeyName: "assignments_role_id_fkey"
-      columns: ["role_id"]
+      foreignKeyName: "assignments_position_unique_fk"
+      columns: ["position_id","is_unique_per_unit"]
 isOneToOne: false
-      referencedRelation: "role_overview"
-      referencedColumns: ["id"]
+      referencedRelation: "positions"
+      referencedColumns: ["id","is_unique_per_unit"]
     },{
-      foreignKeyName: "assignments_role_id_fkey"
-      columns: ["role_id"]
+      foreignKeyName: "assignments_unit_type_fk"
+      columns: ["org_unit_id","unit_type"]
 isOneToOne: false
-      referencedRelation: "roles"
-      referencedColumns: ["id"]
+      referencedRelation: "org_units"
+      referencedColumns: ["id","type"]
     }
                   ]
                 },"audit_log": {
@@ -109,6 +109,26 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"org_units": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"id": string,"is_active": boolean,"name": string,"parent_id": string | null,"sort_order": number,"type": Database["public"]['Enums']["org_unit_type"],"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"is_active"?: boolean,"name": string,"parent_id"?: string | null,"sort_order"?: number,"type": Database["public"]['Enums']["org_unit_type"],"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"is_active"?: boolean,"name"?: string,"parent_id"?: string | null,"sort_order"?: number,"type"?: Database["public"]['Enums']["org_unit_type"],"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "org_units_parent_id_fkey"
+      columns: ["parent_id"]
+isOneToOne: false
+      referencedRelation: "org_units"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"periods": {
                   Row: {
                     "created_at": string,"created_by": string | null,"ends_on": string | null,"id": string,"is_active": boolean,"label": string,"starts_on": string | null,"updated_at": string,"updated_by": string | null
@@ -123,42 +143,62 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
-                },"positions": {
+                },"position_roles": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"id": string,"name": string,"role_id": string,"updated_at": string,"updated_by": string | null
+                    "created_at": string,"created_by": string | null,"position_id": string,"role_id": string,"updated_at": string,"updated_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"name": string,"role_id": string,"updated_at"?: string,"updated_by"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"position_id": string,"role_id": string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"name"?: string,"role_id"?: string,"updated_at"?: string,"updated_by"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"position_id"?: string,"role_id"?: string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
                     {
-      foreignKeyName: "positions_role_id_fkey"
+      foreignKeyName: "position_roles_position_id_fkey"
+      columns: ["position_id"]
+isOneToOne: false
+      referencedRelation: "positions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "position_roles_role_id_fkey"
       columns: ["role_id"]
 isOneToOne: false
       referencedRelation: "role_overview"
       referencedColumns: ["id"]
     },{
-      foreignKeyName: "positions_role_id_fkey"
+      foreignKeyName: "position_roles_role_id_fkey"
       columns: ["role_id"]
 isOneToOne: false
       referencedRelation: "roles"
       referencedColumns: ["id"]
     }
                   ]
-                },"roles": {
+                },"positions": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"description": string | null,"id": string,"name": string,"sort_order": number,"updated_at": string,"updated_by": string | null
+                    "created_at": string,"created_by": string | null,"id": string,"is_unique_per_unit": boolean,"name": string,"rank": number,"unit_type": Database["public"]['Enums']["org_unit_type"],"updated_at": string,"updated_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"description"?: string | null,"id"?: string,"name": string,"sort_order"?: number,"updated_at"?: string,"updated_by"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"is_unique_per_unit"?: boolean,"name": string,"rank": number,"unit_type": Database["public"]['Enums']["org_unit_type"],"updated_at"?: string,"updated_by"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"description"?: string | null,"id"?: string,"name"?: string,"sort_order"?: number,"updated_at"?: string,"updated_by"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"is_unique_per_unit"?: boolean,"name"?: string,"rank"?: number,"unit_type"?: Database["public"]['Enums']["org_unit_type"],"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"roles": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"description": string | null,"grants_admin": boolean,"id": string,"is_system": boolean,"key": string | null,"name": string,"sort_order": number,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"description"?: string | null,"grants_admin"?: boolean,"id"?: string,"is_system"?: boolean,"key"?: string | null,"name": string,"sort_order"?: number,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"description"?: string | null,"grants_admin"?: boolean,"id"?: string,"is_system"?: boolean,"key"?: string | null,"name"?: string,"sort_order"?: number,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
                     
@@ -168,14 +208,14 @@ isOneToOne: false
           Views: {
             "role_overview": {
                   Row: {
-                    "active_member_count": number | null,"assignment_count": number | null,"description": string | null,"id": string,"name": string,"sort_order": number
+                    "active_member_count": number | null,"description": string | null,"grants_admin": boolean,"id": string,"is_system": boolean,"key": string | null,"name": string,"position_count": number | null,"sort_order": number
                   }
                   ComputedFields: never
                   Insert: {
-                           "active_member_count"?: never,"assignment_count"?: never,"description"?: string | null,"id"?: string | null,"name"?: string | null,"sort_order"?: number | null
+                           "active_member_count"?: never,"description"?: string | null,"grants_admin"?: boolean | null,"id"?: string | null,"is_system"?: boolean | null,"key"?: string | null,"name"?: string | null,"position_count"?: never,"sort_order"?: number | null
                          }
                         Update: {
-                           "active_member_count"?: never,"assignment_count"?: never,"description"?: string | null,"id"?: string | null,"name"?: string | null,"sort_order"?: number | null
+                           "active_member_count"?: never,"description"?: string | null,"grants_admin"?: boolean | null,"id"?: string | null,"is_system"?: boolean | null,"key"?: string | null,"name"?: string | null,"position_count"?: never,"sort_order"?: number | null
                          }
                         Relationships: [
                     
@@ -183,12 +223,15 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "set_active_period":
+            "current_access":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
+"set_active_period":
 { Args: { "p_period_id": string }; Returns: undefined
                            }
           }
           Enums: {
-            "access_level": "admin"|"member"
+            "access_level": "super_admin"|"admin"|"member","org_unit_type": "organization"|"bph"|"department"|"bureau"|"division"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -308,7 +351,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "access_level": ["admin", "member"]
+            "access_level": ["super_admin", "admin", "member"],"org_unit_type": ["organization", "bph", "department", "bureau", "division"]
           }
         }
 } as const

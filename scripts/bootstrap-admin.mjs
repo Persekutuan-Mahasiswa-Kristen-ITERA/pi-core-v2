@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
- * Creates the FIRST PI-CORE admin. Run once per environment by the maintainer.
+ * Creates the FIRST PI-CORE super admin. Run once per environment by the maintainer.
  *
  *   node --env-file=.env.local scripts/bootstrap-admin.mjs --email you@example.org --name "Your Name"
  *
  * Needs NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SECRET_KEY in the environment (never in git).
  * A random temporary password is printed ONCE to this terminal; it must be changed at first login.
- * Refuses to run if an active admin already exists — after that, admins are created in the app.
+ * Refuses to run if an active super admin already exists — after that, accounts are created in the app.
  */
 import { randomInt } from "node:crypto";
 import { parseArgs } from "node:util";
@@ -32,14 +32,14 @@ const admin = createClient(url, secret, { auth: { persistSession: false, autoRef
 const { count, error: countError } = await admin
   .from("members")
   .select("id", { count: "exact", head: true })
-  .eq("access_level", "admin")
+  .eq("access_level", "super_admin")
   .eq("is_active", true);
 if (countError) {
   console.error("Could not read members (are the migrations applied?):", countError.message);
   process.exit(1);
 }
 if (count && count > 0) {
-  console.error(`Refusing: ${count} active admin(s) already exist. Create further admins from the app.`);
+  console.error(`Refusing: ${count} active super admin(s) already exist. Create further admins from the app.`);
   process.exit(1);
 }
 
@@ -64,7 +64,7 @@ const { error: insertError } = await admin.from("members").insert({
   user_id: created.user.id,
   full_name: fullName,
   email,
-  access_level: "admin",
+  access_level: "super_admin",
   must_change_password: true,
 });
 if (insertError) {
@@ -73,6 +73,6 @@ if (insertError) {
   process.exit(1);
 }
 
-console.log(`First admin created: ${email}`);
+console.log(`First super admin created: ${email}`);
 console.log(`Temporary password (shown once): ${password}`);
 console.log("Log in and choose a new password. Do not store this temporary password.");

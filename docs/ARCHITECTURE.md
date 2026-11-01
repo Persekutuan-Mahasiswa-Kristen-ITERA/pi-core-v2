@@ -16,7 +16,7 @@ Next.js PWA installed from the browser. v1 is untouched.
 | Auth + DB  | Supabase Auth (email/password) + Postgres 17, `@supabase/ssr` | Cookie sessions                                      |
 | Validation | Zod 4                                                         | `src/lib/validation.ts`                              |
 | Tests      | Vitest 5 (unit + integration), Playwright 1.64 (E2E)          | Integration/E2E run against local Supabase in Docker |
-| Hosting    | Vercel (planned; not yet linked)                              | HTTPS-only                                           |
+| Hosting    | Vercel (team PMK ITERA, CLI deploys; see OPERATIONS.md)       | HTTPS-only                                           |
 
 No deviations from the preferred stack. Not added: an ORM (supabase-js + RLS is enough), Serwist/next-pwa (the
 service worker is ~70 lines and hand-written so its caching rules are auditable), next-themes (light-only design).
@@ -41,24 +41,47 @@ Browser ──► proxy.ts ──► Server Component page ──► src/lib/que
 
 ## Decisions
 
-### D-01 System access vs organizational roles
+### D-01 Access levels (revised 2026-11-01, owner decision)
 
-- `members.access_level` (`admin` | `member`) is the **only** input to authorization (`private.is_admin()`).
-- `roles` / `positions` / `assignments` describe the organization. No policy, function or app check reads a role name.
-  Making someone "BPH" never makes them a PI-CORE admin, and an admin does not need any role.
+Three levels, computed by the database (`private.is_super_admin()`, `private.is_admin()`, exposed to the app as
+`public.current_access()`):
 
-### D-02 Role vs Position (working assumption, needs owner confirmation)
+| Level       | How someone gets it                                                                                                                                                                                                                                                  |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| super admin | `members.access_level = 'super_admin'`, set by another super admin (or the bootstrap script). Not tied to a period. Intended for the maintainer and the pembina.                                                                                                     |
+| admin       | `access_level = 'admin'` set by a super admin, **or** an assignment in the **active period** whose position carries a role with `grants_admin` (PI-CORE v1 ADR-0002: Ketua Umum, Sekretaris Jenderal, Sekretaris Umum 1/2, every Kepala Departemen and Kepala Biro). |
+| member      | everyone else                                                                                                                                                                                                                                                        |
 
-- **Role** = organizational category (BPH, Kepala Departemen, Sekretaris, Bendahara, Staff, Panitia).
-- **Position** = the specific title inside a role for an assignment (Ketua Umum, Kepala Departemen Musik, …).
-- Positions are a **lookup table** (`positions`, unique per role, case-insensitive), not free text, so "Ketua" /
-  "ketua " / "Ketua Umum" do not drift apart and can be filtered and counted. Admins pick an existing position or type
-  a new one in the assignment form (created on save); positions can be renamed or deleted (if unused) on the role's
-  edit page.
-- A composite foreign key `assignments(position_id, role_id) → positions(id, role_id)` makes the database reject a
-  position that belongs to a different role.
-- Position is **required** on every assignment (the prototype shows one on every row). A plain member of a role can
-  use a position such as "Anggota".
+- Admin through a position starts and ends with the active period; switching the active period changes who is an admin.
+- Only super admins: organization structure (units, positions, roles, position → role mapping), access levels,
+  editing / deactivating / resetting a super admin's account, organization settings.
+- No policy or function reads a role **name**; `is_admin()` reads `roles.grants_admin`.
+- The last active super admin cannot be demoted or deactivated (advisory-locked trigger). Position-derived admins
+  come and go with periods, so the guard protects super admins only.
+- Consequence to be aware of: an admin can assign someone (including themselves) a position that carries
+  Organization Admin and so make them an admin for that period. They cannot reach super admin. Every assignment is
+  in the audit log.
+
+### D-02 Organization model from PI-CORE v1 (replaces the role/position working assumption)
+
+The structure the owner defined for v1 (`../PMK-CORE/docs/ARCHITECTURE.md` §2–3) is used as-is:
+
+- **Org units** (`org_units`): a tree. `organization` (PMK ITERA) → `bph` | `department` (7) | `bureau` (1);
+  each department → `division`s (16). Type and parent are fixed after creation; the tree rule is enforced by
+  `private.org_unit_check_parent()`. Units are deactivated (no new assignments) or deleted only when unused.
+- **Positions**: a title for one unit **type** (Kepala Divisi exists in every division), with a `rank` (lower =
+  more senior) and `is_unique_per_unit` (one holder per unit per period: Ketua Umum, Kepala Divisi, ...). Staff is
+  two positions (division and bureau), as in v1.
+- **Roles**: bundles of capabilities. Today the only capability is `grants_admin`. System roles (from v1) cannot be
+  deleted; super admins can add custom roles. v1's `super_admin` role is the `super_admin` access level here;
+  `anggota` is implicit; `panitia` is not seeded (v1 deferred it with Events).
+- **position_roles**: the roles a position carries (v1 `position_roles`, same 21 rows).
+- **Assignments**: member × unit × position × period. The database copies `unit_type` and `is_unique_per_unit` from
+  the position (trigger) and uses composite foreign keys so a position can only be used in its kind of unit; a
+  partial unique index enforces one holder for unique positions.
+- The baseline structure is inserted by migration `20261101100100_org_structure.sql`, so every environment has it.
+- Not taken from v1: the 23-permission catalog with O/U/S scopes and the rank guard. Admin rights are all-or-nothing
+  per D-01; the role table can grow more capability columns if finer rights are needed later.
 
 ### D-03 Rendering and caching
 
@@ -97,9 +120,9 @@ reactivate. There is no hard-delete path through the API (no DELETE grant or pol
 
 ### D-07 Role member counts
 
-Role cards and role detail count **distinct active members with an assignment in the active period** (view
-`role_overview.active_member_count`). Role deletion is blocked while the role has assignments in **any** period
-(`assignment_count`, plus `ON DELETE RESTRICT`).
+Role cards and role detail count **distinct active members whose position carries the role in the active period**
+(view `role_overview.active_member_count`). Deleting a custom role only removes its position mapping; assignments
+are untouched. Positions and units with assignments in any period cannot be deleted (`ON DELETE RESTRICT`).
 
 ### D-08 Regular members do not browse the directory
 
@@ -119,8 +142,8 @@ read-only directory — that is a deliberate privacy decision for the owner.
 
 ## Audit log
 
-`audit_log` gets one row per INSERT/UPDATE/DELETE on members, roles, positions, periods, assignments and
-org_settings, written by a trigger with `auth.uid()` as actor (null for service-role/system writes) and the old/new
+`audit_log` gets one row per INSERT/UPDATE/DELETE on members, org_units, roles, positions, position_roles, periods,
+assignments and org_settings, written by a trigger with `auth.uid()` as actor (null for service-role/system writes) and the old/new
 row as JSON. Only admins can read it; nobody can write it through the API. There is no UI for it yet (query it in
 the Supabase dashboard).
 

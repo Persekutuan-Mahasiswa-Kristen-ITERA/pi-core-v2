@@ -24,13 +24,15 @@ export function EmptyState({
   );
 }
 
-export function ForbiddenState() {
+export function ForbiddenState({ superAdmin = false }: { superAdmin?: boolean }) {
   return (
     <div className="flex flex-col items-center gap-3 px-6 py-16 text-center" role="alert">
       <ShieldAlert className="size-10 text-pmk-accent" aria-hidden />
-      <p className="text-lg font-bold text-pmk-ink">Admins only</p>
+      <p className="text-lg font-bold text-pmk-ink">{superAdmin ? "Super admins only" : "Admins only"}</p>
       <p className="max-w-sm text-sm text-pmk-body">
-        This part of PI-CORE is managed by PMK ITERA admins. Your own profile and assignments are under Profile.
+        {superAdmin
+          ? "Changing the organization structure, roles and access levels is reserved for PI-CORE super admins."
+          : "This part of PI-CORE is managed by PMK ITERA admins. Your own profile and assignments are under Profile."}
       </p>
     </div>
   );

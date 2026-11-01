@@ -61,8 +61,10 @@ describe("describeDbError", () => {
       ),
     ).toBe("Email taken");
   });
-  it("maps the last-admin guard and hides unknown errors", () => {
-    expect(describeDbError({ code: "P0001", hint: "last_admin" })).toMatch(/at least one active admin/);
+  it("maps the database guards and hides unknown errors", () => {
+    expect(describeDbError({ code: "P0001", hint: "last_super_admin" })).toMatch(/at least one active super admin/);
+    expect(describeDbError({ code: "P0001", hint: "unit_type_mismatch" })).toMatch(/kind of unit/);
+    expect(describeDbError({ code: "P0001", hint: "unit_inactive" })).toMatch(/inactive/);
     expect(describeDbError({ code: "XX000", message: "internal detail" })).not.toMatch(/internal detail/);
   });
 });

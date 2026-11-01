@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { assignmentSchema, memberSchema, passwordChangeSchema, periodSchema, roleSchema } from "@/lib/validation";
+import {
+  assignmentSchema,
+  memberSchema,
+  orgUnitCreateSchema,
+  parseIdList,
+  passwordChangeSchema,
+  periodSchema,
+  positionCreateSchema,
+  positionSchema,
+  roleSchema,
+} from "@/lib/validation";
 
 const uuid = "4f1c2a3b-5d6e-4f70-8a9b-0c1d2e3f4a5b";
 
@@ -27,8 +37,10 @@ describe("memberSchema", () => {
     expect(memberSchema.parse({ ...base, phone: "+62 812-3456-7890" }).phone).toBe("+6281234567890");
   });
 
-  it("only allows the two access levels (no client-chosen superuser flags)", () => {
+  it("only allows the three access levels; an absent field means 'keep / member'", () => {
     expect(memberSchema.safeParse({ ...base, accessLevel: "owner" }).success).toBe(false);
+    expect(memberSchema.parse({ ...base, accessLevel: "super_admin" }).accessLevel).toBe("super_admin");
+    expect(memberSchema.parse({ ...base, accessLevel: "" }).accessLevel).toBeNull();
   });
 
   it("drops unknown fields (no mass assignment)", () => {
@@ -53,21 +65,62 @@ describe("periodSchema", () => {
 
 describe("roleSchema", () => {
   it("requires a 2–60 character name", () => {
-    expect(roleSchema.safeParse({ name: "B", description: "" }).success).toBe(false);
-    expect(roleSchema.parse({ name: " BPH ", description: "" })).toEqual({ name: "BPH", description: null });
+    expect(roleSchema.safeParse({ name: "B", description: "", grantsAdmin: "" }).success).toBe(false);
+    expect(roleSchema.parse({ name: " BPH ", description: "", grantsAdmin: "" })).toEqual({
+      name: "BPH",
+      description: null,
+      grantsAdmin: false,
+    });
+  });
+  it("reads the admin checkbox", () => {
+    expect(roleSchema.parse({ name: "Org Admin", description: "", grantsAdmin: "on" }).grantsAdmin).toBe(true);
   });
 });
 
 describe("assignmentSchema", () => {
-  const base = { memberId: uuid, roleId: uuid, periodId: uuid, positionId: "", newPositionName: "" };
-  it("needs exactly one of an existing position or a new position name", () => {
-    expect(assignmentSchema.safeParse(base).success).toBe(false);
-    expect(assignmentSchema.safeParse({ ...base, positionId: uuid }).success).toBe(true);
-    expect(assignmentSchema.safeParse({ ...base, positionId: "__new", newPositionName: "Ketua" }).success).toBe(true);
-    expect(assignmentSchema.safeParse({ ...base, positionId: uuid, newPositionName: "Ketua" }).success).toBe(false);
+  const base = { memberId: uuid, orgUnitId: uuid, positionId: uuid, periodId: uuid };
+  it("needs a member, unit, position and period", () => {
+    expect(assignmentSchema.safeParse(base).success).toBe(true);
+    for (const key of Object.keys(base)) {
+      expect(assignmentSchema.safeParse({ ...base, [key]: "" }).success).toBe(false);
+    }
   });
   it("rejects non-uuid ids", () => {
-    expect(assignmentSchema.safeParse({ ...base, memberId: "1 or 1=1", positionId: uuid }).success).toBe(false);
+    expect(assignmentSchema.safeParse({ ...base, memberId: "1 or 1=1" }).success).toBe(false);
+  });
+});
+
+describe("structure schemas", () => {
+  it("parses a new unit and defaults the sort order", () => {
+    expect(orgUnitCreateSchema.parse({ parentId: uuid, type: "division", name: " Musik ", sortOrder: "" })).toEqual({
+      parentId: uuid,
+      type: "division",
+      name: "Musik",
+      sortOrder: 100,
+    });
+  });
+  it("never accepts a second organization root", () => {
+    expect(
+      orgUnitCreateSchema.safeParse({ parentId: uuid, type: "organization", name: "X", sortOrder: "" }).success,
+    ).toBe(false);
+  });
+  it("parses a position with rank and the one-per-unit checkbox", () => {
+    expect(
+      positionCreateSchema.parse({ name: "Kepala Divisi", unitType: "division", rank: "60", isUniquePerUnit: "on" }),
+    ).toEqual({ name: "Kepala Divisi", unitType: "division", rank: 60, isUniquePerUnit: true });
+    expect(
+      positionCreateSchema.safeParse({ name: "X Y", unitType: "organization", rank: "1", isUniquePerUnit: "" }).success,
+    ).toBe(false);
+    expect(positionSchema.safeParse({ name: "Staff", rank: "0", isUniquePerUnit: "" }).success).toBe(false);
+    expect(positionSchema.safeParse({ name: "Staff", rank: "abc", isUniquePerUnit: "" }).success).toBe(false);
+  });
+  it("reads checkbox groups of ids and rejects anything else", () => {
+    const fd = new FormData();
+    fd.append("roleIds", uuid);
+    fd.append("roleIds", "");
+    expect(parseIdList(fd, "roleIds")).toEqual([uuid]);
+    fd.append("roleIds", "not-an-id");
+    expect(() => parseIdList(fd, "roleIds")).toThrow();
   });
 });
 

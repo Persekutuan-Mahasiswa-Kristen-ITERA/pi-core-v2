@@ -18,7 +18,7 @@ function param(value: string | string[] | undefined) {
 }
 
 export default async function MembersPage({ searchParams }: PageProps<"/members">) {
-  const { allowed, member: actor } = await requireAdminPage();
+  const { allowed, member: actor, isSuperAdmin } = await requireAdminPage();
   if (!allowed) return <ForbiddenState />;
 
   const sp = await searchParams;
@@ -86,12 +86,14 @@ export default async function MembersPage({ searchParams }: PageProps<"/members"
                       title={m.email}
                     >
                       {m.fullName}
-                      {m.accessLevel === "admin" ? (
+                      {m.accessLevel === "super_admin" ? (
+                        <span className="ml-1 text-[11px] font-semibold text-pmk-accent">SUPER ADMIN</span>
+                      ) : m.isAdmin ? (
                         <span className="ml-1 text-[11px] font-semibold text-pmk-accent">ADMIN</span>
                       ) : null}
                     </Link>
-                    <span className="block truncate text-xs sm:text-[inherit]" title={m.role ?? undefined}>
-                      {m.role ?? "No role"}
+                    <span className="block truncate text-xs sm:text-[inherit]" title={m.assignment ?? undefined}>
+                      {m.assignment ?? "No assignment"}
                       {m.extraAssignments ? <span className="text-pmk-muted"> +{m.extraAssignments}</span> : null}
                       <span className="sm:hidden"> · {m.period ?? "—"}</span>
                     </span>
@@ -105,7 +107,9 @@ export default async function MembersPage({ searchParams }: PageProps<"/members"
                     >
                       <SquarePen className="size-5" aria-hidden />
                     </Link>
-                    {m.isActive ? (
+                    {m.accessLevel === "super_admin" && !isSuperAdmin ? (
+                      <span className="size-11" aria-hidden />
+                    ) : m.isActive ? (
                       m.id === actor.id ? (
                         <span className="size-11" aria-hidden />
                       ) : (

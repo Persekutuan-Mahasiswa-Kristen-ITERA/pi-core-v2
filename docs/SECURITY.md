@@ -2,57 +2,63 @@
 
 ## Permission matrix
 
-| Capability                                      | Anonymous | Member (active) | Admin (active) | Deactivated |
-| ----------------------------------------------- | :-------: | :-------------: | :------------: | :---------: |
-| Log in                                          |     –     |       yes       |      yes       |  no (ban)   |
-| Sign up                                         |    no     |       no        |       no       |     no      |
-| Read own profile + own assignments              |     –     |       yes       |      yes       |     no      |
-| Read active period label, organization name     |    no     |       yes       |      yes       |     no      |
-| Change own password                             |     –     |       yes       |      yes       |     no      |
-| Read other members / all assignments            |    no     |       no        |      yes       |     no      |
-| Create / edit / deactivate / reactivate members |    no     |       no        |      yes       |     no      |
-| Issue a temporary password for a member         |    no     |       no        | yes (not self) |     no      |
-| Change a member's PI-CORE access (admin/member) |    no     |       no        | yes (not self) |     no      |
-| Create / edit / delete roles and positions      |    no     |       no        |      yes       |     no      |
-| Create / edit periods, set active period        |    no     |       no        |      yes       |     no      |
-| Create / edit / remove assignments              |    no     |       no        |      yes       |     no      |
-| Edit organization name                          |    no     |       no        |      yes       |     no      |
-| Read audit log                                  |    no     |       no        |      yes       |     no      |
+"Admin" = stored admin **or** admin through an active-period position (see ARCHITECTURE D-01).
+
+| Capability                                                 | Anonymous | Member (active) |        Admin (active)         |  Super admin   | Deactivated |
+| ---------------------------------------------------------- | :-------: | :-------------: | :---------------------------: | :------------: | :---------: |
+| Log in                                                     |     –     |       yes       |              yes              |      yes       |  no (ban)   |
+| Sign up                                                    |    no     |       no        |              no               |       no       |     no      |
+| Read own profile + own assignments                         |     –     |       yes       |              yes              |      yes       |     no      |
+| Read active period, organization name, units and positions |    no     |       yes       |              yes              |      yes       |     no      |
+| Change own password                                        |     –     |       yes       |              yes              |      yes       |     no      |
+| Read other members / all assignments / roles               |    no     |       no        |              yes              |      yes       |     no      |
+| Create / edit / deactivate / reactivate members            |    no     |       no        |     yes, not super admins     |      yes       |     no      |
+| Issue a temporary password for a member                    |    no     |       no        | yes, not self or super admins | yes (not self) |     no      |
+| Set access levels (member / admin / super admin)           |    no     |       no        |              no               | yes (not self) |     no      |
+| Create / edit periods, set active period                   |    no     |       no        |              yes              |      yes       |     no      |
+| Create / edit / remove assignments                         |    no     |       no        |              yes              |      yes       |     no      |
+| Manage units, positions, roles, position → role mapping    |    no     |       no        |              no               |      yes       |     no      |
+| Edit organization name                                     |    no     |       no        |              no               |      yes       |     no      |
+| Read audit log                                             |    no     |       no        |              yes              |      yes       |     no      |
 
 A member whose `must_change_password` is true can only reach `/change-password` and log out.
 
 ## Where each rule is enforced
 
-| Layer             | What it does                                                                                                                                                       |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Postgres grants   | `anon` has no privileges on any table. `authenticated` gets only the columns it may write (e.g. no `is_active` on periods, no `created_by` anywhere).              |
-| RLS (every table) | Policies in `supabase/migrations/*`. Admin = `private.is_admin()`; own data = `private.current_member_id()`, both require an **active** member.                    |
-| Triggers          | Stamp `created_*/updated_*`, audit log, last-admin guard, no assignments for inactive members, first period auto-active.                                           |
-| Constraints       | Unique email/NIM, unique role name (case-insensitive), unique position per role, one active period, assignment uniqueness, position belongs to role, label format. |
-| Server Actions    | `requireAdminAction()`, Zod whitelist parsing, self-protection (cannot demote/deactivate/reset self).                                                              |
-| Pages             | `requireMember()` / `requireAdminPage()`; non-admins get the "Admins only" state.                                                                                  |
-| proxy.ts          | Session refresh + redirect to `/login` (coarse).                                                                                                                   |
+| Layer             | What it does                                                                                                                                                                                                                       |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Postgres grants   | `anon` has no privileges on any table. `authenticated` gets only the columns it may write (e.g. no `is_active` on periods, no `created_by` anywhere).                                                                              |
+| RLS (every table) | Policies in `supabase/migrations/*`. Admin = `private.is_admin()`; own data = `private.current_member_id()`, both require an **active** member.                                                                                    |
+| Triggers          | Stamp `created_*/updated_*`, audit log, last-super-admin guard, access level changes only by super admins, unit tree rule, assignment unit/position match, no assignments for inactive members or units, first period auto-active. |
+| Constraints       | Unique email/NIM, unique role name (case-insensitive), unique position per role, one active period, assignment uniqueness, position belongs to role, label format.                                                                 |
+| Server Actions    | `requireAdminAction()` / `requireSuperAdminAction()`, Zod whitelist parsing, self-protection (cannot change own access/deactivate/reset self), super admin targets checked before any Auth admin API call.                         |
+| Pages             | `requireMember()` / `requireAdminPage()`; non-admins get the "Admins only" state.                                                                                                                                                  |
+| proxy.ts          | Session refresh + redirect to `/login` (coarse).                                                                                                                                                                                   |
 
 UI hiding is never the only check: every admin rule above exists in RLS and is covered by `tests/integration`.
 
 ## RLS policies (summary)
 
-| Table         | SELECT                                                | INSERT / UPDATE / DELETE                                                   |
-| ------------- | ----------------------------------------------------- | -------------------------------------------------------------------------- |
-| members       | admin, or own row while active                        | admin (no DELETE at all)                                                   |
-| assignments   | admin, or own                                         | admin                                                                      |
-| roles         | admin, or roles on own assignments                    | admin                                                                      |
-| positions     | admin, or positions on own assignments                | admin                                                                      |
-| periods       | admin, active period (any active member), own periods | admin insert/update; no DELETE; `is_active` only via `set_active_period()` |
-| org_settings  | any active member                                     | admin update                                                               |
-| audit_log     | admin                                                 | none (trigger only)                                                        |
-| role_overview | view with `security_invoker`, inherits the above      | –                                                                          |
+| Table          | SELECT                                                | INSERT / UPDATE / DELETE                                                                        |
+| -------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| members        | admin, or own row while active                        | super admin; admin only for non-super-admin rows and `access_level = member` (no DELETE at all) |
+| assignments    | admin, or own                                         | admin                                                                                           |
+| org_units      | any active member                                     | super admin                                                                                     |
+| positions      | any active member                                     | super admin                                                                                     |
+| roles          | admin, or roles carried by own positions              | super admin; system roles cannot be deleted                                                     |
+| position_roles | admin, or rows of own positions                       | super admin                                                                                     |
+| periods        | admin, active period (any active member), own periods | admin insert/update; no DELETE; `is_active` only via `set_active_period()`                      |
+| org_settings   | any active member                                     | super admin update                                                                              |
+| audit_log      | admin                                                 | none (trigger only)                                                                             |
+| role_overview  | view with `security_invoker`, inherits the above      | –                                                                                               |
 
 Privilege-escalation review: members cannot update their own row (no policy), so `access_level`,
-`is_active` and `must_change_password` are out of reach; `is_admin()` reads only `access_level` + `is_active`;
+`is_active` and `must_change_password` are out of reach; a trigger rejects any `access_level` change that is not made
+by a super admin (or the service role); `is_admin()` reads `access_level`, `is_active` and active-period assignments
+whose position carries a `grants_admin` role, and only super admins can change positions, roles or that mapping;
 `SECURITY DEFINER` functions use `search_path = ''` and live in the non-exposed `private` schema except
-`set_active_period`, which checks `is_admin()` first; the last active admin cannot be demoted or deactivated
-(advisory-locked trigger).
+`set_active_period`, which checks `is_admin()` first; the last active super admin cannot be demoted or
+deactivated (advisory-locked trigger).
 
 ## Web risks
 

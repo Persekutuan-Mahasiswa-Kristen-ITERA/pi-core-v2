@@ -9,7 +9,7 @@ import {
   UsersRound,
   type LucideIcon,
 } from "lucide-react";
-import { requireMember } from "@/lib/auth";
+import { isAdminAccess, requireMember } from "@/lib/auth";
 import { getDashboardStats, listAssignmentsForMember } from "@/lib/queries";
 import { SectionTitle, TintCard, RowPill } from "@/components/common/surfaces";
 import { EmptyState } from "@/components/common/states";
@@ -21,7 +21,7 @@ const numberFormat = new Intl.NumberFormat("en-US");
 export default async function DashboardPage() {
   const member = await requireMember();
   const firstName = member.fullName.split(/\s+/)[0];
-  const isAdmin = member.accessLevel === "admin";
+  const isAdmin = isAdminAccess(member.access);
 
   return (
     <div className="space-y-6">
@@ -72,15 +72,15 @@ async function MemberDashboard({ memberId }: { memberId: string }) {
       <SectionTitle id="my-assignments">Your assignments{activeLabel ? ` · ${activeLabel}` : ""}</SectionTitle>
       {current.length === 0 ? (
         <EmptyState title="No assignment in the active period">
-          When an admin assigns you a role, it will appear here. Past assignments are under Profile.
+          When an admin assigns you a position, it will appear here. Past assignments are under Profile.
         </EmptyState>
       ) : (
         <ul className="space-y-2">
           {current.map((a) => (
             <li key={a.id}>
               <RowPill className="flex items-center justify-between gap-3">
-                <span className="font-semibold text-pmk-ink">{a.role}</span>
-                <span className="text-right text-sm">{a.position}</span>
+                <span className="font-semibold text-pmk-ink">{a.position}</span>
+                <span className="text-right text-sm">{a.unit}</span>
               </RowPill>
             </li>
           ))}

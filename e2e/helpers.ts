@@ -2,6 +2,8 @@ import { expect, type Page } from "@playwright/test";
 
 export const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? "admin@example.com";
 export const MEMBER_EMAIL = process.env.E2E_MEMBER_EMAIL ?? "maria@example.com";
+/** Stored as a member; admin through Kepala Departemen in the active period (seed-dev-users). */
+export const POSITION_ADMIN_EMAIL = process.env.E2E_POSITION_ADMIN_EMAIL ?? "yohanes@example.com";
 export const PASSWORD = process.env.E2E_PASSWORD ?? "";
 if (!PASSWORD) throw new Error("Set E2E_PASSWORD to the SEED_PASSWORD used for `pnpm seed:dev-users`.");
 

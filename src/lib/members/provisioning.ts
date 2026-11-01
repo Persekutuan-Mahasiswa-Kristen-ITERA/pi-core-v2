@@ -63,7 +63,7 @@ export async function provisionMember(actor: Client, admin: Client, input: Membe
       email: input.email,
       nim: input.nim,
       phone: input.phone,
-      access_level: input.accessLevel,
+      access_level: input.accessLevel ?? "member",
       must_change_password: true,
     })
     .select("id")

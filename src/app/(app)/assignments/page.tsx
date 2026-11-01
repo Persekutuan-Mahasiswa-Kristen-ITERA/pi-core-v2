@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SquarePen, Trash2 } from "lucide-react";
 import { requireAdminPage } from "@/lib/auth";
-import { listActiveMembersForPicker, listAssignments, listPeriods, listRolesWithPositions } from "@/lib/queries";
+import { listAssignments } from "@/lib/queries";
 import { idSchema } from "@/lib/validation";
 import { ConfirmAction } from "@/components/common/confirm-action";
 import { EmptyState, ForbiddenState } from "@/components/common/states";
 import { RowPill } from "@/components/common/surfaces";
 import { AssignmentForm } from "./assignment-form";
 import { PeriodFilter } from "./period-filter";
+import { getAssignmentFormOptions } from "./form-options";
 import { createAssignment, deleteAssignment } from "./actions";
 
 export const metadata: Metadata = { title: "Assignments" };
@@ -17,16 +18,11 @@ export default async function AssignmentsPage({ searchParams }: PageProps<"/assi
   const { allowed } = await requireAdminPage();
   if (!allowed) return <ForbiddenState />;
   const sp = await searchParams;
-  const [members, roles, periods] = await Promise.all([
-    listActiveMembersForPicker(),
-    listRolesWithPositions(),
-    listPeriods(),
-  ]);
-  const activePeriod = periods.find((p) => p.is_active) ?? null;
+  const options = await getAssignmentFormOptions();
+  const activePeriodId = options.activePeriodId ?? null;
 
   const requestedPeriod = typeof sp.period === "string" ? sp.period : undefined;
-  const listPeriodId =
-    requestedPeriod === "all" ? null : (idSchema.safeParse(requestedPeriod).data ?? activePeriod?.id ?? null);
+  const listPeriodId = requestedPeriod === "all" ? null : (idSchema.safeParse(requestedPeriod).data ?? activePeriodId);
   const assignments = await listAssignments(listPeriodId);
   const preselectedMember = idSchema.safeParse(typeof sp.member === "string" ? sp.member : undefined).data;
 
@@ -36,10 +32,11 @@ export default async function AssignmentsPage({ searchParams }: PageProps<"/assi
         <AssignmentForm
           mode="create"
           action={createAssignment}
-          members={members.map((m) => ({ id: m.id, label: `${m.full_name} · ${m.email}` }))}
-          roles={roles.map((r) => ({ id: r.id, name: r.name, positions: r.positions }))}
-          periods={periods.map((p) => ({ id: p.id, label: p.is_active ? `${p.label} (active)` : p.label }))}
-          defaults={{ memberId: preselectedMember, periodId: activePeriod?.id }}
+          members={options.members}
+          units={options.units}
+          positions={options.positions}
+          periods={options.periods}
+          defaults={{ memberId: preselectedMember, periodId: options.activePeriodId }}
         />
       </section>
 
@@ -50,12 +47,12 @@ export default async function AssignmentsPage({ searchParams }: PageProps<"/assi
           </h2>
           <PeriodFilter
             value={requestedPeriod === "all" ? "all" : (listPeriodId ?? "all")}
-            periods={periods.map((p) => ({ id: p.id, label: p.label }))}
+            periods={options.periods.map((p) => ({ id: p.id, label: p.label.replace(" (active)", "") }))}
           />
         </div>
         {assignments.length === 0 ? (
           <EmptyState title="No assignments in this period">
-            Use the form above to assign a member a role and position.
+            Use the form above to give a member a position in a unit.
           </EmptyState>
         ) : (
           <ul className="space-y-2.5">
@@ -71,13 +68,13 @@ export default async function AssignmentsPage({ searchParams }: PageProps<"/assi
                       <span className="shrink-0 text-xs sm:hidden">{a.period}</span>
                     </span>
                     <span className="block truncate text-xs sm:hidden">
-                      {a.role} · {a.position}
-                    </span>
-                    <span className="hidden truncate sm:block" title={a.role}>
-                      {a.role}
+                      {a.position} · {a.unit}
                     </span>
                     <span className="hidden truncate sm:block" title={a.position}>
                       {a.position}
+                    </span>
+                    <span className="hidden truncate sm:block" title={a.unit}>
+                      {a.unit}
                     </span>
                     <span className="hidden truncate sm:block">{a.period}</span>
                   </span>
@@ -92,7 +89,7 @@ export default async function AssignmentsPage({ searchParams }: PageProps<"/assi
                     <ConfirmAction
                       action={deleteAssignment.bind(null, a.id)}
                       title="Remove this assignment?"
-                      description={`${a.memberName} will no longer hold ${a.role} · ${a.position} in ${a.period}.`}
+                      description={`${a.memberName} will no longer hold ${a.position} · ${a.unit} in ${a.period}.`}
                       confirmLabel="Remove"
                       destructive
                     >

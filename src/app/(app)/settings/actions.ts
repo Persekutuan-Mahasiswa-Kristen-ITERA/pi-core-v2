@@ -1,13 +1,13 @@
 "use server";
 
 import type { ActionResult } from "@/lib/action-result";
-import { AuthorizationError, requireAdminAction } from "@/lib/auth";
+import { AuthorizationError, requireSuperAdminAction } from "@/lib/auth";
 import { describeDbError } from "@/lib/db-errors";
 import { orgSettingsSchema, parseForm } from "@/lib/validation";
 
 export async function updateOrgSettings(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   try {
-    const { supabase } = await requireAdminAction();
+    const { supabase } = await requireSuperAdminAction();
     const parsed = parseForm(orgSettingsSchema, formData, ["orgName"]);
     if (!parsed.success)
       return { ok: false, message: "Check the highlighted fields.", fieldErrors: parsed.fieldErrors };

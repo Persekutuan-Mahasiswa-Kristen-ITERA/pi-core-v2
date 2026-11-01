@@ -10,7 +10,7 @@ import { OrgForm } from "./org-form";
 export const metadata: Metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
-  const { allowed } = await requireAdminPage();
+  const { allowed, isSuperAdmin } = await requireAdminPage();
   if (!allowed) return <ForbiddenState />;
   const settings = await getOrgSettings();
 
@@ -18,7 +18,14 @@ export default async function SettingsPage() {
     <div className="mx-auto max-w-xl space-y-8">
       <section aria-label="Organization identity" className="flex flex-col items-center gap-4 pt-4 text-center">
         <Image src="/brand/pmk-logo.png" alt="PMK ITERA logo" width={84} height={84} unoptimized />
-        <OrgForm orgName={settings?.org_name ?? ""} />
+        {isSuperAdmin ? (
+          <OrgForm orgName={settings?.org_name ?? ""} />
+        ) : (
+          <div className="space-y-1">
+            <p className="text-lg font-bold text-pmk-body">{settings?.org_name}</p>
+            <p className="text-xs text-pmk-body">Only a super admin can change the organization name.</p>
+          </div>
+        )}
         <p className="text-xs text-pmk-body">
           The logo is bundled with the app. Replacing it is a code change (see README).
         </p>

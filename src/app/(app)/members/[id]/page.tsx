@@ -15,13 +15,15 @@ import { ResetPassword } from "./reset-password";
 export const metadata: Metadata = { title: "Edit member" };
 
 export default async function EditMemberPage({ params }: PageProps<"/members/[id]">) {
-  const { allowed, member: actor } = await requireAdminPage();
+  const { allowed, member: actor, isSuperAdmin } = await requireAdminPage();
   if (!allowed) return <ForbiddenState />;
   const id = idSchema.safeParse((await params).id);
   if (!id.success) notFound();
   const [member, assignments] = await Promise.all([getMember(id.data), listAssignmentsForMember(id.data)]);
   if (!member) notFound();
   const isSelf = member.id === actor.id;
+  // Only a super admin edits a super admin's account (RLS enforces the same).
+  const locked = member.access_level === "super_admin" && !isSuperAdmin;
 
   return (
     <div className="mx-auto max-w-xl space-y-8">
@@ -40,18 +42,26 @@ export default async function EditMemberPage({ params }: PageProps<"/members/[id
         ) : member.must_change_password ? (
           <p className="text-sm text-pmk-body">Has not chosen a personal password yet.</p>
         ) : null}
-        <MemberForm
-          mode="edit"
-          action={updateMember.bind(null, member.id)}
-          isSelf={isSelf}
-          defaults={{
-            fullName: member.full_name,
-            email: member.email,
-            nim: member.nim,
-            phone: member.phone,
-            accessLevel: member.access_level,
-          }}
-        />
+        {locked ? (
+          <div className="space-y-2 rounded-xl bg-pmk-tint px-4 py-3 text-sm text-pmk-body">
+            <p className="font-semibold text-pmk-ink">Super admin account</p>
+            <p className="break-all">{member.email}</p>
+            <p>Only another super admin can edit, deactivate or reset this account.</p>
+          </div>
+        ) : (
+          <MemberForm
+            mode="edit"
+            action={updateMember.bind(null, member.id)}
+            canSetAccess={isSuperAdmin && !isSelf}
+            defaults={{
+              fullName: member.full_name,
+              email: member.email,
+              nim: member.nim,
+              phone: member.phone,
+              accessLevel: member.access_level,
+            }}
+          />
+        )}
       </section>
 
       <section className="space-y-3" aria-labelledby="assignments-title">
@@ -77,8 +87,8 @@ export default async function EditMemberPage({ params }: PageProps<"/members/[id
                   className="block rounded-xl focus-visible:outline-2 focus-visible:outline-pmk-accent"
                 >
                   <RowPill className="grid grid-cols-3 gap-2 text-sm hover:bg-pmk-tint-border/60">
-                    <span className="font-medium text-pmk-ink">{a.role}</span>
-                    <span>{a.position}</span>
+                    <span className="font-medium text-pmk-ink">{a.position}</span>
+                    <span>{a.unit}</span>
                     <span className="text-right">
                       {a.period}
                       {a.activePeriod ? <span className="sr-only"> (active period)</span> : null}
@@ -91,7 +101,7 @@ export default async function EditMemberPage({ params }: PageProps<"/members/[id
         )}
       </section>
 
-      {!isSelf ? (
+      {!isSelf && !locked ? (
         <section className="space-y-3" aria-labelledby="account-title">
           <SectionTitle id="account-title">Account</SectionTitle>
           <div className="flex flex-wrap gap-3">

@@ -4,6 +4,7 @@ import {
   CircleUserRound,
   House,
   LayoutDashboard,
+  Network,
   Plug,
   Settings,
   ShieldHalf,
@@ -12,7 +13,14 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-export type NavItem = { href: string; label: string; icon: LucideIcon; adminOnly?: boolean; comingSoon?: boolean };
+export type NavItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  adminOnly?: boolean;
+  superAdminOnly?: boolean;
+  comingSoon?: boolean;
+};
 
 /** Drawer items, in prototype order (Frame 31). */
 export const DRAWER_ITEMS: NavItem[] = [
@@ -21,6 +29,7 @@ export const DRAWER_ITEMS: NavItem[] = [
   { href: "/roles", label: "Roles", icon: ShieldHalf, adminOnly: true },
   { href: "/periods", label: "Periods", icon: CalendarRange, adminOnly: true },
   { href: "/assignments", label: "Assignments", icon: UserRoundCheck, adminOnly: true },
+  { href: "/structure", label: "Structure", icon: Network, adminOnly: true },
   { href: "/integrations", label: "Integrations", icon: Plug, adminOnly: true, comingSoon: true },
   { href: "/settings", label: "Setting", icon: Settings, adminOnly: true },
   { href: "/profile", label: "Profile", icon: CircleUserRound },
@@ -45,6 +54,7 @@ const TITLES: [string, string][] = [
   ["/roles", "Roles"],
   ["/periods", "Periods"],
   ["/assignments", "Assignments"],
+  ["/structure", "Structure"],
   ["/settings", "Settings"],
   ["/profile", "Profile"],
   ["/reports", "Reports"],

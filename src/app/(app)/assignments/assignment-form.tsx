@@ -7,37 +7,49 @@ import { toast } from "sonner";
 import { FieldError } from "@/components/common/states";
 import { FormMessage, SubmitButton } from "@/components/common/form-controls";
 import { initialActionState, type ActionResult } from "@/lib/action-result";
+import type { OrgUnitType } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
 
 type Option = { id: string; label: string };
-type RoleOption = { id: string; name: string; positions: { id: string; name: string }[] };
+/** `group` = the top-level unit (BPH, a department with its divisions, the bureau). */
+export type UnitOption = { id: string; label: string; type: OrgUnitType; group: string; isActive: boolean };
+export type PositionOption = { id: string; name: string; unitType: OrgUnitType };
 
 type Props = {
   action: (prev: ActionResult, formData: FormData) => Promise<ActionResult>;
   members: Option[];
-  roles: RoleOption[];
+  units: UnitOption[];
+  positions: PositionOption[];
   periods: Option[];
-  defaults: { memberId?: string; roleId?: string; positionId?: string; periodId?: string };
+  defaults: { memberId?: string; orgUnitId?: string; positionId?: string; periodId?: string };
   mode: "create" | "edit";
 };
 
 const pillClass =
   "h-11 w-full appearance-none rounded-xl border-2 border-pmk-tint-border bg-pmk-tint px-6 text-base font-medium text-pmk-ink focus-visible:border-pmk-accent focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-pmk-accent/20 aria-invalid:border-destructive sm:text-sm";
 
-export function AssignmentForm({ action, members, roles, periods, defaults, mode }: Props) {
-  const [roleId, setRoleId] = useState(defaults.roleId ?? "");
+/** Keeps tree order; one group per top-level unit. */
+function groupUnits(units: UnitOption[]) {
+  const groups = new Map<string, UnitOption[]>();
+  for (const u of units) groups.set(u.group, [...(groups.get(u.group) ?? []), u]);
+  return [...groups.entries()];
+}
+
+export function AssignmentForm({ action, members, units, positions, periods, defaults, mode }: Props) {
+  const [unitId, setUnitId] = useState(defaults.orgUnitId ?? "");
   const [positionId, setPositionId] = useState(defaults.positionId ?? "");
   const [state, formAction] = useActionState(async (prev: ActionResult, formData: FormData) => {
     const result = await action(prev, formData);
     if (result.ok && mode === "create") {
-      // Keep member and period for quick consecutive entries; reset role/position.
-      setRoleId("");
+      // Keep member and period for quick consecutive entries; reset unit/position.
+      setUnitId("");
       setPositionId("");
     }
     return result;
   }, initialActionState);
   const router = useRouter();
-  const positions = roles.find((r) => r.id === roleId)?.positions ?? [];
+  const unitType = units.find((u) => u.id === unitId)?.type;
+  const unitPositions = unitType ? positions.filter((p) => p.unitType === unitType) : [];
   const errors = state.ok ? undefined : state.fieldErrors;
 
   useEffect(() => {
@@ -74,29 +86,35 @@ export function AssignmentForm({ action, members, roles, periods, defaults, mode
         <FieldError id="field-memberId-error" messages={errors?.memberId} />
       </div>
       <div>
-        <label htmlFor="field-roleId" className="sr-only">
-          Role
+        <label htmlFor="field-orgUnitId" className="sr-only">
+          Unit
         </label>
         <select
-          {...a11y("roleId")}
-          value={roleId}
+          {...a11y("orgUnitId")}
+          value={unitId}
           onChange={(e) => {
-            setRoleId(e.target.value);
+            setUnitId(e.target.value);
             setPositionId("");
           }}
           className={pillClass}
           required
         >
           <option value="" disabled>
-            ＋ Role
+            ＋ Unit
           </option>
-          {roles.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.name}
-            </option>
+          {groupUnits(units).map(([group, list]) => (
+            <optgroup key={group} label={group}>
+              {list.map((u) => (
+                // Inactive units stay selectable only when this assignment already uses one.
+                <option key={u.id} value={u.id} disabled={!u.isActive && u.id !== defaults.orgUnitId}>
+                  {u.label}
+                  {u.isActive ? "" : " (inactive)"}
+                </option>
+              ))}
+            </optgroup>
           ))}
         </select>
-        <FieldError id="field-roleId-error" messages={errors?.roleId} />
+        <FieldError id="field-orgUnitId-error" messages={errors?.orgUnitId} />
       </div>
       <div>
         <label htmlFor="field-positionId" className="sr-only">
@@ -106,36 +124,20 @@ export function AssignmentForm({ action, members, roles, periods, defaults, mode
           {...a11y("positionId")}
           value={positionId}
           onChange={(e) => setPositionId(e.target.value)}
-          className={cn(pillClass, !roleId && "opacity-60")}
-          disabled={!roleId}
+          className={cn(pillClass, !unitId && "opacity-60")}
+          disabled={!unitId}
           required
         >
           <option value="" disabled>
-            {roleId ? "＋ Position" : "＋ Position (choose a role first)"}
+            {unitId ? "＋ Position" : "＋ Position (choose a unit first)"}
           </option>
-          {positions.map((p) => (
+          {unitPositions.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
             </option>
           ))}
-          <option value="__new">New position…</option>
         </select>
         <FieldError id="field-positionId-error" messages={errors?.positionId} />
-        {positionId === "__new" ? (
-          <div className="mt-2">
-            <label htmlFor="field-newPositionName" className="mb-1 block text-sm font-semibold text-pmk-ink">
-              New position name
-            </label>
-            <input
-              {...a11y("newPositionName")}
-              placeholder="e.g. Kepala Departemen Musik"
-              className={pillClass}
-              maxLength={80}
-              autoFocus
-            />
-            <FieldError id="field-newPositionName-error" messages={errors?.newPositionName} />
-          </div>
-        ) : null}
       </div>
       <div>
         <label htmlFor="field-periodId" className="sr-only">

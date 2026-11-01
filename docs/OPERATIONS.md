@@ -58,3 +58,12 @@ owner's machine (`~/.config/vercel-pmk-token/token.txt`, mode 600). Env vars (Pr
 
 Still to do: real-device checks (docs/PWA.md), owner-approved production deploy, then set Supabase Auth Site URL to the
 production URL.
+
+## Pending: organization structure migration (branch `feat/org-structure-v1`)
+
+Not yet applied to the hosted project. `20261101100000_access_level_super_admin.sql` and
+`20261101100100_org_structure.sql` replace roles/positions/assignments with the v1 structure, add super admins and
+position-derived admin access, and turn every existing `admin` into `super_admin` (on hosted: the bootstrapped first
+admin). The second migration **refuses to run** if roles, positions or assignments contain rows, so it cannot drop
+data silently. Before `supabase db push`: check those three tables are empty on hosted, then push, then deploy a
+preview built from the same commit (the old app code does not work against the new schema).

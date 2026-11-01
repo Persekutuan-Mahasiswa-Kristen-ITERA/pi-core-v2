@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SquarePen, Trash2, UsersRound } from "lucide-react";
 import { requireAdminPage } from "@/lib/auth";
+import { UNIT_TYPE_LABEL } from "@/lib/org-structure";
 import { getRoleDetail } from "@/lib/queries";
 import { idSchema } from "@/lib/validation";
 import { ConfirmAction } from "@/components/common/confirm-action";
@@ -13,13 +14,13 @@ import { deleteRole } from "../actions";
 export const metadata: Metadata = { title: "Role" };
 
 export default async function RoleDetailPage({ params }: PageProps<"/roles/[id]">) {
-  const { allowed } = await requireAdminPage();
+  const { allowed, isSuperAdmin } = await requireAdminPage();
   if (!allowed) return <ForbiddenState />;
   const id = idSchema.safeParse((await params).id);
   if (!id.success) notFound();
   const detail = await getRoleDetail(id.data);
   if (!detail) notFound();
-  const { role, members, activePeriod } = detail;
+  const { role, members, positions, activePeriod } = detail;
 
   return (
     <div className="mx-auto max-w-xl space-y-5">
@@ -34,9 +35,33 @@ export default async function RoleDetailPage({ params }: PageProps<"/roles/[id]"
           <UsersRound className="size-5 text-pmk-accent" aria-hidden />
           {role.name}
         </p>
+        {role.grants_admin ? (
+          <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-pmk-accent">
+            Gives admin access in the active period
+          </p>
+        ) : null}
         <p className="mt-3 text-sm text-pmk-body">Total Members{activePeriod ? ` · ${activePeriod.label}` : ""}</p>
         <p className="text-3xl font-bold text-pmk-ink">{role.active_member_count}</p>
       </TintCard>
+
+      <section aria-labelledby="role-positions" className="space-y-2">
+        <h2 id="role-positions" className="text-sm font-bold text-pmk-ink">
+          Positions with this role
+        </h2>
+        {positions.length === 0 ? (
+          <p className="text-sm text-pmk-body">
+            No position carries this role yet. A super admin sets this per position under Structure.
+          </p>
+        ) : (
+          <ul className="flex flex-wrap gap-2">
+            {positions.map((p) => (
+              <li key={p.id} className="rounded-full bg-pmk-tint px-3 py-1.5 text-sm text-pmk-ink">
+                {p.name} <span className="text-xs text-pmk-body">· {UNIT_TYPE_LABEL[p.unit_type]}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section aria-labelledby="role-members" className="rounded-xl border-2 border-pmk-tint/80 bg-pmk-cream p-4">
         <h2 id="role-members" className="text-sm font-bold text-pmk-ink">
@@ -56,7 +81,10 @@ export default async function RoleDetailPage({ params }: PageProps<"/roles/[id]"
                   <Link href={`/members/${m.memberId}`} className="font-medium text-pmk-ink hover:underline">
                     {m.fullName}
                   </Link>
-                  <span className="text-right text-sm">{m.position}</span>
+                  <span className="text-right text-sm">
+                    {m.position}
+                    <span className="block text-xs text-pmk-muted">{m.unit}</span>
+                  </span>
                 </RowPill>
               </li>
             ))}
@@ -64,36 +92,37 @@ export default async function RoleDetailPage({ params }: PageProps<"/roles/[id]"
         )}
       </section>
 
-      <div className="flex min-h-11 items-center justify-between rounded-xl border-2 border-pmk-tint-border bg-pmk-tint px-2">
-        <Link
-          href={`/roles/${role.id}/edit`}
-          className="inline-flex min-h-11 items-center gap-2 px-2 text-sm font-medium text-pmk-ink hover:underline"
-        >
-          <SquarePen className="size-5 text-pmk-brown" aria-hidden />
-          Edit Role
-        </Link>
-        <ConfirmAction
-          action={deleteRole.bind(null, role.id!)}
-          title={`Delete role ${role.name}?`}
-          description="The role and its unused positions will be deleted. This cannot be undone."
-          confirmLabel="Delete Role"
-          destructive
-          redirectTo="/roles"
-          blockedReason={
-            role.assignment_count
-              ? `${role.name} still has ${role.assignment_count} assignment(s) across all periods. Remove them under Assignments before deleting the role.`
-              : undefined
-          }
-        >
-          <button
-            type="button"
+      {isSuperAdmin ? (
+        <div className="flex min-h-11 items-center justify-between rounded-xl border-2 border-pmk-tint-border bg-pmk-tint px-2">
+          <Link
+            href={`/roles/${role.id}/edit`}
             className="inline-flex min-h-11 items-center gap-2 px-2 text-sm font-medium text-pmk-ink hover:underline"
           >
-            Delete Role
-            <Trash2 className="size-5 text-pmk-brown" aria-hidden />
-          </button>
-        </ConfirmAction>
-      </div>
+            <SquarePen className="size-5 text-pmk-brown" aria-hidden />
+            Edit Role
+          </Link>
+          {role.is_system ? (
+            <span className="px-2 text-xs text-pmk-body">System role · cannot be deleted</span>
+          ) : (
+            <ConfirmAction
+              action={deleteRole.bind(null, role.id!)}
+              title={`Delete role ${role.name}?`}
+              description="Positions lose this role; assignments are not touched. This cannot be undone."
+              confirmLabel="Delete Role"
+              destructive
+              redirectTo="/roles"
+            >
+              <button
+                type="button"
+                className="inline-flex min-h-11 items-center gap-2 px-2 text-sm font-medium text-pmk-ink hover:underline"
+              >
+                Delete Role
+                <Trash2 className="size-5 text-pmk-brown" aria-hidden />
+              </button>
+            </ConfirmAction>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

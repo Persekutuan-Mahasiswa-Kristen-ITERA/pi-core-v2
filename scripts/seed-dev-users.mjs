@@ -30,28 +30,29 @@ if (!secret || !password || password.length < 8 || !/[A-Za-z]/.test(password) ||
 
 const admin = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
 
+// One account per access path: super admin, admin through a position (Kepala Departemen carries
+// Organization Admin), member with a non-admin position, member without assignments.
+// `assign` = [unit name, position name] in the active period.
 export const DEV_USERS = [
-  { email: "admin@example.com", fullName: "Admin Contoh", accessLevel: "admin", assign: [["BPH", "Ketua Umum"]] },
   {
-    email: "maria@example.com",
-    fullName: "Maria Contoh",
-    accessLevel: "member",
-    assign: [["Sekretaris", "Sekretaris Umum"]],
+    email: "admin@example.com",
+    fullName: "Admin Contoh",
+    accessLevel: "super_admin",
+    assign: [["IT", "Kepala Divisi"]],
   },
+  { email: "maria@example.com", fullName: "Maria Contoh", accessLevel: "member", assign: [["Musik", "Staff"]] },
   {
     email: "yohanes@example.com",
     fullName: "Yohanes Contoh",
     accessLevel: "member",
-    assign: [
-      ["Kepala Departemen", "Kepala Departemen Musik"],
-      ["Panitia", "Ketua Panitia Natal"],
-    ],
+    assign: [["Departemen Pelayanan Khusus", "Kepala Departemen"]],
   },
   { email: "ruth@example.com", fullName: "Ruth Contoh", accessLevel: "member", assign: [] },
 ];
 
 const { data: period } = await admin.from("periods").select("id").eq("is_active", true).single();
-const { data: positions } = await admin.from("positions").select("id, name, role_id, roles(name)");
+const { data: units } = await admin.from("org_units").select("id, name, type");
+const { data: positions } = await admin.from("positions").select("id, name, unit_type");
 
 for (const user of DEV_USERS) {
   const { data: existing } = await admin.from("members").select("id").eq("email", user.email).maybeSingle();
@@ -77,12 +78,13 @@ for (const user of DEV_USERS) {
     .select("id")
     .single();
   if (insertError) throw insertError;
-  for (const [roleName, positionName] of user.assign) {
-    const position = positions.find((p) => p.roles?.name === roleName && p.name === positionName);
-    if (!position || !period) continue;
+  for (const [unitName, positionName] of user.assign) {
+    const unit = units.find((u) => u.name === unitName);
+    const position = unit && positions.find((p) => p.unit_type === unit.type && p.name === positionName);
+    if (!position || !period) throw new Error(`No ${positionName} in ${unitName} (or no active period).`);
     const { error: aError } = await admin
       .from("assignments")
-      .insert({ member_id: member.id, role_id: position.role_id, position_id: position.id, period_id: period.id });
+      .insert({ member_id: member.id, org_unit_id: unit.id, position_id: position.id, period_id: period.id });
     if (aError) throw aError;
   }
   console.log(`created ${user.email} (${user.accessLevel})`);

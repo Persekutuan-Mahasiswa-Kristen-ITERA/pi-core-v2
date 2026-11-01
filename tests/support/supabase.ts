@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import pg from "pg";
-import type { Database } from "@/lib/supabase/types";
+import { assignmentRow, type AccessLevel, type Database } from "@/lib/supabase/types";
 
 /**
  * Integration helpers. They talk to the LOCAL Supabase started by `supabase start` and refuse any
@@ -39,7 +39,7 @@ const createdUserIds: string[] = [];
 
 export async function createUser(
   label: string,
-  accessLevel: "admin" | "member",
+  accessLevel: AccessLevel,
   opts: { mustChangePassword?: boolean } = {},
 ): Promise<TestUser> {
   const admin = serviceClient();
@@ -75,20 +75,52 @@ export async function withDb<T>(fn: (db: pg.Client) => Promise<T>): Promise<T> {
   }
 }
 
+/** Ids of the baseline structure (from the migrations), looked up by name. */
+export async function structure() {
+  const svc = serviceClient();
+  const [units, positions, roles, period] = await Promise.all([
+    svc.from("org_units").select("id, name, type"),
+    svc.from("positions").select("id, name, unit_type"),
+    svc.from("roles").select("id, key"),
+    svc.from("periods").select("id").eq("is_active", true).single(),
+  ]);
+  if (units.error || positions.error || roles.error || period.error) throw new Error("baseline structure missing");
+  const unit = (name: string) => units.data.find((u) => u.name === name)!.id;
+  const position = (unitType: string, name: string) =>
+    positions.data.find((p) => p.unit_type === unitType && p.name === name)!.id;
+  const role = (key: string) => roles.data.find((r) => r.key === key)!.id;
+  return { unit, position, role, activePeriodId: period.data.id };
+}
+
+/** Inserts an assignment as the service role (test setup). */
+export async function assign(memberId: string, orgUnitId: string, positionId: string, periodId: string) {
+  const { data, error } = await serviceClient()
+    .from("assignments")
+    .insert(
+      assignmentRow({ member_id: memberId, org_unit_id: orgUnitId, position_id: positionId, period_id: periodId }),
+    )
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data.id;
+}
+
 /** Removes everything this run created (as the DB owner, bypassing RLS and grants). */
 export async function cleanup() {
   await withDb(async (db) => {
     const like = `%${RUN}%`;
     await db.query(
-      `delete from public.assignments where member_id in (select id from public.members where email like $1)`,
-      [like],
-    );
-    await db.query(
-      `delete from public.assignments where role_id in (select id from public.roles where name like $1)
-         or period_id in (select id from public.periods where label in (select unnest($2::text[])))`,
+      `delete from public.assignments where member_id in (select id from public.members where email like $1)
+         or period_id in (select id from public.periods where label in (select unnest($2::text[])))
+         or position_id in (select id from public.positions where name like $1)
+         or org_unit_id in (select id from public.org_units where name like $1)`,
       [like, testPeriodLabels],
     );
     await db.query(`delete from public.roles where name like $1`, [like]);
+    await db.query(`delete from public.positions where name like $1`, [like]);
+    // children first: parent_id is ON DELETE RESTRICT, checked row by row
+    await db.query(`delete from public.org_units where name like $1 and type = 'division'`, [like]);
+    await db.query(`delete from public.org_units where name like $1`, [like]);
     await db.query(`delete from public.periods where label = any($1::text[]) and not is_active`, [testPeriodLabels]);
     await db.query(`delete from public.members where email like $1`, [like]);
     await db.query(`delete from auth.users where email like $1`, [like]);

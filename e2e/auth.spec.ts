@@ -37,7 +37,7 @@ test("admin logs in to the dashboard and logs out", async ({ page }) => {
 test("a regular member cannot open admin screens", async ({ page }) => {
   await login(page, MEMBER_EMAIL, PASSWORD);
   await expect(page.getByText("Shalom Maria!")).toBeVisible();
-  for (const path of ["/members", "/roles", "/periods", "/assignments", "/settings", "/members/new"]) {
+  for (const path of ["/members", "/roles", "/periods", "/assignments", "/structure", "/settings", "/members/new"]) {
     await page.goto(path);
     await expect(page.getByText("Admins only")).toBeVisible();
   }

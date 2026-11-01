@@ -1,19 +1,17 @@
 "use server";
 
 import { z } from "zod";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ActionResult } from "@/lib/action-result";
 import { AuthorizationError, requireAdminAction } from "@/lib/auth";
 import { describeDbError } from "@/lib/db-errors";
-import { escapeLike } from "@/lib/search";
-import type { Database } from "@/lib/supabase/types";
-import { assignmentSchema, idSchema, parseForm, type AssignmentInput } from "@/lib/validation";
+import { assignmentRow } from "@/lib/supabase/types";
+import { assignmentSchema, idSchema, parseForm } from "@/lib/validation";
 
-const FIELDS = ["memberId", "roleId", "positionId", "newPositionName", "periodId"] as const;
+const FIELDS = ["memberId", "orgUnitId", "positionId", "periodId"] as const;
 const ERRORS = {
-  assignments_unique: "This member already holds that role and position in that period.",
-  positions_role_name_key: "This role already has a position with that name.",
-  foreign_key: "The selected member, role, position or period no longer exists.",
+  assignments_unique: "This member already holds that position in that unit and period.",
+  assignments_one_holder: "Someone already holds that position in this unit for that period.",
+  foreign_key: "The selected member, unit, position or period no longer exists.",
 };
 
 function denied(error: unknown): ActionResult<never> {
@@ -22,53 +20,28 @@ function denied(error: unknown): ActionResult<never> {
   throw error;
 }
 
-/** Picks an existing position (case-insensitive) or creates it under the chosen role. */
-async function resolvePosition(
-  supabase: SupabaseClient<Database>,
-  input: AssignmentInput,
-): Promise<{ id: string } | { error: string }> {
-  if (input.positionId) return { id: input.positionId };
-  const name = input.newPositionName!;
-  const find = () =>
-    supabase.from("positions").select("id").eq("role_id", input.roleId).ilike("name", escapeLike(name)).maybeSingle();
-  const existing = await find();
-  if (existing.error) return { error: describeDbError(existing.error) };
-  if (existing.data) return { id: existing.data.id };
-  const created = await supabase.from("positions").insert({ role_id: input.roleId, name }).select("id").single();
-  if (created.error) {
-    if (created.error.code === "23505") {
-      const again = await find(); // created concurrently
-      if (again.data) return { id: again.data.id };
-    }
-    return { error: describeDbError(created.error, ERRORS) };
-  }
-  return { id: created.data.id };
-}
-
 async function save(id: string | null, formData: FormData): Promise<ActionResult> {
   const { supabase } = await requireAdminAction();
   const assignmentId = id ? idSchema.parse(id) : null;
   const parsed = parseForm(assignmentSchema, formData, FIELDS);
   if (!parsed.success) return { ok: false, message: "Check the highlighted fields.", fieldErrors: parsed.fieldErrors };
 
-  const position = await resolvePosition(supabase, parsed.data);
-  if ("error" in position)
-    return { ok: false, message: position.error, fieldErrors: { newPositionName: [position.error] } };
-
-  const row = {
+  const row = assignmentRow({
     member_id: parsed.data.memberId,
-    role_id: parsed.data.roleId,
-    position_id: position.id,
+    org_unit_id: parsed.data.orgUnitId,
+    position_id: parsed.data.positionId,
     period_id: parsed.data.periodId,
-  };
+  });
+  // The database checks that the position belongs to this kind of unit, that the unit is active,
+  // and that unique positions (Kepala Divisi, Ketua Umum, ...) have one holder per unit and period.
   const { data, error } = assignmentId
     ? await supabase.from("assignments").update(row).eq("id", assignmentId).select("id")
     : await supabase.from("assignments").insert(row).select("id");
   if (error) {
-    // 23503 here also covers a position that belongs to a different role (composite FK).
-    const message =
-      error.code === "23503" ? "That position does not belong to the selected role." : describeDbError(error, ERRORS);
-    return { ok: false, message };
+    const message = describeDbError(error, ERRORS);
+    const field =
+      error.hint === "unit_type_mismatch" ? "positionId" : error.hint === "unit_inactive" ? "orgUnitId" : null;
+    return { ok: false, message, fieldErrors: field ? { [field]: [message] } : undefined };
   }
   if (!data.length) return { ok: false, message: "Assignment not found." };
   return { ok: true, message: assignmentId ? "Assignment saved." : "Assignment added." };

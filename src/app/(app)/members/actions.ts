@@ -7,6 +7,8 @@ import { describeDbError } from "@/lib/db-errors";
 import { DEACTIVATED_BAN, MEMBER_UNIQUE, provisionMember } from "@/lib/members/provisioning";
 import { generateTemporaryPassword } from "@/lib/password";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { AccessLevel, Database, EffectiveAccess } from "@/lib/supabase/types";
 import { idSchema, memberSchema, parseForm } from "@/lib/validation";
 
 const FIELDS = ["fullName", "email", "nim", "phone", "accessLevel"] as const;
@@ -19,16 +21,43 @@ function denied(error: unknown): ActionResult<never> {
   throw error;
 }
 
+const SUPER_ADMIN_ONLY = "Only a super admin can change a super admin's account.";
+
+/**
+ * Loads the target and applies the super admin rule before any Auth admin API call (those run with
+ * the service role, so RLS would not stop them). RLS repeats the rule for the profile row.
+ */
+type Target = { id: string; user_id: string | null; email: string; is_active: boolean; access_level: AccessLevel };
+
+async function loadTarget(
+  supabase: SupabaseClient<Database>,
+  actorAccess: EffectiveAccess,
+  memberId: string,
+): Promise<{ ok: true; target: Target } | { ok: false; error: string }> {
+  const { data, error } = await supabase
+    .from("members")
+    .select("id, user_id, email, is_active, access_level")
+    .eq("id", memberId)
+    .maybeSingle();
+  if (error) return { ok: false, error: describeDbError(error) };
+  if (!data) return { ok: false, error: "Member not found." };
+  if (data.access_level === "super_admin" && actorAccess !== "super_admin")
+    return { ok: false, error: SUPER_ADMIN_ONLY };
+  return { ok: true, target: data };
+}
+
 export async function createMember(
   _prev: ActionResult<IssuedPassword>,
   formData: FormData,
 ): Promise<ActionResult<IssuedPassword>> {
   try {
-    const { supabase } = await requireAdminAction();
+    const { supabase, member: actor } = await requireAdminAction();
     const parsed = parseForm(memberSchema, formData, FIELDS);
     if (!parsed.success)
       return { ok: false, message: "Check the highlighted fields.", fieldErrors: parsed.fieldErrors };
-    const result = await provisionMember(supabase, createAdminClient(), parsed.data);
+    // Only super admins choose an access level; everyone else creates plain members.
+    const accessLevel: AccessLevel = actor.access === "super_admin" ? (parsed.data.accessLevel ?? "member") : "member";
+    const result = await provisionMember(supabase, createAdminClient(), { ...parsed.data, accessLevel });
     if (!result.ok) {
       return {
         ok: false,
@@ -55,21 +84,20 @@ export async function updateMember(id: string, _prev: ActionResult, formData: Fo
       return { ok: false, message: "Check the highlighted fields.", fieldErrors: parsed.fieldErrors };
     const input = parsed.data;
 
-    if (memberId === actor.id && input.accessLevel !== "admin") {
+    const loaded = await loadTarget(supabase, actor.access, memberId);
+    if (!loaded.ok) return { ok: false, message: loaded.error };
+    const current = loaded.target;
+
+    // Non-super admins never change access levels; the submitted value is ignored.
+    const accessLevel: AccessLevel =
+      actor.access === "super_admin" ? (input.accessLevel ?? current.access_level) : current.access_level;
+    if (memberId === actor.id && accessLevel !== current.access_level) {
       return {
         ok: false,
-        message: "You cannot remove your own admin access.",
-        fieldErrors: { accessLevel: ["Ask another admin to change this."] },
+        message: "You cannot change your own access.",
+        fieldErrors: { accessLevel: ["Ask another super admin to change this."] },
       };
     }
-
-    const { data: current, error: readError } = await supabase
-      .from("members")
-      .select("id, user_id, email")
-      .eq("id", memberId)
-      .maybeSingle();
-    if (readError) return { ok: false, message: describeDbError(readError) };
-    if (!current) return { ok: false, message: "Member not found." };
 
     const { error } = await supabase
       .from("members")
@@ -78,7 +106,7 @@ export async function updateMember(id: string, _prev: ActionResult, formData: Fo
         email: input.email,
         nim: input.nim,
         phone: input.phone,
-        access_level: input.accessLevel,
+        access_level: accessLevel,
       })
       .eq("id", memberId);
     if (error) {
@@ -119,6 +147,8 @@ export async function deactivateMember(id: string): Promise<ActionResult> {
     const { supabase, member: actor } = await requireAdminAction();
     const memberId = idSchema.parse(id);
     if (memberId === actor.id) return { ok: false, message: "You cannot deactivate your own account." };
+    const loaded = await loadTarget(supabase, actor.access, memberId);
+    if (!loaded.ok) return { ok: false, message: loaded.error };
     const { data, error } = await supabase
       .from("members")
       .update({ is_active: false })
@@ -144,8 +174,10 @@ export async function deactivateMember(id: string): Promise<ActionResult> {
 
 export async function reactivateMember(id: string): Promise<ActionResult> {
   try {
-    const { supabase } = await requireAdminAction();
+    const { supabase, member: actor } = await requireAdminAction();
     const memberId = idSchema.parse(id);
+    const loaded = await loadTarget(supabase, actor.access, memberId);
+    if (!loaded.ok) return { ok: false, message: loaded.error };
     const { data, error } = await supabase
       .from("members")
       .update({ is_active: true })
@@ -172,13 +204,10 @@ export async function resetMemberPassword(id: string): Promise<ActionResult<Issu
     const { supabase, member: actor } = await requireAdminAction();
     const memberId = idSchema.parse(id);
     if (memberId === actor.id) return { ok: false, message: "Use Profile to change your own password." };
-    const { data: target, error } = await supabase
-      .from("members")
-      .select("id, user_id, email, is_active")
-      .eq("id", memberId)
-      .maybeSingle();
-    if (error) return { ok: false, message: describeDbError(error) };
-    if (!target?.user_id) return { ok: false, message: "Member not found." };
+    const loaded = await loadTarget(supabase, actor.access, memberId);
+    if (!loaded.ok) return { ok: false, message: loaded.error };
+    const target = loaded.target;
+    if (!target.user_id) return { ok: false, message: "Member not found." };
     if (!target.is_active) return { ok: false, message: "Reactivate the member first." };
 
     const temporaryPassword = generateTemporaryPassword();

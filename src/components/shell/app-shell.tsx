@@ -10,12 +10,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { BOTTOM_ITEMS, DRAWER_ITEMS, isActivePath, titleForPath, type NavItem } from "./nav-config";
 
-type Props = { isAdmin: boolean; orgName: string; children: React.ReactNode };
+type Props = { isAdmin: boolean; isSuperAdmin: boolean; orgName: string; children: React.ReactNode };
 
-export function AppShell({ isAdmin, orgName, children }: Props) {
+export function AppShell({ isAdmin, isSuperAdmin, orgName, children }: Props) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const drawerItems = DRAWER_ITEMS.filter((i) => isAdmin || !i.adminOnly);
+  const drawerItems = DRAWER_ITEMS.filter((i) => (isAdmin || !i.adminOnly) && (isSuperAdmin || !i.superAdminOnly));
   const bottomItems = BOTTOM_ITEMS.filter((i) => isAdmin || !i.adminOnly);
   const title = titleForPath(pathname);
 

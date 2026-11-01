@@ -8,7 +8,7 @@ import { MemberForm } from "../member-form";
 export const metadata: Metadata = { title: "Create member" };
 
 export default async function NewMemberPage() {
-  const { allowed } = await requireAdminPage();
+  const { allowed, isSuperAdmin } = await requireAdminPage();
   if (!allowed) return <ForbiddenState />;
   return (
     <div className="mx-auto max-w-xl space-y-4">
@@ -17,7 +17,7 @@ export default async function NewMemberPage() {
         PI-CORE creates the login and shows a temporary password once. The member chooses their own password at first
         login.
       </p>
-      <MemberForm mode="create" action={createMember} />
+      <MemberForm mode="create" action={createMember} canSetAccess={isSuperAdmin} />
     </div>
   );
 }

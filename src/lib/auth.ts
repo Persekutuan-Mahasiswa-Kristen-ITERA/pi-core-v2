@@ -2,7 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { AccessLevel } from "@/lib/supabase/types";
+import type { AccessLevel, EffectiveAccess } from "@/lib/supabase/types";
 
 export type CurrentMember = {
   id: string;
@@ -11,7 +11,10 @@ export type CurrentMember = {
   email: string;
   nim: string | null;
   phone: string | null;
+  /** Stored level (set by a super admin). */
   accessLevel: AccessLevel;
+  /** Stored level or position-derived admin, whichever is higher. Use this for authorization. */
+  access: EffectiveAccess;
   mustChangePassword: boolean;
 };
 
@@ -38,6 +41,9 @@ export const getSessionState = cache(async (): Promise<SessionState> => {
 
   if (!row || !row.is_active) return { status: "no-member", userId };
 
+  const { data: access, error: accessError } = await supabase.rpc("current_access");
+  if (accessError) throw new Error(`current access: ${accessError.message}`);
+
   return {
     status: "member",
     member: {
@@ -48,6 +54,7 @@ export const getSessionState = cache(async (): Promise<SessionState> => {
       nim: row.nim,
       phone: row.phone,
       accessLevel: row.access_level,
+      access: access === "super_admin" || access === "admin" ? access : "member",
       mustChangePassword: row.must_change_password,
     },
   };
@@ -62,15 +69,20 @@ export async function requireMember(opts: { allowPendingPasswordChange?: boolean
   return state.member;
 }
 
-export async function isAdmin() {
-  const state = await getSessionState();
-  return state.status === "member" && state.member.accessLevel === "admin" && !state.member.mustChangePassword;
+export function isAdminAccess(access: EffectiveAccess) {
+  return access === "admin" || access === "super_admin";
 }
 
 /** For admin pages. Non-admins get the forbidden screen, rendered by the caller. */
 export async function requireAdminPage() {
   const member = await requireMember();
-  return { member, allowed: member.accessLevel === "admin" };
+  return { member, allowed: isAdminAccess(member.access), isSuperAdmin: member.access === "super_admin" };
+}
+
+/** For pages only super admins may use (structure, access levels). */
+export async function requireSuperAdminPage() {
+  const member = await requireMember();
+  return { member, allowed: member.access === "super_admin" };
 }
 
 export class AuthorizationError extends Error {
@@ -80,11 +92,23 @@ export class AuthorizationError extends Error {
   }
 }
 
-/** For Server Actions. Throws instead of redirecting; actions turn it into an error result. */
-export async function requireAdminAction() {
+async function requireActionMember() {
   const state = await getSessionState();
   if (state.status !== "member") throw new AuthorizationError("Your session has ended. Log in again.");
   if (state.member.mustChangePassword) throw new AuthorizationError("Change your temporary password first.");
-  if (state.member.accessLevel !== "admin") throw new AuthorizationError();
-  return { member: state.member, supabase: await createClient() };
+  return state.member;
+}
+
+/** For Server Actions. Throws instead of redirecting; actions turn it into an error result. */
+export async function requireAdminAction() {
+  const member = await requireActionMember();
+  if (!isAdminAccess(member.access)) throw new AuthorizationError();
+  return { member, supabase: await createClient() };
+}
+
+/** For Server Actions only super admins may run. RLS enforces the same rule. */
+export async function requireSuperAdminAction() {
+  const member = await requireActionMember();
+  if (member.access !== "super_admin") throw new AuthorizationError("Only a super admin can do that.");
+  return { member, supabase: await createClient() };
 }

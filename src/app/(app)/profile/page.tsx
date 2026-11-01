@@ -9,6 +9,8 @@ import { RowPill, SectionTitle, TintCard } from "@/components/common/surfaces";
 
 export const metadata: Metadata = { title: "Profile" };
 
+const ACCESS_LABEL = { super_admin: "Super admin", admin: "Admin", member: "Member" } as const;
+
 export default async function ProfilePage() {
   const member = await requireMember();
   const assignments = await listAssignmentsForMember(member.id);
@@ -31,7 +33,7 @@ export default async function ProfilePage() {
           </div>
           <div>
             <dt className="text-xs text-pmk-body">PI-CORE access</dt>
-            <dd className="font-medium text-pmk-ink">{member.accessLevel === "admin" ? "Admin" : "Member"}</dd>
+            <dd className="font-medium text-pmk-ink">{ACCESS_LABEL[member.access]}</dd>
           </div>
         </dl>
         <p className="text-xs text-pmk-body">To correct your details, contact a PMK ITERA admin.</p>
@@ -46,8 +48,8 @@ export default async function ProfilePage() {
             {assignments.map((a) => (
               <li key={a.id}>
                 <RowPill className="grid grid-cols-3 gap-2 text-sm">
-                  <span className="font-medium text-pmk-ink">{a.role}</span>
-                  <span>{a.position}</span>
+                  <span className="font-medium text-pmk-ink">{a.position}</span>
+                  <span>{a.unit}</span>
                   <span className="text-right">
                     {a.period}
                     {a.activePeriod ? (

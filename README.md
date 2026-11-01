@@ -21,7 +21,7 @@ pnpm install
 pnpm db:start                 # local Supabase in Docker; applies migrations + supabase/seed.sql
 pnpm exec supabase status -o env   # copy API_URL, PUBLISHABLE_KEY, SECRET_KEY, DB_URL into .env.local
 cp .env.example .env.local    # then fill it in (see below)
-SEED_PASSWORD='choose-one-123' pnpm seed:dev-users   # fake local accounts (admin@example.com, maria@…)
+SEED_PASSWORD='choose-one-123' pnpm seed:dev-users   # fake local accounts: admin@ (super admin), yohanes@ (admin via Kepala Departemen), maria@, ruth@
 pnpm dev                      # http://localhost:3000
 ```
 
@@ -42,8 +42,9 @@ The service worker registers only in production builds (`pnpm build && pnpm star
 
 - Schema, constraints, RLS, triggers: `supabase/migrations/` (versioned; never change the database by hand in the
   dashboard).
-- `supabase/seed.sql`: development roles, positions and periods (no people). Applied by `db:start` / `db:reset`
-  locally only.
+- The PMK ITERA structure (units, positions, roles, position → role mapping, from PI-CORE v1) is baseline data in
+  the migrations and reaches every environment.
+- `supabase/seed.sql`: development periods (no people). Applied by `db:start` / `db:reset` locally only.
 - After changing the schema: `pnpm exec supabase migration new <name>` **from an interactive terminal** (when stdin
   is not a TTY the CLI waits for SQL on stdin), write the SQL, `pnpm exec supabase migration up`, then `pnpm db:types`.
 
@@ -72,7 +73,7 @@ back masked** and the API answers `401 Invalid API key`. `pnpm dev:hosted` runs 
 project instead of local Docker (careful: that is real data). It prints the Supabase host it uses; Next.js still lists
 `.env.local` under "Environments", but variables loaded from `.env.hosted.local` take precedence.
 
-## First admin (bootstrap)
+## First super admin (bootstrap)
 
 Run once per environment, from a trusted machine, with that environment's URL and secret key:
 
@@ -82,9 +83,11 @@ NEXT_PUBLIC_SUPABASE_URL=… SUPABASE_SECRET_KEY=… \
 # locally: pnpm bootstrap:admin --email you@example.org --name "Your Name"
 ```
 
-It prints a temporary password **once**; log in and you are forced to choose your own. The script refuses to run if
-an active admin already exists — further admins are created in the app (Members → Create Member → PI-CORE access:
-Admin). No credentials are stored in the repo.
+It prints a temporary password **once**; log in and you are forced to choose your own. The account is a **super
+admin**. The script refuses to run if an active super admin already exists — further super admins (e.g. the pembina)
+and admins are set in the app by a super admin (Members → member → PI-CORE access). Organization admins
+(Ketua Umum, Sekjen, Sekum, Kepala Departemen, Kepala Biro) get admin access automatically from their assignment in
+the active period. No credentials are stored in the repo.
 
 ## Accounts
 

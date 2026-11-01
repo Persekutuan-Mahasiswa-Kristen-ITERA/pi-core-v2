@@ -3,10 +3,12 @@ import { provisionMember } from "@/lib/members/provisioning";
 import { anonClient, cleanup, createUser, RUN, serviceClient, withDb, type TestUser } from "../support/supabase";
 
 let admin: TestUser;
+let superAdmin: TestUser;
 let member: TestUser;
 
 beforeAll(async () => {
   admin = await createUser("padmin", "admin");
+  superAdmin = await createUser("psuper", "super_admin");
   member = await createUser("pmember", "member");
 });
 afterAll(cleanup);
@@ -50,5 +52,16 @@ describe("admin-only member provisioning", () => {
   it("rejects a duplicate email before creating a login", async () => {
     const result = await provisionMember(admin.client, serviceClient(), { ...input("dup"), email: member.email });
     expect(result).toMatchObject({ ok: false, field: "email" });
+  });
+
+  it("only a super admin can create an admin; otherwise the login is rolled back", async () => {
+    const denied = input("asadmin");
+    const result = await provisionMember(admin.client, serviceClient(), { ...denied, accessLevel: "admin" });
+    expect(result.ok).toBe(false);
+    expect(await authUserExists(denied.email)).toBe(false);
+
+    const allowed = input("bysuper");
+    const ok = await provisionMember(superAdmin.client, serviceClient(), { ...allowed, accessLevel: "admin" });
+    expect(ok.ok).toBe(true);
   });
 });

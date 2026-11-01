@@ -9,6 +9,10 @@ import { initialActionState, type ActionResult } from "@/lib/action-result";
 import type { AccessLevel } from "@/lib/supabase/types";
 import type { IssuedPassword } from "./actions";
 
+const ACCESS_LABEL: Record<AccessLevel, string> = { member: "Member", admin: "Admin", super_admin: "Super admin" };
+const ACCESS_NOTE =
+  "Only a super admin changes access levels. Holding a position with the Organization Admin role in the active period also gives admin access.";
+
 type Defaults = { fullName: string; email: string; nim: string | null; phone: string | null; accessLevel: AccessLevel };
 
 type Props =
@@ -16,14 +20,23 @@ type Props =
       mode: "create";
       action: (prev: ActionResult<IssuedPassword>, fd: FormData) => Promise<ActionResult<IssuedPassword>>;
       defaults?: undefined;
-      isSelf?: undefined;
+      canSetAccess: boolean;
     }
   | {
       mode: "edit";
       action: (prev: ActionResult, fd: FormData) => Promise<ActionResult>;
       defaults: Defaults;
-      isSelf: boolean;
+      /** Super admin editing someone else. */
+      canSetAccess: boolean;
     };
+
+const ACCESS_HELP: Record<AccessLevel, string> = {
+  member:
+    "Member: sees their own profile. Becomes an admin automatically while holding a position with the Organization Admin role in the active period.",
+  admin: "Admin: manages members, periods and assignments, whatever their position.",
+  super_admin:
+    "Super admin: everything an admin can do, plus the organization structure, roles, access levels and super admin accounts.",
+};
 
 export function MemberForm(props: Props) {
   // The two modes share one form; create's result also carries the one-time password.
@@ -41,7 +54,7 @@ export function MemberForm(props: Props) {
             href={`/assignments?member=${state.data.memberId}`}
             className="inline-flex min-h-11 items-center rounded-full bg-pmk-brown px-6 text-sm font-semibold text-white"
           >
-            Assign a role
+            Assign a position
           </Link>
           <Link
             href="/members"
@@ -102,24 +115,30 @@ export function MemberForm(props: Props) {
           )}
         </Field>
       </div>
-      <Field
-        name="accessLevel"
-        label="PI-CORE access"
-        errors={errors?.accessLevel}
-        hint={
-          props.isSelf
-            ? "You cannot change your own access."
-            : "Admins can manage every member, role, period and assignment. This is separate from organizational roles."
-        }
-      >
-        {(a) => (
-          <select {...a} defaultValue={d?.accessLevel ?? "member"} className={fieldClass} disabled={props.isSelf}>
-            <option value="member">Member — sees own profile only</option>
-            <option value="admin">Admin — manages PI-CORE</option>
-          </select>
-        )}
-      </Field>
-      {props.isSelf ? <input type="hidden" name="accessLevel" value="admin" /> : null}
+      {props.canSetAccess ? (
+        <Field
+          name="accessLevel"
+          label="PI-CORE access"
+          errors={errors?.accessLevel}
+          hint={ACCESS_HELP[d?.accessLevel ?? "member"]}
+        >
+          {(a) => (
+            <select {...a} defaultValue={d?.accessLevel ?? "member"} className={fieldClass}>
+              <option value="member">Member</option>
+              <option value="admin">Admin</option>
+              <option value="super_admin">Super admin</option>
+            </select>
+          )}
+        </Field>
+      ) : (
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-pmk-ink">PI-CORE access</p>
+          <p className="text-sm text-pmk-body">
+            {d ? ACCESS_LABEL[d.accessLevel] : "Member"}. {ACCESS_NOTE}
+          </p>
+          {errors?.accessLevel ? <p className="text-sm font-medium text-destructive">{errors.accessLevel[0]}</p> : null}
+        </div>
+      )}
       <div className="flex items-center gap-3 pt-2">
         <SubmitButton pendingText={props.mode === "create" ? "Creating…" : "Saving…"}>
           {props.mode === "create" ? "Create member" : "Save changes"}
