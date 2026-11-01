@@ -1,26 +1,118 @@
 @import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
 @theme inline {
+  --color-pmk-brown: var(--pmk-brown);
+  --color-pmk-accent: var(--pmk-accent);
+  --color-pmk-gold: var(--pmk-gold);
+  --color-pmk-gold-strong: var(--pmk-gold-strong);
+  --color-pmk-cream: var(--pmk-cream);
+  --color-pmk-tint: var(--pmk-tint);
+  --color-pmk-tint-border: var(--pmk-tint-border);
+  --color-pmk-ink: var(--pmk-ink);
+  --color-pmk-body: var(--pmk-body);
+  --color-pmk-muted: var(--pmk-muted);
+  --font-display: var(--font-poppins);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-manrope);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-heading: var(--font-sans);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/*
+ * PMK ITERA design tokens — read from the PI-CORE Figma file (key 18T2e8GH2l2zTzn7vkP1ax) via MCP
+ * on 2026-10-15 (recorded in PMK-CORE/docs/DESIGN.md) and re-sampled from the exported frames
+ * on 2026-11-01. The prototype is light-only, so there is no dark theme.
+ */
+:root {
+  color-scheme: light;
+
+  /* Brand palette (raw) */
+  --pmk-brown: #5a3e1b; /* primary buttons, Shalom banner, login header (90%) */
+  --pmk-accent: #a15912; /* icons, active nav item, hamburger, bell */
+  --pmk-gold: #e6c65c; /* drawer background */
+  --pmk-gold-strong: #c9a227; /* active-period check + label */
+  --pmk-cream: #f8f7f6; /* app background */
+  --pmk-tint: #efe7df; /* rgba(161,89,18,.1) on cream: cards, rows, search, pills */
+  --pmk-tint-border: #dfcbb6; /* rgba(161,89,18,.2) on cream: card / pill borders */
+  --pmk-ink: #0f172a; /* headings */
+  --pmk-body: #475569; /* body text */
+  --pmk-muted: #64748b; /* labels, inactive nav, active directory tab */
+  --pmk-positive: #059669;
+  --pmk-negative: #e11d48;
+
+  /* shadcn semantic tokens mapped onto the palette */
+  --background: var(--pmk-cream);
+  --foreground: var(--pmk-ink);
+  --card: #ffffff;
+  --card-foreground: var(--pmk-ink);
+  --popover: #ffffff;
+  --popover-foreground: var(--pmk-ink);
+  --primary: var(--pmk-brown);
+  --primary-foreground: #ffffff;
+  --secondary: var(--pmk-tint);
+  --secondary-foreground: var(--pmk-ink);
+  --muted: var(--pmk-tint);
+  --muted-foreground: var(--pmk-muted);
+  --accent: var(--pmk-tint);
+  --accent-foreground: var(--pmk-brown);
+  --destructive: #be123c;
+  --border: var(--pmk-tint-border);
+  --input: var(--pmk-tint-border);
+  --ring: var(--pmk-accent);
+  --radius: 0.75rem; /* 12px: cards, rows, inputs */
+
+  /* iOS standalone safe areas */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
   }
 }
 
+/* Never let the page itself scroll sideways on phones. */
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  overflow-x: clip;
+}
+
+body {
+  background: var(--pmk-cream);
+  -webkit-tap-highlight-color: transparent;
 }
