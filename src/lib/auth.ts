@@ -35,17 +35,19 @@ export const getSessionState = cache(async (): Promise<SessionState> => {
   const userId = data?.claims?.sub;
   if (error || !userId) return { status: "anonymous" };
 
-  const { data: row } = await supabase
-    .from("members")
-    .select(
-      "id, user_id, member_type, full_name, email, nim, nip, phone, access_level, is_active, must_change_password",
-    )
-    .eq("user_id", userId)
-    .maybeSingle();
+  // Both reads depend only on the JWT, so they run in parallel (one database round trip, not two).
+  const [{ data: row }, { data: access, error: accessError }] = await Promise.all([
+    supabase
+      .from("members")
+      .select(
+        "id, user_id, member_type, full_name, email, nim, nip, phone, access_level, is_active, must_change_password",
+      )
+      .eq("user_id", userId)
+      .maybeSingle(),
+    supabase.rpc("current_access"),
+  ]);
 
   if (!row || !row.is_active) return { status: "no-member", userId };
-
-  const { data: access, error: accessError } = await supabase.rpc("current_access");
   if (accessError) throw new Error(`current access: ${accessError.message}`);
 
   return {

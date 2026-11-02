@@ -1,98 +1,138 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Bell, Menu } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { BOTTOM_ITEMS, DRAWER_ITEMS, isActivePath, titleForPath, type NavItem } from "./nav-config";
+import { BOTTOM_ITEMS, NAV_GROUPS, isActivePath, type NavItem } from "./nav-config";
+import { LogoutButton } from "./logout-button";
 
-type Props = { isAdmin: boolean; isSuperAdmin: boolean; orgName: string; children: React.ReactNode };
+type Viewer = { fullName: string; accessLabel: string };
+type Props = { isAdmin: boolean; isSuperAdmin: boolean; orgName: string; viewer: Viewer; children: React.ReactNode };
 
-export function AppShell({ isAdmin, isSuperAdmin, orgName, children }: Props) {
+/*
+ * Shell: one tinted frame (sidebar on desktop, top bar on phones) around a white sheet.
+ * Desktop (lg, 1024+): 240px sidebar on the chrome tint; the sheet is inset 8px from the window's
+ * top, right and bottom edges, 16px radius, 1px edge, no shadow. Content column max 1100px.
+ * Phone and tablet: the sheet becomes the screen; a 52px top bar on the chrome tint and a bottom
+ * bar with the most used screens. The rest of the navigation is in the menu sheet.
+ */
+export function AppShell({ isAdmin, isSuperAdmin, orgName, viewer, children }: Props) {
   const pathname = usePathname();
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const drawerItems = DRAWER_ITEMS.filter((i) => (isAdmin || !i.adminOnly) && (isSuperAdmin || !i.superAdminOnly));
-  const bottomItems = BOTTOM_ITEMS.filter((i) => isAdmin || !i.adminOnly);
-  const title = titleForPath(pathname);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const allowed = (i: NavItem) => (isAdmin || !i.adminOnly) && (isSuperAdmin || !i.superAdminOnly);
+  const groups = NAV_GROUPS.map((g) => ({ ...g, items: g.items.filter(allowed) })).filter((g) => g.items.length);
+  const bottomItems = BOTTOM_ITEMS.filter(allowed);
 
   return (
-    <div className="min-h-dvh lg:pl-[250px]">
-      {/* Desktop: the drawer becomes a persistent sidebar. */}
+    <div className="min-h-dvh bg-white lg:bg-pmk-cream lg:pl-60">
+      {/* Desktop sidebar */}
       <aside
-        className="fixed inset-y-0 left-0 z-30 hidden w-[250px] flex-col bg-pmk-gold pt-[var(--safe-top)] lg:flex"
+        className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col pt-[var(--safe-top)] lg:flex"
         aria-label="Main navigation"
       >
-        <div className="flex items-center gap-3 px-4 py-6">
-          <Image src="/brand/pmk-logo.png" alt="" width={44} height={44} unoptimized />
-          <p className="text-sm font-bold leading-tight text-pmk-ink">{orgName}</p>
+        <Brand orgName={orgName} className="px-5 pb-6 pt-6" />
+        <NavGroups groups={groups} pathname={pathname} />
+        <div className="mt-auto px-3 pb-4">
+          <ViewerCard viewer={viewer} pathname={pathname} />
         </div>
-        <DrawerList items={drawerItems} pathname={pathname} />
       </aside>
 
-      <header className="sticky top-0 z-20 border-b border-pmk-tint-border/70 bg-pmk-cream/95 pt-[var(--safe-top)] backdrop-blur supports-[backdrop-filter]:bg-pmk-cream/85">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-2 pl-[max(0.5rem,var(--safe-left))] pr-[max(0.5rem,var(--safe-right))]">
+      {/* Phone / tablet top bar */}
+      <header className="sticky top-0 z-20 bg-pmk-cream pt-[var(--safe-top)] lg:hidden">
+        <div className="flex h-[52px] items-center gap-1 pl-[max(0.25rem,var(--safe-left))] pr-[max(0.75rem,var(--safe-right))]">
           <button
             type="button"
-            onClick={() => setDrawerOpen(true)}
-            className="grid size-11 place-items-center rounded-full text-pmk-accent hover:bg-pmk-tint focus-visible:outline-2 focus-visible:outline-pmk-accent lg:invisible"
+            onClick={() => setMenuOpen(true)}
+            className="grid size-11 place-items-center rounded-full text-pmk-ink hover:bg-pmk-active focus-visible:outline-2 focus-visible:outline-pmk-accent"
             aria-label="Open menu"
           >
-            <Menu className="size-6" aria-hidden />
+            <Menu className="size-5" aria-hidden />
           </button>
-          <h1 className="text-lg font-bold tracking-[-0.45px] text-pmk-ink">{title}</h1>
-          <NotificationBell />
+          <Link href="/" className="flex min-h-11 items-center gap-2 rounded-lg pr-2">
+            <Image src="/brand/pmk-logo-96.png" alt="" width={28} height={28} />
+            <span className="text-[15px] font-semibold text-pmk-ink">PI-CORE</span>
+          </Link>
+          <Link
+            href="/profile"
+            className="ml-auto grid size-11 place-items-center rounded-full focus-visible:outline-2 focus-visible:outline-pmk-accent"
+            aria-label={`Profile of ${viewer.fullName}`}
+          >
+            <Initials name={viewer.fullName} />
+          </Link>
         </div>
       </header>
 
-      <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+      <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
         <SheetContent
           side="left"
-          className="gap-0 border-none bg-pmk-gold p-0 pt-[var(--safe-top)] data-[side=left]:w-[250px] data-[side=left]:max-w-[80vw] data-[side=left]:sm:max-w-[250px] [&>button]:hidden"
+          className="gap-0 border-none bg-pmk-cream p-0 pt-[var(--safe-top)] pb-[var(--safe-bottom)] data-[side=left]:w-[288px] data-[side=left]:max-w-[85vw] [&>button]:hidden"
         >
           <SheetTitle className="sr-only">Menu</SheetTitle>
-          <SheetDescription className="sr-only">Navigate between PI-CORE sections</SheetDescription>
-          <div className="flex h-16 items-center px-2">
+          <SheetDescription className="sr-only">Move between PI-CORE screens</SheetDescription>
+          <div className="flex items-center justify-between pr-2">
+            <Brand orgName={orgName} className="px-5 py-4" />
             <button
               type="button"
-              onClick={() => setDrawerOpen(false)}
-              className="grid size-11 place-items-center rounded-full text-pmk-accent hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-pmk-brown"
+              onClick={() => setMenuOpen(false)}
+              className="grid size-11 shrink-0 place-items-center rounded-full text-pmk-ink hover:bg-pmk-active focus-visible:outline-2 focus-visible:outline-pmk-accent"
               aria-label="Close menu"
             >
-              <Menu className="size-6" aria-hidden />
+              <X className="size-5" aria-hidden />
             </button>
           </div>
-          <DrawerList items={drawerItems} pathname={pathname} onNavigate={() => setDrawerOpen(false)} />
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+            <NavGroups groups={groups} pathname={pathname} onNavigate={() => setMenuOpen(false)} />
+            <div className="mt-auto px-3 pb-4 pt-6">
+              <ViewerCard viewer={viewer} pathname={pathname} onNavigate={() => setMenuOpen(false)} />
+            </div>
+          </div>
         </SheetContent>
       </Sheet>
 
-      <main className="mx-auto w-full max-w-5xl px-4 pb-[calc(6rem+var(--safe-bottom))] pl-[max(1rem,var(--safe-left))] pr-[max(1rem,var(--safe-right))] pt-4 lg:pb-10">
-        {children}
-      </main>
+      {/* The sheet */}
+      <div className="lg:min-h-[calc(100dvh-16px)] lg:py-2 lg:pr-2">
+        <div className="min-h-[calc(100dvh-52px)] bg-white lg:min-h-[calc(100dvh-16px)] lg:rounded-2xl lg:border lg:border-pmk-tint-border">
+          <main className="mx-auto w-full max-w-[1100px] px-4 pb-[calc(6rem+var(--safe-bottom))] pl-[max(1rem,var(--safe-left))] pr-[max(1rem,var(--safe-right))] pt-5 sm:px-6 lg:px-10 lg:pb-12 lg:pt-9">
+            {children}
+          </main>
+        </div>
+      </div>
 
+      {/* Phone / tablet bottom bar */}
       <nav
         aria-label="Primary"
-        className="fixed inset-x-0 bottom-0 z-20 border-t border-pmk-tint-border/70 bg-pmk-cream pb-[var(--safe-bottom)] lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-20 border-t border-pmk-tint-border bg-white pb-[var(--safe-bottom)] lg:hidden"
       >
-        <ul className={cn("mx-auto grid max-w-lg", bottomItems.length === 4 ? "grid-cols-4" : "grid-cols-3")}>
+        <ul className="mx-auto flex max-w-xl">
           {bottomItems.map((item) => {
-            const active = isActivePath(pathname, item.match);
+            const active = isActivePath(pathname, item);
             const Icon = item.icon;
             return (
-              <li key={item.href}>
+              <li key={item.href} className="flex-1">
                 <Link
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex min-h-14 flex-col items-center justify-center gap-0.5 py-2 text-xs font-medium tracking-[0.3px] focus-visible:outline-2 focus-visible:outline-pmk-accent",
-                    active ? "text-pmk-accent" : "text-pmk-muted",
+                    "group flex min-h-[58px] flex-col items-center justify-center gap-1 text-[11px] font-medium focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-pmk-accent",
+                    active ? "text-pmk-ink" : "text-pmk-muted",
                   )}
                 >
-                  <Icon className="size-6" aria-hidden strokeWidth={active ? 2.25 : 1.75} />
-                  {item.label}
+                  <span
+                    className={cn(
+                      "grid h-7 w-14 place-items-center rounded-full transition-colors",
+                      active ? "bg-pmk-active" : "group-active:bg-pmk-tint",
+                    )}
+                  >
+                    <Icon className="size-[18px]" aria-hidden strokeWidth={active ? 2.2 : 1.8} />
+                  </span>
+                  <span className="relative">
+                    {item.label}
+                    <PendingDot />
+                  </span>
                 </Link>
               </li>
             );
@@ -103,62 +143,145 @@ export function AppShell({ isAdmin, isSuperAdmin, orgName, children }: Props) {
   );
 }
 
-function DrawerList({ items, pathname, onNavigate }: { items: NavItem[]; pathname: string; onNavigate?: () => void }) {
+function Brand({ orgName, className }: { orgName: string; className?: string }) {
   return (
-    <ul className="flex flex-col gap-1 px-2 pt-6">
-      {items.map((item) => {
-        if (item.comingSoon) {
-          return (
-            <li key={item.href}>
-              <span
-                className="flex min-h-11 cursor-not-allowed items-center justify-between rounded-lg px-2 text-lg font-semibold tracking-[-0.45px] text-pmk-ink/55"
-                aria-disabled="true"
-              >
-                {item.label}
-                <span className="rounded-full bg-black/10 px-2 py-0.5 text-[11px] font-semibold tracking-normal text-pmk-ink/70">
-                  Soon
-                </span>
-              </span>
-            </li>
-          );
-        }
-        const active = isActivePath(pathname, [item.href]);
-        return (
-          <li key={item.href}>
-            <Link
-              href={item.href}
-              onClick={onNavigate}
-              aria-current={active ? "page" : undefined}
-              className={cn(
-                "flex min-h-11 items-center rounded-lg px-2 text-lg font-semibold tracking-[-0.45px] text-pmk-ink hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-pmk-brown",
-                active && "bg-black/[0.07]",
-              )}
-            >
-              {item.label}
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
+    <Link href="/" className={cn("flex min-w-0 items-center gap-3", className)}>
+      <Image src="/brand/pmk-logo-96.png" alt="" width={36} height={36} className="shrink-0" />
+      <span className="min-w-0">
+        <span className="block text-[15px] font-semibold leading-tight text-pmk-ink">PI-CORE</span>
+        <span className="block truncate text-xs leading-snug text-pmk-muted" title={orgName}>
+          {orgName}
+        </span>
+      </span>
+    </Link>
   );
 }
 
-function NotificationBell() {
+function NavGroups({
+  groups,
+  pathname,
+  onNavigate,
+}: {
+  groups: { label: string | null; items: NavItem[] }[];
+  pathname: string;
+  onNavigate?: () => void;
+}) {
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className="grid size-11 place-items-center rounded-full text-pmk-accent hover:bg-pmk-tint focus-visible:outline-2 focus-visible:outline-pmk-accent"
-          aria-label="Notifications"
-        >
-          <Bell className="size-6" aria-hidden />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-64 text-sm">
-        <p className="font-semibold text-pmk-ink">No notifications</p>
-        <p className="mt-1 text-pmk-body">Notifications are planned for a later version of PI-CORE.</p>
-      </PopoverContent>
-    </Popover>
+    <nav aria-label="Sections" className="space-y-6 px-3">
+      {groups.map((group) => (
+        <div key={group.label ?? "main"}>
+          {group.label ? <p className="mb-1.5 px-2.5 text-xs font-medium text-pmk-muted">{group.label}</p> : null}
+          <ul className="space-y-0.5">
+            {group.items.map((item) => (
+              <li key={item.href}>
+                <NavRow item={item} active={isActivePath(pathname, item)} onNavigate={onNavigate} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </nav>
+  );
+}
+
+function NavRow({ item, active, onNavigate }: { item: NavItem; active: boolean; onNavigate?: () => void }) {
+  const Icon = item.icon;
+  if (item.comingSoon) {
+    return (
+      <span
+        className="flex min-h-10 items-center gap-2.5 rounded-lg px-2.5 text-sm text-pmk-muted"
+        aria-disabled="true"
+      >
+        <Icon className="size-4" aria-hidden strokeWidth={1.8} />
+        {item.label}
+        <span className="ml-auto text-xs">Later</span>
+      </span>
+    );
+  }
+  return (
+    <Link
+      href={item.href}
+      onClick={onNavigate}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "flex min-h-10 items-center gap-2.5 rounded-lg px-2.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-pmk-accent",
+        active ? "bg-pmk-active font-semibold text-pmk-ink" : "text-pmk-body hover:bg-pmk-active/60 hover:text-pmk-ink",
+      )}
+    >
+      <Icon className="size-4 shrink-0" aria-hidden strokeWidth={active ? 2.2 : 1.8} />
+      {item.label}
+      <PendingSpinner />
+    </Link>
+  );
+}
+
+function ViewerCard({ viewer, pathname, onNavigate }: { viewer: Viewer; pathname: string; onNavigate?: () => void }) {
+  const active = isActivePath(pathname, { href: "/profile" });
+  return (
+    <div className="space-y-0.5">
+      <Link
+        href="/profile"
+        onClick={onNavigate}
+        aria-current={active ? "page" : undefined}
+        className={cn(
+          "flex min-h-12 items-center gap-2.5 rounded-lg px-2 transition-colors focus-visible:outline-2 focus-visible:outline-pmk-accent",
+          active ? "bg-pmk-active" : "hover:bg-pmk-active/60",
+        )}
+      >
+        <Initials name={viewer.fullName} />
+        <span className="min-w-0">
+          <span className="block truncate text-sm font-medium text-pmk-ink">{viewer.fullName}</span>
+          <span className="block text-xs text-pmk-muted">{viewer.accessLabel}</span>
+        </span>
+      </Link>
+      <LogoutButton />
+    </div>
+  );
+}
+
+export function Initials({ name, className }: { name: string; className?: string }) {
+  const letters = name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase())
+    .join("");
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "grid size-8 shrink-0 place-items-center rounded-full bg-pmk-gold-soft text-xs font-semibold text-pmk-gold-strong",
+        className,
+      )}
+    >
+      {letters || "?"}
+    </span>
+  );
+}
+
+/** Confirms a tap on a nav link while the next screen loads (only shows when it is not instant). */
+function PendingSpinner() {
+  const { pending } = useLinkStatus();
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "ml-auto size-3.5 rounded-full border-2 border-pmk-muted/40 border-t-pmk-ink transition-opacity",
+        pending ? "animate-spin opacity-100" : "opacity-0",
+      )}
+    />
+  );
+}
+
+function PendingDot() {
+  const { pending } = useLinkStatus();
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "absolute -right-2.5 top-1/2 size-1.5 -translate-y-1/2 rounded-full bg-pmk-gold transition-opacity",
+        pending ? "opacity-100" : "opacity-0",
+      )}
+    />
   );
 }

@@ -1,9 +1,7 @@
 import {
   CalendarRange,
-  ChartNoAxesColumnIncreasing,
   CircleUserRound,
   House,
-  LayoutDashboard,
   Network,
   Plug,
   Settings,
@@ -20,54 +18,47 @@ export type NavItem = {
   adminOnly?: boolean;
   superAdminOnly?: boolean;
   comingSoon?: boolean;
+  /** Extra path prefixes that mark this item as current. */
+  match?: string[];
 };
 
-/** Drawer items, in prototype order (Frame 31). */
-export const DRAWER_ITEMS: NavItem[] = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+export type NavGroup = { label: string | null; items: NavItem[] };
+
+/** Sidebar (desktop) and menu sheet (phone). */
+export const NAV_GROUPS: NavGroup[] = [
+  {
+    label: null,
+    items: [{ href: "/", label: "Home", icon: House }],
+  },
+  {
+    label: "Organization",
+    items: [
+      { href: "/members", label: "Members", icon: UsersRound, adminOnly: true },
+      { href: "/assignments", label: "Assignments", icon: UserRoundCheck, adminOnly: true },
+      { href: "/structure", label: "Structure", icon: Network, adminOnly: true },
+      { href: "/roles", label: "Roles", icon: ShieldHalf, adminOnly: true },
+      { href: "/periods", label: "Periods", icon: CalendarRange, adminOnly: true },
+    ],
+  },
+  {
+    label: "Admin",
+    items: [
+      { href: "/settings", label: "Settings", icon: Settings, adminOnly: true },
+      { href: "/integrations", label: "Integrations", icon: Plug, adminOnly: true, comingSoon: true },
+    ],
+  },
+];
+
+/** Bottom bar on phones: the screens used most. Everything else is in the menu sheet. */
+export const BOTTOM_ITEMS: NavItem[] = [
+  { href: "/", label: "Home", icon: House },
   { href: "/members", label: "Members", icon: UsersRound, adminOnly: true },
-  { href: "/roles", label: "Roles", icon: ShieldHalf, adminOnly: true },
-  { href: "/periods", label: "Periods", icon: CalendarRange, adminOnly: true },
-  { href: "/assignments", label: "Assignments", icon: UserRoundCheck, adminOnly: true },
+  { href: "/assignments", label: "Assign", icon: UserRoundCheck, adminOnly: true },
   { href: "/structure", label: "Structure", icon: Network, adminOnly: true },
-  { href: "/integrations", label: "Integrations", icon: Plug, adminOnly: true, comingSoon: true },
-  { href: "/settings", label: "Setting", icon: Settings, adminOnly: true },
   { href: "/profile", label: "Profile", icon: CircleUserRound },
 ];
 
-/** Bottom navigation (Home, Directory, Reports, Profile). */
-export const BOTTOM_ITEMS: (NavItem & { match: string[] })[] = [
-  { href: "/", label: "Home", icon: House, match: ["/"] },
-  {
-    href: "/members",
-    label: "Directory",
-    icon: UsersRound,
-    adminOnly: true,
-    match: ["/members", "/roles", "/periods"],
-  },
-  { href: "/reports", label: "Reports", icon: ChartNoAxesColumnIncreasing, match: ["/reports"] },
-  { href: "/profile", label: "Profile", icon: CircleUserRound, match: ["/profile"] },
-];
-
-const TITLES: [string, string][] = [
-  ["/members", "Members"],
-  ["/roles", "Roles"],
-  ["/periods", "Periods"],
-  ["/assignments", "Assignments"],
-  ["/structure", "Structure"],
-  ["/settings", "Settings"],
-  ["/profile", "Profile"],
-  ["/reports", "Reports"],
-  ["/integrations", "Integrations"],
-];
-
-export function titleForPath(pathname: string) {
-  for (const [prefix, title] of TITLES) {
-    if (pathname === prefix || pathname.startsWith(`${prefix}/`)) return title;
-  }
-  return "Dashboard";
-}
-
-export function isActivePath(pathname: string, prefixes: string[]) {
+export function isActivePath(pathname: string, item: Pick<NavItem, "href" | "match">) {
+  const prefixes = [item.href, ...(item.match ?? [])];
   return prefixes.some((p) => (p === "/" ? pathname === "/" : pathname === p || pathname.startsWith(`${p}/`)));
 }

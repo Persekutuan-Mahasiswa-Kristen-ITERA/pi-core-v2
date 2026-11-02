@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { requireAdminPage } from "@/lib/auth";
 import { ForbiddenState } from "@/components/common/states";
-import { SectionTitle } from "@/components/common/surfaces";
+import { PageHeader } from "@/components/common/surfaces";
+import { FormCard } from "@/components/common/form-controls";
 import { createPeriod } from "../actions";
 import { PeriodForm } from "../period-form";
 
@@ -11,9 +12,15 @@ export default async function NewPeriodPage() {
   const { allowed } = await requireAdminPage();
   if (!allowed) return <ForbiddenState />;
   return (
-    <div className="mx-auto max-w-xl space-y-4">
-      <SectionTitle>Create Period</SectionTitle>
-      <PeriodForm action={createPeriod} submitLabel="Create period" />
+    <div className="max-w-2xl">
+      <PageHeader
+        title="Create period"
+        description="One academic year of kepengurusan. The first period becomes active automatically."
+        back={{ href: "/periods", label: "Periods" }}
+      />
+      <FormCard>
+        <PeriodForm action={createPeriod} submitLabel="Create period" />
+      </FormCard>
     </div>
   );
 }

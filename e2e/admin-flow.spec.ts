@@ -3,9 +3,10 @@ import { ADMIN_EMAIL, PASSWORD, POSITION_ADMIN_EMAIL, RUN, login, logout } from 
 
 async function totalMembers(page: Page) {
   await page.goto("/");
-  const card = page.locator("div", { has: page.getByText("Total Members", { exact: true }) }).last();
-  const text = await card.locator("p").last().innerText();
-  return Number(text.replace(/,/g, ""));
+  const figure = page.locator("div", { has: page.locator("dt", { hasText: "Total Members" }) }).last();
+  // "7 2 dosen": the count, then a note.
+  const text = await figure.locator("dd").innerText();
+  return Number(text.trim().split(/\s+/)[0].replace(/[.,]/g, ""));
 }
 
 test("super admin: role → position → member → assignment, reflected on dashboard and role detail", async ({ page }) => {
@@ -17,7 +18,7 @@ test("super admin: role → position → member → assignment, reflected on das
   const memberEmail = `e2e-${RUN}@example.com`;
 
   await login(page, ADMIN_EMAIL, PASSWORD);
-  await expect(page.getByText("Shalom Admin!")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Shalom Admin!" })).toBeVisible();
   const before = await totalMembers(page);
 
   // Period (not activated: the active period stays the seed's 2026/2027)
@@ -107,20 +108,20 @@ test("super admin: role → position → member → assignment, reflected on das
   await page.getByLabel("New password", { exact: true }).fill(`Changed${RUN}9`);
   await page.getByLabel("Confirm new password").fill(`Changed${RUN}9`);
   await page.getByRole("button", { name: "Save password" }).click();
-  await expect(page.getByText(`Shalom E2E!`)).toBeVisible();
-  await expect(page.getByText(positionName)).toBeVisible();
-  await expect(page.getByText("Musik")).toBeVisible();
+  await expect(page.getByRole("heading", { name: `Shalom E2E!` })).toBeVisible();
+  await expect(page.getByText(positionName, { exact: true })).toBeVisible();
+  await expect(page.getByText("Musik · Departemen Pelayanan Khusus")).toBeVisible();
   await logout(page);
 });
 
 test("super admin creates a dosen (pembina) with NIP; dosen are not offered for positions", async ({ page }) => {
   const name = `E2E Dosen ${RUN}`;
   await login(page, ADMIN_EMAIL, PASSWORD);
-  await expect(page.getByText("Shalom Admin!")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Shalom Admin!" })).toBeVisible();
   await page.goto("/members/new");
   await page.getByRole("radio", { name: /Dosen/ }).check();
   await expect(page.getByLabel("NIM (optional)")).toHaveCount(0);
-  await page.getByLabel("NIP / NIDN (optional)").fill("198001012010011999");
+  await page.getByLabel("NIP / NIDN (optional)").fill(`1980${String(Date.now()).slice(-12)}`); // run-unique, so the suite can re-run on one database;
   await page.getByLabel("Full name").fill(name);
   await page.getByLabel("Email").fill(`e2e-dosen-${RUN}@example.com`);
   await page.getByLabel("PI-CORE access").selectOption("super_admin");
@@ -129,7 +130,7 @@ test("super admin creates a dosen (pembina) with NIP; dosen are not offered for 
   await expect(page.getByRole("link", { name: "Assign a position" })).toHaveCount(0);
 
   await page.goto(`/members?q=${encodeURIComponent(name)}`);
-  await expect(page.getByRole("main").getByRole("listitem").filter({ hasText: name })).toContainText("SUPER ADMIN");
+  await expect(page.getByRole("main").getByRole("listitem").filter({ hasText: name })).toContainText("Super admin");
   await expect(page.getByRole("main").getByRole("listitem").filter({ hasText: name })).toContainText("Dosen");
   await page.goto("/assignments");
   await expect(page.getByLabel("Member", { exact: true }).locator("option", { hasText: name })).toHaveCount(0);
@@ -138,7 +139,7 @@ test("super admin creates a dosen (pembina) with NIP; dosen are not offered for 
 
 test("a Kepala Departemen is an admin through their position, but not a super admin", async ({ page }) => {
   await login(page, POSITION_ADMIN_EMAIL, PASSWORD);
-  await expect(page.getByText("Shalom Yohanes!")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Shalom Yohanes!" })).toBeVisible();
   await expect(page.getByText("Available Roles")).toBeVisible();
   await page.goto("/members");
   await expect(page.getByRole("link", { name: "Create Member" })).toBeVisible();
@@ -160,7 +161,7 @@ test("a Kepala Departemen is an admin through their position, but not a super ad
 test("admin deactivates a member after confirmation; the member can no longer log in", async ({ page }) => {
   const email = `e2e-deact-${RUN}@example.com`;
   await login(page, ADMIN_EMAIL, PASSWORD);
-  await expect(page.getByText("Shalom Admin!")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Shalom Admin!" })).toBeVisible();
   await page.goto("/members/new");
   await page.getByLabel("Full name").fill(`Deact ${RUN}`);
   await page.getByLabel("Email").fill(email);

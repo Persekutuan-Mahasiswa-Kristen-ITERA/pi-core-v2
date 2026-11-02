@@ -70,7 +70,7 @@ export function ConfirmAction({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={pending} className="h-11 rounded-full">
+          <AlertDialogCancel disabled={pending} className="h-11 rounded-full px-5">
             {blockedReason ? "Close" : "Cancel"}
           </AlertDialogCancel>
           {blockedReason ? null : (
@@ -79,8 +79,8 @@ export function ConfirmAction({
               disabled={pending}
               className={
                 destructive
-                  ? "h-11 rounded-full bg-destructive text-white hover:bg-destructive/90"
-                  : "h-11 rounded-full"
+                  ? "h-11 rounded-full bg-destructive px-5 text-white hover:bg-destructive/90"
+                  : "h-11 rounded-full bg-pmk-brown px-5 hover:bg-pmk-brown-hover"
               }
             >
               {pending ? "Working…" : confirmLabel}

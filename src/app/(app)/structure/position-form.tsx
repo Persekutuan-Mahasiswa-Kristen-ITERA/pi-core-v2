@@ -76,7 +76,7 @@ export function PositionForm({ action, roles, defaults, fixedUnitType, submitLab
         </span>
       </label>
       <fieldset className="space-y-2">
-        <legend className="text-sm font-semibold text-pmk-ink">Roles</legend>
+        <legend className="mb-2 text-sm font-medium text-pmk-ink">Roles</legend>
         <p className="text-xs text-pmk-body">Members holding this position carry these roles.</p>
         <div className="grid gap-2 sm:grid-cols-2">
           {roles.map((r) => (
@@ -102,7 +102,7 @@ export function PositionForm({ action, roles, defaults, fixedUnitType, submitLab
         <SubmitButton>{submitLabel}</SubmitButton>
         <Link
           href="/structure"
-          className="inline-flex min-h-11 items-center px-4 text-sm font-medium text-pmk-body hover:text-pmk-ink"
+          className="inline-flex h-11 items-center rounded-full px-4 text-sm font-medium text-pmk-muted hover:bg-pmk-tint hover:text-pmk-ink"
         >
           Cancel
         </Link>

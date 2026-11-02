@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { requireSuperAdminPage } from "@/lib/auth";
 import { listRolesForPicker } from "@/lib/queries";
 import { ForbiddenState } from "@/components/common/states";
-import { SectionTitle } from "@/components/common/surfaces";
+import { PageHeader } from "@/components/common/surfaces";
+import { FormCard } from "@/components/common/form-controls";
 import { createPosition } from "../../actions";
 import { PositionForm } from "../../position-form";
 
@@ -13,9 +14,11 @@ export default async function NewPositionPage() {
   if (!allowed) return <ForbiddenState superAdmin />;
   const roles = await listRolesForPicker();
   return (
-    <div className="mx-auto max-w-xl space-y-4">
-      <SectionTitle>Create Position</SectionTitle>
-      <PositionForm action={createPosition} roles={roles} submitLabel="Create position" />
+    <div className="max-w-2xl">
+      <PageHeader title="Create position" back={{ href: "/structure", label: "Structure" }} />
+      <FormCard>
+        <PositionForm action={createPosition} roles={roles} submitLabel="Create position" />
+      </FormCard>
     </div>
   );
 }

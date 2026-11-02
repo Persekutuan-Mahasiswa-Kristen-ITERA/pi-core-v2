@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { requireSuperAdminPage } from "@/lib/auth";
 import { ForbiddenState } from "@/components/common/states";
-import { SectionTitle } from "@/components/common/surfaces";
+import { PageHeader } from "@/components/common/surfaces";
+import { FormCard } from "@/components/common/form-controls";
 import { createRole } from "../actions";
 import { RoleForm } from "../role-form";
 
@@ -11,9 +12,11 @@ export default async function NewRolePage() {
   const { allowed } = await requireSuperAdminPage();
   if (!allowed) return <ForbiddenState superAdmin />;
   return (
-    <div className="mx-auto max-w-xl space-y-4">
-      <SectionTitle>Create Role</SectionTitle>
-      <RoleForm action={createRole} submitLabel="Create role" cancelHref="/roles" />
+    <div className="max-w-2xl">
+      <PageHeader title="Create role" back={{ href: "/roles", label: "Roles" }} />
+      <FormCard>
+        <RoleForm action={createRole} submitLabel="Create role" cancelHref="/roles" />
+      </FormCard>
     </div>
   );
 }

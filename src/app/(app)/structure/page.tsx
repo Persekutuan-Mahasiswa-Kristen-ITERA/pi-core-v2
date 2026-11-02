@@ -6,13 +6,13 @@ import { CHILD_TYPES, UNIT_TYPE_LABEL } from "@/lib/org-structure";
 import { listOrgUnits, listPositions, listRolesForPicker } from "@/lib/queries";
 import { POSITION_UNIT_TYPES } from "@/lib/validation";
 import { ForbiddenState } from "@/components/common/states";
-import { CreateBar, ListPanel, RowPill, SectionTitle } from "@/components/common/surfaces";
+import { LinkButton, PageHeader, RowList, SectionHeader, Tag } from "@/components/common/surfaces";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Structure" };
 
 const iconLink =
-  "grid size-11 shrink-0 place-items-center rounded-full text-pmk-brown hover:bg-white focus-visible:outline-2 focus-visible:outline-pmk-accent";
+  "grid size-10 shrink-0 place-items-center rounded-full text-pmk-muted transition-colors hover:bg-pmk-active hover:text-pmk-ink focus-visible:outline-2 focus-visible:outline-pmk-accent";
 
 export default async function StructurePage() {
   const { allowed, isSuperAdmin } = await requireAdminPage();
@@ -20,30 +20,50 @@ export default async function StructurePage() {
   const [units, positions, roles] = await Promise.all([listOrgUnits(), listPositions(), listRolesForPicker()]);
   const roleName = new Map(roles.map((r) => [r.id, r.name]));
 
-  return (
-    <div className="mx-auto max-w-2xl space-y-8">
-      <p className="text-sm text-pmk-body">
-        {isSuperAdmin
-          ? "The PMK ITERA units and the positions that exist in each kind of unit. Assignments pick a unit and one of its positions."
-          : "The PMK ITERA units and positions. Only a super admin can change them."}
-      </p>
+  const root = units.find((u) => u.type === "organization");
+  const tree = units.filter((u) => u.type !== "organization");
+  const departments = tree.filter((u) => u.type === "department").length;
+  const divisions = tree.filter((u) => u.type === "division").length;
 
-      <section aria-labelledby="units-title" className="space-y-3">
-        <SectionTitle id="units-title">Units</SectionTitle>
-        <ListPanel>
-          <ul className="space-y-2">
-            {units.map((u) => (
-              <li key={u.id} style={{ paddingLeft: `${Math.max(0, u.depth - 1) * 1.25}rem` }}>
-                <RowPill
+  return (
+    <div>
+      <PageHeader
+        title="Structure"
+        description={`${root?.name ?? "PMK ITERA"}: BPH, ${departments} departments with ${divisions} divisions, and the bureaus. ${
+          isSuperAdmin ? "Assignments pick a unit and one of its positions." : "Only a super admin can change them."
+        }`}
+      />
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-6">
+        <section aria-labelledby="units-title" className="lg:col-span-7">
+          <SectionHeader
+            id="units-title"
+            title="Units"
+            meta={tree.length}
+            action={
+              isSuperAdmin && root ? (
+                <LinkButton href={`/structure/units/new?parent=${root.id}`} variant="ghost">
+                  <Plus aria-hidden /> Add unit
+                </LinkButton>
+              ) : null
+            }
+          />
+          <RowList>
+            {tree.map((u) => {
+              const child = u.depth > 1;
+              return (
+                <li
+                  key={u.id}
                   className={cn(
-                    "flex items-center gap-2 py-1 pl-4 pr-1",
-                    u.type === "organization" && "bg-pmk-tint-border/60",
+                    "flex items-center gap-2 py-1.5 pr-2",
+                    child ? "pl-9" : "bg-pmk-tint/60 pl-4",
                     !u.is_active && "opacity-60",
                   )}
                 >
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium text-pmk-ink">{u.name}</span>
-                    <span className="text-xs">
+                  <span className="min-w-0 flex-1 py-1">
+                    <span className={cn("block truncate text-sm text-pmk-ink", child ? "" : "font-semibold")}>
+                      {u.name}
+                    </span>
+                    <span className="text-xs text-pmk-muted">
                       {UNIT_TYPE_LABEL[u.type]}
                       {u.is_active ? "" : " · inactive"}
                     </span>
@@ -54,72 +74,80 @@ export default async function StructurePage() {
                       className={iconLink}
                       aria-label={`Add a unit under ${u.name}`}
                     >
-                      <Plus className="size-5" aria-hidden />
+                      <Plus className="size-4" aria-hidden />
                     </Link>
                   ) : null}
-                  {isSuperAdmin && u.type !== "organization" ? (
+                  {isSuperAdmin ? (
                     <Link href={`/structure/units/${u.id}`} className={iconLink} aria-label={`Edit ${u.name}`}>
-                      <SquarePen className="size-5" aria-hidden />
+                      <SquarePen className="size-4" aria-hidden />
                     </Link>
                   ) : null}
-                </RowPill>
-              </li>
-            ))}
-          </ul>
-        </ListPanel>
-      </section>
+                </li>
+              );
+            })}
+          </RowList>
+        </section>
 
-      <section aria-labelledby="positions-title" className="space-y-3">
-        <SectionTitle id="positions-title">Positions</SectionTitle>
-        <p className="text-sm text-pmk-body">
-          Rank: lower is more senior. “One per unit” positions can have a single holder per unit and period.
-        </p>
-        {isSuperAdmin ? <CreateBar href="/structure/positions/new">Create Position</CreateBar> : null}
-        {POSITION_UNIT_TYPES.map((type) => {
-          const list = positions.filter((p) => p.unitType === type);
-          return (
-            <div key={type} className="space-y-2">
-              <h3 className="px-1 text-sm font-bold text-pmk-ink">{UNIT_TYPE_LABEL[type]}</h3>
-              {list.length === 0 ? (
-                <p className="px-1 text-sm text-pmk-body">No positions.</p>
-              ) : (
-                <ul className="space-y-2">
-                  {list.map((p) => (
-                    <li key={p.id}>
-                      <RowPill className="flex items-center gap-2 py-1.5 pl-4 pr-1">
-                        <span className="min-w-0 flex-1">
-                          <span className="block font-medium text-pmk-ink">
-                            {p.name}
-                            {p.isUniquePerUnit ? (
-                              <span className="ml-2 text-[11px] font-semibold text-pmk-accent">ONE PER UNIT</span>
-                            ) : null}
+        <section aria-labelledby="positions-title" className="lg:col-span-5">
+          <SectionHeader
+            id="positions-title"
+            title="Positions"
+            meta={positions.length}
+            action={
+              isSuperAdmin ? (
+                <LinkButton href="/structure/positions/new" variant="ghost">
+                  <Plus aria-hidden /> Create Position
+                </LinkButton>
+              ) : null
+            }
+          />
+          <p className="mb-4 text-sm text-pmk-muted">
+            Ordered by rank (lower is more senior). A “one holder” position has a single holder per unit and period.
+          </p>
+          <div className="space-y-5">
+            {POSITION_UNIT_TYPES.map((type) => {
+              const list = positions.filter((p) => p.unitType === type);
+              return (
+                <div key={type}>
+                  <h3 className="mb-2 text-sm font-medium text-pmk-muted">{UNIT_TYPE_LABEL[type]}</h3>
+                  {list.length === 0 ? (
+                    <p className="text-sm text-pmk-muted">No positions.</p>
+                  ) : (
+                    <RowList>
+                      {list.map((p) => (
+                        <li key={p.id} className="flex items-center gap-2 py-2 pl-4 pr-2">
+                          <span className="min-w-0 flex-1">
+                            <span className="flex items-center gap-2">
+                              <span className="truncate text-sm font-medium text-pmk-ink">{p.name}</span>
+                              {p.isUniquePerUnit ? <Tag>One holder</Tag> : null}
+                            </span>
+                            <span className="mt-0.5 block text-xs text-pmk-muted">
+                              <span className="tnum">Rank {p.rank}</span>
+                              {p.roleIds.length
+                                ? ` · ${p.roleIds.map((id) => roleName.get(id) ?? "?").join(", ")}`
+                                : " · no roles"}
+                              <span className="tnum">{` · ${p.usage} assignment${p.usage === 1 ? "" : "s"}`}</span>
+                            </span>
                           </span>
-                          <span className="block text-xs">
-                            Rank {p.rank}
-                            {p.roleIds.length
-                              ? ` · ${p.roleIds.map((id) => roleName.get(id) ?? "?").join(", ")}`
-                              : " · no roles"}
-                            {` · ${p.usage} assignment${p.usage === 1 ? "" : "s"}`}
-                          </span>
-                        </span>
-                        {isSuperAdmin ? (
-                          <Link
-                            href={`/structure/positions/${p.id}`}
-                            className={iconLink}
-                            aria-label={`Edit ${p.name}`}
-                          >
-                            <SquarePen className="size-5" aria-hidden />
-                          </Link>
-                        ) : null}
-                      </RowPill>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          );
-        })}
-      </section>
+                          {isSuperAdmin ? (
+                            <Link
+                              href={`/structure/positions/${p.id}`}
+                              className={iconLink}
+                              aria-label={`Edit ${p.name}`}
+                            >
+                              <SquarePen className="size-4" aria-hidden />
+                            </Link>
+                          ) : null}
+                        </li>
+                      ))}
+                    </RowList>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

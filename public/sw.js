@@ -11,11 +11,11 @@
  * Nothing user-specific is ever written to Cache Storage, so logging out or switching accounts
  * cannot expose another user's data or stale permissions.
  */
-const VERSION = "v1";
+const VERSION = "v2";
 const PRECACHE = `pi-core-precache-${VERSION}`;
 const STATIC = `pi-core-static-${VERSION}`;
 const OFFLINE_URL = "/offline";
-const PRECACHE_URLS = [OFFLINE_URL, "/brand/pmk-logo.png", "/icons/icon-192.png"];
+const PRECACHE_URLS = [OFFLINE_URL, "/brand/pmk-logo-192.png", "/icons/icon-192.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

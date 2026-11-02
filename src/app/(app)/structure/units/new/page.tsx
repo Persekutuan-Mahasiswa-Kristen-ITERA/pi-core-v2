@@ -5,7 +5,8 @@ import { CHILD_TYPES } from "@/lib/org-structure";
 import { getOrgUnit } from "@/lib/queries";
 import { idSchema } from "@/lib/validation";
 import { ForbiddenState } from "@/components/common/states";
-import { SectionTitle } from "@/components/common/surfaces";
+import { PageHeader } from "@/components/common/surfaces";
+import { FormCard } from "@/components/common/form-controls";
 import { createUnit } from "../../actions";
 import { UnitForm } from "../../unit-form";
 
@@ -20,13 +21,15 @@ export default async function NewUnitPage({ searchParams }: PageProps<"/structur
   const parent = await getOrgUnit(parentId.data);
   if (!parent || !CHILD_TYPES[parent.unit.type].length) notFound();
   return (
-    <div className="mx-auto max-w-xl space-y-4">
-      <SectionTitle>Add unit under {parent.unit.name}</SectionTitle>
-      <UnitForm
-        action={createUnit}
-        create={{ parentId: parent.unit.id, types: CHILD_TYPES[parent.unit.type] }}
-        submitLabel="Add unit"
-      />
+    <div className="max-w-2xl">
+      <PageHeader title={`Add unit under ${parent.unit.name}`} back={{ href: "/structure", label: "Structure" }} />
+      <FormCard>
+        <UnitForm
+          action={createUnit}
+          create={{ parentId: parent.unit.id, types: CHILD_TYPES[parent.unit.type] }}
+          submitLabel="Add unit"
+        />
+      </FormCard>
     </div>
   );
 }

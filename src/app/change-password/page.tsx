@@ -13,16 +13,20 @@ export default async function ChangePasswordPage() {
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col px-6 pb-[calc(1.5rem+var(--safe-bottom))] pt-[calc(2.5rem+var(--safe-top))]">
-      <Image src="/brand/pmk-logo.png" alt="PMK ITERA logo" width={72} height={72} unoptimized className="mx-auto" />
-      <h1 className="mt-6 text-center text-2xl font-bold text-pmk-ink">Shalom, {member.fullName}!</h1>
-      <p className="mb-8 mt-2 text-center text-sm text-pmk-body">
+      <Image src="/brand/pmk-logo-192.png" alt="PMK ITERA logo" width={56} height={56} />
+      <h1 className="mt-6 text-2xl font-semibold tracking-[-0.01em] text-pmk-ink">
+        Shalom {member.fullName.split(/\s+/)[0]}!
+      </h1>
+      <p className="mb-8 mt-1.5 text-sm text-pmk-muted">
         You signed in with a temporary password. Choose your own password to continue.
       </p>
-      <PasswordForm currentLabel="Temporary password" submitLabel="Save password" />
-      <form action={signOut} className="mt-6 text-center">
+      <div className="rounded-2xl border border-pmk-tint-border p-5">
+        <PasswordForm currentLabel="Temporary password" submitLabel="Save password" />
+      </div>
+      <form action={signOut} className="mt-6">
         <button
           type="submit"
-          className="min-h-11 text-sm font-medium text-pmk-accent underline-offset-4 hover:underline"
+          className="min-h-11 text-sm font-medium text-pmk-muted underline-offset-4 hover:text-pmk-ink hover:underline"
         >
           Log out
         </button>
