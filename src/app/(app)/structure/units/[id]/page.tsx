@@ -1,93 +1,102 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireSuperAdminPage } from "@/lib/auth";
-import { UNIT_TYPE_LABEL } from "@/lib/org-structure";
+import { getI18n } from "@/lib/i18n/server";
 import { getOrgUnit } from "@/lib/queries";
 import { idSchema } from "@/lib/validation";
-import { Button } from "@/components/ui/button";
 import { ConfirmAction } from "@/components/common/confirm-action";
 import { ForbiddenState } from "@/components/common/states";
-import { PageHeader, SectionTitle } from "@/components/common/surfaces";
+import { PageHeader, SectionTitle, actionClass } from "@/components/common/surfaces";
+import { InfoIcon } from "@/components/icons";
 import { FormCard } from "@/components/common/form-controls";
 import { deleteUnit, setUnitActive, updateUnit } from "../../actions";
 import { UnitForm } from "../../unit-form";
 
-export const metadata: Metadata = { title: "Edit unit" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { d } = await getI18n();
+  return { title: d.structure.editUnitTitle };
+}
 
 export default async function EditUnitPage({ params }: PageProps<"/structure/units/[id]">) {
   const { allowed } = await requireSuperAdminPage();
   if (!allowed) return <ForbiddenState superAdmin />;
   const id = idSchema.safeParse((await params).id);
   if (!id.success) notFound();
-  const detail = await getOrgUnit(id.data);
+  const [detail, { d }] = await Promise.all([getOrgUnit(id.data), getI18n()]);
+  const s = d.structure;
   if (!detail || detail.unit.type === "organization") notFound();
   const { unit, childCount, assignmentCount } = detail;
   const deleteBlocked =
-    childCount || assignmentCount
-      ? `${unit.name} has ${childCount} sub-unit(s) and ${assignmentCount} assignment(s) across all periods. Deactivate it instead to keep that history.`
-      : undefined;
+    childCount || assignmentCount ? s.deleteUnitBlocked(unit.name, childCount, assignmentCount) : undefined;
 
   return (
     <div className="max-w-2xl space-y-8">
       <section>
         <PageHeader
           title={unit.name}
-          description={`${UNIT_TYPE_LABEL[unit.type]} · ${childCount} sub-unit${childCount === 1 ? "" : "s"} · ${assignmentCount} assignment${assignmentCount === 1 ? "" : "s"} across all periods`}
-          back={{ href: "/structure", label: "Structure" }}
+          description={s.unitDescription(d.unitType[unit.type], childCount, assignmentCount)}
+          back={{ href: "/structure", label: d.nav.structure }}
         />
         {!unit.is_active ? (
-          <p role="status" className="mb-4 rounded-[10px] bg-pmk-tint px-4 py-3 text-sm font-medium text-pmk-ink">
-            Inactive: no new assignments can be made in this unit.
+          <p
+            role="status"
+            className="mb-4 flex items-start gap-2.5 rounded-2xl border border-pmk-tint-border bg-pmk-tint px-4 py-3 text-sm font-semibold text-pmk-ink"
+          >
+            <InfoIcon className="mt-px size-5 shrink-0 text-pmk-muted" aria-hidden />
+            {s.unitInactive}
           </p>
         ) : null}
         <FormCard>
           <UnitForm
             action={updateUnit.bind(null, unit.id)}
             defaults={{ name: unit.name, sortOrder: unit.sort_order }}
-            submitLabel="Save changes"
+            submitLabel={d.common.saveChanges}
           />
         </FormCard>
       </section>
-      <section className="rounded-2xl border border-pmk-tint-border p-5" aria-labelledby="unit-status">
-        <SectionTitle id="unit-status">Status</SectionTitle>
-        <p className="mb-4 mt-1 text-sm text-pmk-muted">
-          Deactivate a unit to stop new assignments while keeping its history. Only an empty unit can be deleted.
-        </p>
+      <section
+        className="rounded-[20px] border border-pmk-tint-border bg-white p-5 shadow-[var(--pmk-shadow-card)]"
+        aria-labelledby="unit-status"
+      >
+        <SectionTitle id="unit-status">{s.status}</SectionTitle>
+        <p className="mb-4 mt-1 text-sm text-pmk-muted">{s.statusBody}</p>
         <div className="flex flex-wrap gap-3">
           {unit.is_active ? (
             <ConfirmAction
               action={setUnitActive.bind(null, unit.id, false)}
-              title={`Deactivate ${unit.name}?`}
-              description="Existing assignments are kept. No new assignments can be made in this unit until it is reactivated."
-              confirmLabel="Deactivate"
+              title={s.deactivateTitle(unit.name)}
+              description={s.deactivateBody}
+              confirmLabel={s.deactivate}
               destructive
             >
-              <Button variant="outline" className="h-11 rounded-full px-5">
-                Deactivate unit
-              </Button>
+              <button type="button" className={actionClass("secondary")}>
+                {s.deactivateUnit}
+              </button>
             </ConfirmAction>
           ) : (
             <ConfirmAction
               action={setUnitActive.bind(null, unit.id, true)}
-              title={`Reactivate ${unit.name}?`}
-              description="Admins can assign members to this unit again."
-              confirmLabel="Reactivate"
+              title={s.reactivateTitle(unit.name)}
+              description={s.reactivateBody}
+              confirmLabel={s.reactivate}
             >
-              <Button className="h-11 rounded-full px-5">Reactivate unit</Button>
+              <button type="button" className={actionClass("primary")}>
+                {s.reactivateUnit}
+              </button>
             </ConfirmAction>
           )}
           <ConfirmAction
             action={deleteUnit.bind(null, unit.id)}
-            title={`Delete ${unit.name}?`}
-            description="This cannot be undone."
-            confirmLabel="Delete"
+            title={s.deleteTitle(unit.name)}
+            description={s.cannotUndo}
+            confirmLabel={s.delete}
             destructive
             redirectTo="/structure"
             blockedReason={deleteBlocked}
           >
-            <Button variant="destructive" className="h-11 rounded-full px-5">
-              Delete unit
-            </Button>
+            <button type="button" className={actionClass("danger-outline")}>
+              {s.deleteUnit}
+            </button>
           </ConfirmAction>
         </div>
       </section>

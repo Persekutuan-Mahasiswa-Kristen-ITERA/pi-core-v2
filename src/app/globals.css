@@ -7,6 +7,7 @@
   --color-pmk-accent: var(--pmk-accent);
   --color-pmk-gold: var(--pmk-gold);
   --color-pmk-gold-strong: var(--pmk-gold-strong);
+  --color-pmk-gold-line: var(--pmk-gold-line);
   --color-pmk-cream: var(--pmk-cream);
   --color-pmk-gold-soft: var(--pmk-gold-soft);
   --color-pmk-brown-hover: var(--pmk-brown-hover);
@@ -14,16 +15,22 @@
   --color-pmk-rule: var(--pmk-rule);
   --color-pmk-control: var(--pmk-control);
   --color-pmk-positive: var(--pmk-positive);
+  --color-pmk-positive-soft: var(--pmk-positive-soft);
   --color-pmk-negative: var(--pmk-negative);
+  --color-pmk-negative-soft: var(--pmk-negative-soft);
+  --color-pmk-negative-ink: var(--pmk-negative-ink);
   --color-pmk-tint: var(--pmk-tint);
   --color-pmk-tint-border: var(--pmk-tint-border);
   --color-pmk-ink: var(--pmk-ink);
   --color-pmk-body: var(--pmk-body);
   --color-pmk-muted: var(--pmk-muted);
-  --font-display: var(--font-figtree);
+  --color-pmk-deep: var(--pmk-deep);
+  --color-pmk-on-deep: var(--pmk-on-deep);
+  --color-pmk-on-deep-muted: var(--pmk-on-deep-muted);
+  --font-display: var(--font-jakarta);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
   --font-heading: var(--font-sans);
   --color-ring: var(--ring);
@@ -52,38 +59,47 @@
 }
 
 /*
- * PMK ITERA design tokens (2026-11 refresh). The brand is the deep brown of the PMK seal; the
- * ground is a neutral warm grey so the brown reads as the one colour on screen. Gold is kept for
- * data marks (seats filled, the active period). Light only, like the prototype.
- *
- * Tokens keep their original names so every `pmk-*` utility follows the new values:
- *   cream  = the app chrome (sidebar, phone top bar)      tint        = a raised panel on white
- *   brown  = primary actions                              tint-border = hairlines and card edges
- *   accent = links and selected icons                     ink/body/muted = three text tiers (≥4.5:1)
+ * PMK ITERA tokens (2026-11, from the final Stitch prototype). A cream canvas, white paper cards
+ * with a warm 1px edge, the seal's brown for text and primary actions, gold only as a mark.
+ * Light only. Every text pairing below was measured for WCAG AA:
+ *   ink #5A3E1B 9.8:1 on white · body 8.8:1 · muted #76614A 5.4:1 on the canvas
+ *   gold-strong #8A6A12 (gold as text) 4.7:1 on the canvas · control edge #A08B68 3:1 (non-text)
+ *   positive on its tint 4.6:1 · negative ink on its tint 7.9:1 · cream on deep brown 12.5:1
  */
 :root {
   color-scheme: light;
 
-  --pmk-brown: #4f3517; /* primary fill, white label 11:1 */
-  --pmk-brown-hover: #3f2a11;
-  --pmk-accent: #74501d; /* links, active icons: 7:1 on white */
-  --pmk-gold: #c99a2e; /* data fill only (bars), never text */
-  --pmk-gold-soft: #f3e8cc; /* track behind a gold bar, pale pill */
-  --pmk-gold-strong: #7d5c12; /* gold as text: 5.6:1 on white */
-  --pmk-cream: #f1efec; /* chrome */
-  --pmk-tint: #f6f5f3; /* raised panel */
-  --pmk-active: #e7e4df; /* selected nav pill, pressed */
-  --pmk-tint-border: #e6e3de; /* card edge */
-  --pmk-rule: #efedea; /* row divider */
-  --pmk-control: #d3cfc9; /* input and select border */
-  --pmk-ink: #1c1917;
-  --pmk-body: #3d3833;
-  --pmk-muted: #6b645c; /* 5.7:1 on white, 5.0:1 on chrome */
-  --pmk-positive: #247b50;
-  --pmk-negative: #b42318;
+  --pmk-brown: #5a3e1b;
+  --pmk-brown-hover: #473014;
+  --pmk-deep: #3d2a13; /* login band, toasts */
+  --pmk-on-deep: #fbf5e4;
+  --pmk-on-deep-muted: #dccba6;
+  --pmk-accent: #8a6a12; /* links and focus rings */
+  --pmk-gold: #c9a227; /* marks only (bars, dots, rings), never text */
+  --pmk-gold-soft: #faf1d6; /* role chip, selected nav */
+  --pmk-gold-line: #ead48a; /* chip edge */
+  --pmk-gold-strong: #8a6a12; /* gold as text */
+  --pmk-cream: #f8f6f2; /* canvas */
+  --pmk-tint: #fbf7ec; /* quiet warm fill: hero, table head, hover */
+  --pmk-active: #faf1d6; /* selected nav pill */
+  --pmk-tint-border: #e9e2d3; /* card edge */
+  --pmk-rule: #f0ebe0; /* row divider */
+  --pmk-control: #a08b68; /* input and select edge */
+  --pmk-ink: #5a3e1b;
+  --pmk-body: #5f4627;
+  --pmk-muted: #76614a;
+  --pmk-positive: #2e7d4f;
+  --pmk-positive-soft: #f0f7f2;
+  --pmk-negative: #b3412f;
+  --pmk-negative-soft: #f8e9e6;
+  --pmk-negative-ink: #7d2c1f;
+
+  --pmk-shadow-card: 0 2px 8px -1px rgba(90, 62, 27, 0.04), 0 1px 2px rgba(90, 62, 27, 0.03);
+  --pmk-shadow-float: 0 12px 32px -4px rgba(90, 62, 27, 0.14), 0 4px 12px -2px rgba(90, 62, 27, 0.06);
+  --pmk-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* shadcn semantic tokens mapped onto the palette */
-  --background: #ffffff;
+  --background: var(--pmk-cream);
   --foreground: var(--pmk-ink);
   --card: #ffffff;
   --card-foreground: var(--pmk-ink);
@@ -101,7 +117,7 @@
   --border: var(--pmk-tint-border);
   --input: var(--pmk-control);
   --ring: var(--pmk-accent);
-  --radius: 0.625rem; /* 10px controls; cards use rounded-2xl (16px) */
+  --radius: 0.875rem; /* 14px controls; cards 20px, sheets 24px, actions fully round */
 
   /* iOS standalone safe areas */
   --safe-top: env(safe-area-inset-top, 0px);
@@ -129,7 +145,7 @@ body {
 }
 
 body {
-  background: #ffffff;
+  background: var(--pmk-cream);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -138,7 +154,321 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* A thin bar that runs while a navigation or action is pending. */
+/* Frosted chrome: the top bar and the floating tab bar, nothing else. */
+.pmk-frost {
+  background: rgba(248, 246, 242, 0.8);
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
+  backdrop-filter: blur(20px) saturate(170%);
+}
+.pmk-frost-light {
+  background: rgba(255, 255, 255, 0.84);
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
+  backdrop-filter: blur(20px) saturate(170%);
+}
+
+/* Chevron for native selects (the platform picker stays). */
+.pmk-chevron,
+.pmk-chevron-ink,
+.pmk-chevron-white {
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 18px;
+}
+.pmk-chevron {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2376614A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+.pmk-chevron-ink {
+  background-position: right 12px center;
+  background-size: 16px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235A3E1B' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+.pmk-chevron-white {
+  background-position: right 12px center;
+  background-size: 16px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+/* Offline page: both languages are in the static HTML; an inline script picks one (Indonesian by default). */
+[data-offline-text="en"] {
+  display: none !important;
+}
+html[data-offline-lang="en"] [data-offline-text="en"] {
+  display: flex !important;
+}
+html[data-offline-lang="en"] [data-offline-text="id"] {
+  display: none !important;
+}
+
+/* Hero: a warm card with gold light in one corner. */
+.pmk-hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid #efe3bf;
+  /* taste-skill-ignore: gold light on the hero, the owner's soft-glass choice */
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgba(230, 198, 92, 0.3), rgba(230, 198, 92, 0) 55%),
+    linear-gradient(180deg, #fffdf7, #fbf5e4);
+}
+.pmk-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* =====================================================================
+   Motion: every animation from the Stitch screens, in one place, with the
+   same names, durations and easing. All of it stops under reduced motion.
+   ===================================================================== */
+@keyframes pmk-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pmk-fade-down {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pmk-slide-left {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pmk-slide-up-card {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pmk-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes pmk-bell-wiggle {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  20% {
+    transform: rotate(14deg);
+  }
+  40% {
+    transform: rotate(-12deg);
+  }
+  60% {
+    transform: rotate(8deg);
+  }
+  80% {
+    transform: rotate(-4deg);
+  }
+}
+@keyframes pmk-pulse-dot {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.75;
+  }
+}
+@keyframes pmk-breathing-dot {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(46, 125, 79, 0.4);
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.85;
+    box-shadow: 0 0 0 4px rgba(46, 125, 79, 0);
+  }
+}
+@keyframes pmk-fab-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 10px 28px -4px rgba(90, 62, 27, 0.32),
+      0 0 0 0 rgba(201, 162, 39, 0.35);
+  }
+  50% {
+    box-shadow:
+      0 14px 34px -4px rgba(90, 62, 27, 0.4),
+      0 0 0 6px rgba(201, 162, 39, 0);
+  }
+}
+@keyframes pmk-shimmer {
+  from {
+    transform: translateX(-100%) skewX(-18deg);
+  }
+  to {
+    transform: translateX(260%) skewX(-18deg);
+  }
+}
+@keyframes pmk-bounce-x {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+}
+@keyframes pmk-badge-pop {
+  0% {
+    transform: scale(0.85);
+  }
+  60% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes pmk-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+@keyframes pmk-breathe {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    box-shadow:
+      0 0 25px rgba(235, 198, 114, 0.18),
+      inset 0 0 12px rgba(243, 210, 124, 0.12);
+  }
+  50% {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow:
+      0 0 35px rgba(235, 198, 114, 0.35),
+      inset 0 0 16px rgba(243, 210, 124, 0.2);
+  }
+}
+@keyframes pmk-ambient {
+  from {
+    transform: translate(-8%, -4%) scale(1);
+    opacity: 0.8;
+  }
+  to {
+    transform: translate(8%, 6%) scale(1.12);
+    opacity: 1;
+  }
+}
+@keyframes pmk-button-shimmer {
+  0%,
+  55% {
+    transform: translateX(-120%) skewX(-18deg);
+  }
+  100% {
+    transform: translateX(320%) skewX(-18deg);
+  }
+}
+@keyframes pmk-avatar-halo {
+  0% {
+    box-shadow:
+      0 0 0 5px var(--pmk-on-deep),
+      0 0 0 5px rgba(201, 162, 39, 0.6);
+  }
+  70% {
+    box-shadow:
+      0 0 0 5px var(--pmk-on-deep),
+      0 0 0 19px rgba(201, 162, 39, 0);
+  }
+  100% {
+    box-shadow:
+      0 0 0 5px var(--pmk-on-deep),
+      0 0 0 5px rgba(201, 162, 39, 0);
+  }
+}
+@keyframes pmk-aura {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(1.08);
+  }
+}
+@keyframes pmk-golden-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 12px 1px rgba(201, 162, 39, 0.22);
+  }
+  50% {
+    box-shadow: 0 0 24px 6px rgba(201, 162, 39, 0.42);
+  }
+}
+@keyframes pmk-spin-blob {
+  0% {
+    transform: rotate(0) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.15);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+@keyframes pmk-border-pulse {
+  0%,
+  100% {
+    border-color: rgba(230, 198, 92, 0.5);
+    box-shadow: 0 0 0 0 rgba(201, 162, 39, 0);
+  }
+  50% {
+    border-color: rgba(201, 162, 39, 0.9);
+    box-shadow: 0 0 12px 0 rgba(201, 162, 39, 0.15);
+  }
+}
+@keyframes pmk-soft-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.72;
+    transform: scale(1.04);
+  }
+}
 @keyframes pmk-progress {
   from {
     transform: translateX(-100%);
@@ -147,10 +477,271 @@ body {
     transform: translateX(250%);
   }
 }
+
+/* Shell entrance: sidebar slides in, top bar drops, tab bar rises. */
+.pmk-enter-side {
+  animation: pmk-slide-left 0.5s var(--pmk-ease-out) backwards;
+}
+.pmk-enter-top {
+  animation: pmk-fade-down 0.45s var(--pmk-ease-out) 0.1s backwards;
+}
+.pmk-enter-bottom {
+  animation: pmk-slide-up-card 0.55s var(--pmk-ease-out) 0.2s backwards;
+}
+.pmk-nav-current-icon {
+  animation: pmk-badge-pop 0.35s ease-out 0.5s backwards;
+}
+
+/*
+ * Page content fades up in a stagger. `backwards` fill (not `both`) so hover lifts and press
+ * scales still work once the entrance is over.
+ */
+.pmk-page > *,
+.pmk-page > * > *,
+.pmk-rows > li,
+.pmk-stagger > * {
+  animation: pmk-fade-up 0.55s var(--pmk-ease-out) backwards;
+}
+.pmk-page > :nth-child(2),
+.pmk-page > * > :nth-child(2),
+.pmk-rows > li:nth-child(2),
+.pmk-stagger > :nth-child(2) {
+  animation-delay: 0.06s;
+}
+.pmk-page > :nth-child(3),
+.pmk-page > * > :nth-child(3),
+.pmk-rows > li:nth-child(3),
+.pmk-stagger > :nth-child(3) {
+  animation-delay: 0.12s;
+}
+.pmk-page > :nth-child(4),
+.pmk-page > * > :nth-child(4),
+.pmk-rows > li:nth-child(4),
+.pmk-stagger > :nth-child(4) {
+  animation-delay: 0.18s;
+}
+.pmk-page > :nth-child(5),
+.pmk-page > * > :nth-child(5),
+.pmk-rows > li:nth-child(5),
+.pmk-stagger > :nth-child(5) {
+  animation-delay: 0.24s;
+}
+.pmk-page > :nth-child(n + 6),
+.pmk-page > * > :nth-child(n + 6),
+.pmk-rows > li:nth-child(6),
+.pmk-stagger > :nth-child(6) {
+  animation-delay: 0.3s;
+}
+.pmk-rows > li:nth-child(7),
+.pmk-stagger > :nth-child(n + 7) {
+  animation-delay: 0.36s;
+}
+.pmk-rows > li:nth-child(n + 8) {
+  animation-delay: 0.4s;
+}
+
+/* Press and hover feedback. */
+.pmk-press {
+  transition:
+    transform 0.15s var(--pmk-ease-out),
+    background-color 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s,
+    color 0.2s;
+}
+.pmk-press:active {
+  transform: scale(0.97);
+}
+.pmk-lift {
+  transition:
+    transform 0.2s var(--pmk-ease-out),
+    border-color 0.2s,
+    box-shadow 0.2s,
+    background-color 0.2s;
+}
+.pmk-lift:hover {
+  transform: translateY(-2px);
+  border-color: #dccb9e;
+  box-shadow: 0 10px 24px -8px rgba(90, 62, 27, 0.16);
+}
+.pmk-lift:active {
+  transform: scale(0.98);
+}
+.pmk-lift .pmk-lift-icon {
+  transition: transform 0.25s var(--pmk-ease-out);
+}
+.pmk-lift:hover .pmk-lift-icon {
+  transform: scale(1.08) rotate(-4deg);
+}
+.pmk-brand-mark {
+  transition: transform 0.25s var(--pmk-ease-out);
+}
+a:hover > .pmk-brand-mark {
+  transform: rotate(6deg);
+}
+.pmk-arrow {
+  animation: pmk-bounce-x 1.8s ease-in-out infinite;
+}
+
+/* Bell: wiggles once on open; the class is re-added by the bell button. */
+.pmk-bell:hover svg,
+.pmk-bell[data-ring="true"] svg {
+  animation: pmk-bell-wiggle 0.65s ease-in-out;
+  transform-origin: 50% 10%;
+}
+
+/* Status dots: active pulses, the profile's breathes. */
+.pmk-dot {
+  position: relative;
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: currentColor;
+  flex: none;
+}
+.pmk-dot-pulse {
+  animation: pmk-pulse-dot 2.2s ease-in-out infinite;
+}
+.pmk-dot-breathe {
+  animation: pmk-breathing-dot 2.2s ease-in-out infinite;
+}
+
+/* Floating action button breathes. */
+.pmk-fab {
+  animation:
+    pmk-fade-up 0.5s var(--pmk-ease-out) 0.35s backwards,
+    pmk-fab-glow 3.2s ease-in-out 1s infinite;
+}
+
+/* Light sweeps across the hero. */
+.pmk-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  pointer-events: none;
+  /* taste-skill-ignore: Stitch hero shimmer */
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
+  animation: pmk-shimmer 4s ease-in-out 1s infinite;
+}
+
+/* Segmented control: the pill slides to the current item. */
+.pmk-seg-ind {
+  transition:
+    left 0.38s var(--pmk-ease-out),
+    width 0.38s var(--pmk-ease-out);
+}
+.pmk-seg-ind[data-instant="true"] {
+  transition: none;
+}
+
+/* Validation: invalid fields and error banners shake when they appear. */
+.pmk-shake {
+  animation: pmk-shake 0.45s ease-in-out;
+}
+.pmk-banner-pulse {
+  animation: pmk-border-pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Profile: halo on arrival, two soft gold auras behind the card. */
+.pmk-avatar-halo {
+  animation: pmk-avatar-halo 0.8s ease-out 0.35s;
+}
+.pmk-aura {
+  position: absolute;
+  z-index: 0;
+  width: 180px;
+  height: 180px;
+  border-radius: 9999px;
+  background: var(--pmk-gold-line);
+  filter: blur(46px);
+  pointer-events: none;
+  animation: pmk-aura 6s ease-in-out infinite;
+}
+.pmk-aura-2 {
+  animation-duration: 7s;
+  animation-direction: reverse;
+}
+
+/* Member home: glowing avatar, rotating gold ambience. */
+.pmk-golden-glow {
+  animation: pmk-golden-glow 4s ease-in-out infinite;
+}
+.pmk-ambient {
+  position: absolute;
+  z-index: 0;
+  border-radius: 42% 58% 61% 39%;
+  background: rgba(230, 198, 92, 0.22);
+  filter: blur(40px);
+  pointer-events: none;
+  animation: pmk-spin-blob 16s linear infinite;
+}
+
+/* Sign in: drifting lights, the breathing emblem, a shimmer on the button, the soon badge. */
+.pmk-glow {
+  position: absolute;
+  z-index: 0;
+  border-radius: 9999px;
+  filter: blur(56px);
+  pointer-events: none;
+  animation: pmk-ambient 7s ease-in-out infinite alternate;
+}
+.pmk-glow-2 {
+  animation-duration: 8.5s;
+  animation-direction: alternate-reverse;
+}
+.pmk-breathe {
+  animation:
+    pmk-fade-down 0.7s var(--pmk-ease-out) backwards,
+    pmk-breathe 4.5s ease-in-out 0.7s infinite;
+}
+.pmk-enter-down {
+  animation: pmk-fade-down 0.7s var(--pmk-ease-out) backwards;
+}
+.pmk-enter-up-card {
+  animation: pmk-slide-up-card 0.75s var(--pmk-ease-out) 0.15s backwards;
+}
+.pmk-shimmer-button {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.pmk-shimmer-button::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 30%;
+  pointer-events: none;
+  /* taste-skill-ignore: Stitch button shimmer */
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0));
+  animation: pmk-button-shimmer 4.8s cubic-bezier(0.4, 0, 0.2, 1) 1.2s infinite;
+}
+.pmk-shimmer-button:disabled::after {
+  display: none;
+}
+.pmk-soft-pulse {
+  animation: pmk-soft-pulse 2.8s ease-in-out infinite;
+}
+
+/* A thin bar that runs while a navigation or action is pending. */
 .pmk-progress {
   animation: pmk-progress 0.9s ease-in-out infinite;
 }
+
+/* Toasts spring up (Sonner keeps its own enter; this adds the overshoot). */
+[data-sonner-toast][data-mounted="true"] {
+  transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
 @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
   .pmk-progress {
     animation: none;
     transform: none;

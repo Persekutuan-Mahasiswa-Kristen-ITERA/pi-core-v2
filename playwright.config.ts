@@ -19,6 +19,24 @@ export default defineConfig({
     baseURL: `http://localhost:${PORT}`,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
+    // Animations off: counters show their final value at once and nothing moves under a click.
+    reducedMotion: "reduce",
+    // The suite reads the English copy; Indonesian is the app default (see src/lib/i18n).
+    storageState: {
+      cookies: [
+        {
+          name: "pi-lang",
+          value: "en",
+          domain: "localhost",
+          path: "/",
+          expires: -1,
+          httpOnly: false,
+          secure: false,
+          sameSite: "Lax",
+        },
+      ],
+      origins: [],
+    },
   },
   projects: [{ name: "mobile-chromium", use: { ...devices["Pixel 7"] } }],
   webServer: {

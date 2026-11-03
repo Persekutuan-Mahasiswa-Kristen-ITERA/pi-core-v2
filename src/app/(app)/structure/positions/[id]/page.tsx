@@ -1,64 +1,65 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireSuperAdminPage } from "@/lib/auth";
+import { getI18n } from "@/lib/i18n/server";
 import { getPosition, listRolesForPicker } from "@/lib/queries";
 import { idSchema } from "@/lib/validation";
-import { Button } from "@/components/ui/button";
 import { ConfirmAction } from "@/components/common/confirm-action";
 import { ForbiddenState } from "@/components/common/states";
-import { PageHeader } from "@/components/common/surfaces";
+import { PageHeader, actionClass } from "@/components/common/surfaces";
 import { FormCard } from "@/components/common/form-controls";
 import { deletePosition, updatePosition } from "../../actions";
 import { PositionForm } from "../../position-form";
 
-export const metadata: Metadata = { title: "Edit position" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { d } = await getI18n();
+  return { title: d.structure.editPositionMeta };
+}
 
 export default async function EditPositionPage({ params }: PageProps<"/structure/positions/[id]">) {
   const { allowed } = await requireSuperAdminPage();
   if (!allowed) return <ForbiddenState superAdmin />;
   const id = idSchema.safeParse((await params).id);
   if (!id.success) notFound();
-  const [position, roles] = await Promise.all([getPosition(id.data), listRolesForPicker()]);
+  const [position, roles, { d }] = await Promise.all([getPosition(id.data), listRolesForPicker(), getI18n()]);
+  const s = d.structure;
   if (!position) notFound();
   return (
     <div className="max-w-2xl space-y-8">
       <section>
-        <PageHeader title={`Edit ${position.name}`} back={{ href: "/structure", label: "Structure" }} />
+        <PageHeader title={s.editPositionTitle(position.name)} back={{ href: "/structure", label: d.nav.structure }} />
         <FormCard>
           <PositionForm
             action={updatePosition.bind(null, position.id)}
             roles={roles}
             defaults={position}
             fixedUnitType
-            submitLabel="Save changes"
+            submitLabel={d.common.saveChanges}
           />
         </FormCard>
       </section>
-      <section aria-labelledby="danger-title" className="rounded-2xl border border-pmk-tint-border p-5">
-        <h2 id="danger-title" className="text-base font-semibold text-pmk-ink">
-          Delete this position
+      <section
+        aria-labelledby="danger-title"
+        className="rounded-[20px] border border-pmk-tint-border bg-white p-5 shadow-[var(--pmk-shadow-card)]"
+      >
+        <h2 id="danger-title" className="text-[19px] font-bold text-pmk-ink">
+          {s.deletePositionTitle}
         </h2>
         <p className="mb-4 mt-1 text-sm text-pmk-muted">
-          {position.usage
-            ? `Used by ${position.usage} assignment(s). Remove or change them first.`
-            : "Not used by any assignment. Deleting cannot be undone."}
+          {position.usage ? s.positionUsed(position.usage) : s.positionUnused}
         </p>
         <ConfirmAction
           action={deletePosition.bind(null, position.id)}
-          title={`Delete position ${position.name}?`}
-          description="This cannot be undone."
-          confirmLabel="Delete"
+          title={s.deletePositionConfirm(position.name)}
+          description={s.cannotUndo}
+          confirmLabel={s.delete}
           destructive
           redirectTo="/structure"
-          blockedReason={
-            position.usage
-              ? `${position.usage} assignment(s) use this position. Remove or change them first.`
-              : undefined
-          }
+          blockedReason={position.usage ? s.positionBlocked(position.usage) : undefined}
         >
-          <Button variant="destructive" className="h-11 rounded-full px-5">
-            Delete position
-          </Button>
+          <button type="button" className={actionClass("danger-outline")}>
+            {s.deletePosition}
+          </button>
         </ConfirmAction>
       </section>
     </div>

@@ -1,13 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Figtree } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { ServiceWorkerRegistration } from "@/components/pwa/service-worker-registration";
+import { MotionObserver } from "@/components/common/motion-observer";
+import { LocaleProvider } from "@/lib/i18n/client";
+import { getLocale } from "@/lib/i18n/server";
 import { APP_NAME, APP_SHORT_NAME, THEME_COLOR, BACKGROUND_COLOR } from "@/lib/app-config";
 import "./globals.css";
 
-// One family for the whole app: a friendly grotesk with open word spacing and tabular figures.
-// Variable font, so one file covers every weight.
-const figtree = Figtree({ variable: "--font-figtree", subsets: ["latin"], display: "swap" });
+// One family for the whole app, as in the Stitch design: a warm humanist grotesk with tabular
+// figures. Self-hosted by next/font at build time, so it also works offline. Variable font.
+const jakarta = Plus_Jakarta_Sans({ variable: "--font-jakarta", subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
   title: { default: APP_SHORT_NAME, template: `%s · ${APP_SHORT_NAME}` },
@@ -38,12 +41,22 @@ export const viewport: Viewport = {
   colorScheme: "light",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const locale = await getLocale();
   return (
-    <html lang="en" className={`${figtree.variable} antialiased`} style={{ backgroundColor: BACKGROUND_COLOR }}>
+    // suppressHydrationWarning: the static offline page sets `lang` from the cookie before hydration.
+    <html
+      lang={locale}
+      className={`${jakarta.variable} antialiased`}
+      style={{ backgroundColor: BACKGROUND_COLOR }}
+      suppressHydrationWarning
+    >
       <body className="min-h-dvh">
-        {children}
-        <Toaster position="top-center" richColors closeButton />
+        <LocaleProvider locale={locale}>
+          {children}
+          <Toaster position="top-center" closeButton />
+          <MotionObserver />
+        </LocaleProvider>
         <ServiceWorkerRegistration />
       </body>
     </html>

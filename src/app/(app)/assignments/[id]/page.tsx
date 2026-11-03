@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireAdminPage } from "@/lib/auth";
+import { getI18n } from "@/lib/i18n/server";
 import { getAssignment } from "@/lib/queries";
 import { idSchema } from "@/lib/validation";
 import { ForbiddenState } from "@/components/common/states";
@@ -10,18 +11,25 @@ import { AssignmentForm } from "../assignment-form";
 import { updateAssignment } from "../actions";
 import { getAssignmentFormOptions } from "../form-options";
 
-export const metadata: Metadata = { title: "Edit assignment" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { d } = await getI18n();
+  return { title: d.assignments.editTitle };
+}
 
 export default async function EditAssignmentPage({ params }: PageProps<"/assignments/[id]">) {
   const { allowed } = await requireAdminPage();
   if (!allowed) return <ForbiddenState />;
   const id = idSchema.safeParse((await params).id);
   if (!id.success) notFound();
-  const [assignment, options] = await Promise.all([getAssignment(id.data), getAssignmentFormOptions()]);
+  const [assignment, options, { d }] = await Promise.all([
+    getAssignment(id.data),
+    getAssignmentFormOptions(),
+    getI18n(),
+  ]);
   if (!assignment) notFound();
   return (
     <div className="max-w-2xl">
-      <PageHeader title="Edit assignment" back={{ href: "/assignments", label: "Assignments" }} />
+      <PageHeader title={d.assignments.editTitle} back={{ href: "/assignments", label: d.nav.assignments }} />
       <FormCard>
         <AssignmentForm
           mode="edit"

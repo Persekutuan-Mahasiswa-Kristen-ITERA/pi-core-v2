@@ -2,16 +2,25 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
-import { Field, FormMessage, SubmitButton, fieldClass } from "@/components/common/form-controls";
+import {
+  Field,
+  FormMessage,
+  InfoBanner,
+  SubmitButton,
+  cancelLinkClass,
+  choiceCardClass,
+  fieldClass,
+  selectClass,
+} from "@/components/common/form-controls";
+import { FieldError } from "@/components/common/field-error";
+import { actionClass } from "@/components/common/surfaces";
+import { KeyIcon } from "@/components/icons";
+import { useDict } from "@/lib/i18n/client";
 import { useActionFeedback } from "@/components/common/use-action-feedback";
 import { OneTimeSecret } from "@/components/common/one-time-secret";
 import { initialActionState, type ActionResult } from "@/lib/action-result";
 import type { AccessLevel, MemberType } from "@/lib/supabase/types";
 import type { IssuedPassword } from "./actions";
-
-const ACCESS_LABEL: Record<AccessLevel, string> = { member: "Member", admin: "Admin", super_admin: "Super admin" };
-const ACCESS_NOTE =
-  "Only a super admin changes access levels. Holding a position with the Organization Admin role in the active period also gives admin access.";
 
 type Defaults = {
   memberType: MemberType;
@@ -38,14 +47,6 @@ type Props =
       canSetAccess: boolean;
     };
 
-const ACCESS_HELP: Record<AccessLevel, string> = {
-  member:
-    "Member: sees their own profile. Becomes an admin automatically while holding a position with the Organization Admin role in the active period.",
-  admin: "Admin: manages members, periods and assignments, whatever their position.",
-  super_admin:
-    "Super admin: everything an admin can do, plus the organization structure, roles, access levels and super admin accounts.",
-};
-
 export function MemberForm(props: Props) {
   // The two modes share one form; create's result also carries the one-time password.
   const [memberType, setMemberType] = useState<MemberType>(props.defaults?.memberType ?? "student");
@@ -54,24 +55,20 @@ export function MemberForm(props: Props) {
     initialActionState as ActionResult<IssuedPassword>,
   );
   useActionFeedback(state, props.mode === "edit" ? "/members" : undefined);
+  const d = useDict();
+  const f = d.memberForm;
 
   if (props.mode === "create" && state.ok && state.data) {
     return (
       <OneTimeSecret email={state.data.email} secret={state.data.temporaryPassword}>
         <div className="flex flex-wrap gap-3 pt-1">
           {memberType === "student" ? (
-            <Link
-              href={`/assignments?member=${state.data.memberId}`}
-              className="inline-flex h-11 items-center rounded-full bg-pmk-brown px-6 text-sm font-semibold text-white hover:bg-pmk-brown-hover"
-            >
-              Assign a position
+            <Link href={`/assignments?member=${state.data.memberId}`} className={actionClass("primary", "h-12 px-6")}>
+              {f.assign}
             </Link>
           ) : null}
-          <Link
-            href="/members"
-            className="inline-flex h-11 items-center rounded-full px-4 text-sm font-medium text-pmk-muted hover:bg-pmk-tint hover:text-pmk-ink"
-          >
-            Back to members
+          <Link href="/members" className={cancelLinkClass}>
+            {f.backToMembers}
           </Link>
         </div>
       </OneTimeSecret>
@@ -79,20 +76,27 @@ export function MemberForm(props: Props) {
   }
 
   const errors = state.ok ? undefined : state.fieldErrors;
-  const d = props.defaults;
+  const defaults = props.defaults;
   return (
     <form action={formAction} className="space-y-4" noValidate>
       <FormMessage state={state} />
-      <Field name="fullName" label="Full name" errors={errors?.fullName}>
+      <Field name="fullName" label={f.fullName} errors={errors?.fullName}>
         {(a) => (
-          <input {...a} defaultValue={d?.fullName} autoComplete="off" className={fieldClass} required maxLength={120} />
+          <input
+            {...a}
+            defaultValue={defaults?.fullName}
+            autoComplete="off"
+            className={fieldClass}
+            required
+            maxLength={120}
+          />
         )}
       </Field>
       <Field
         name="email"
-        label="Email"
+        label={f.email}
         errors={errors?.email}
-        hint={props.mode === "create" ? "Used to log in." : "Changing it also changes the login email."}
+        hint={props.mode === "create" ? f.emailHintCreate : f.emailHintEdit}
       >
         {(a) => (
           <input
@@ -101,63 +105,72 @@ export function MemberForm(props: Props) {
             inputMode="email"
             autoCapitalize="none"
             spellCheck={false}
-            defaultValue={d?.email}
+            defaultValue={defaults?.email}
             className={fieldClass}
             required
           />
         )}
       </Field>
       <fieldset className="space-y-2">
-        <legend className="mb-2 text-sm font-medium text-pmk-ink">Member type</legend>
-        <div className="grid grid-cols-2 gap-2">
+        <legend className="mb-2 text-sm font-semibold text-pmk-ink">{f.memberType}</legend>
+        <div className="grid gap-2 sm:grid-cols-2">
           {(
             [
-              ["student", "Mahasiswa", "Identified by NIM. Can hold positions."],
-              ["lecturer", "Dosen", "Identified by NIP/NIDN, e.g. the pembina. No positions."],
+              ["student", d.memberType.student, f.studentNote],
+              ["lecturer", d.memberType.lecturer, f.lecturerNote],
             ] as const
           ).map(([value, label, note]) => (
-            <label
-              key={value}
-              className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border border-pmk-control bg-white px-4 py-3 transition-colors hover:bg-pmk-tint has-checked:border-pmk-accent has-checked:bg-pmk-tint has-checked:ring-1 has-checked:ring-pmk-accent"
-            >
+            <label key={value} className={choiceCardClass}>
               <input
                 type="radio"
                 name="memberType"
                 value={value}
                 checked={memberType === value}
                 onChange={() => setMemberType(value)}
-                className="mt-0.5 size-5 shrink-0 accent-pmk-brown"
+                className="mt-0.5 size-5 shrink-0 accent-pmk-brown focus-visible:outline-none"
               />
               <span className="text-sm">
-                <span className="block font-semibold text-pmk-ink">{label}</span>
-                <span className="text-xs text-pmk-muted">{note}</span>
+                <span className="block font-bold text-pmk-ink">{label}</span>
+                <span className="text-[13px] text-pmk-muted">{note}</span>
               </span>
             </label>
           ))}
         </div>
-        {errors?.memberType ? <p className="text-sm font-medium text-destructive">{errors.memberType[0]}</p> : null}
+        <FieldError id="field-memberType-error" messages={errors?.memberType} />
       </fieldset>
       <div className="grid gap-4 sm:grid-cols-2">
         {memberType === "student" ? (
-          <Field name="nim" label="NIM (optional)" errors={errors?.nim}>
+          <Field name="nim" label={f.nim} errors={errors?.nim}>
             {(a) => (
-              <input {...a} inputMode="numeric" defaultValue={d?.nim ?? ""} className={fieldClass} maxLength={12} />
+              <input
+                {...a}
+                inputMode="numeric"
+                defaultValue={defaults?.nim ?? ""}
+                className={fieldClass}
+                maxLength={12}
+              />
             )}
           </Field>
         ) : (
-          <Field name="nip" label="NIP / NIDN (optional)" errors={errors?.nip}>
+          <Field name="nip" label={f.nip} errors={errors?.nip}>
             {(a) => (
-              <input {...a} inputMode="numeric" defaultValue={d?.nip ?? ""} className={fieldClass} maxLength={20} />
+              <input
+                {...a}
+                inputMode="numeric"
+                defaultValue={defaults?.nip ?? ""}
+                className={fieldClass}
+                maxLength={20}
+              />
             )}
           </Field>
         )}
-        <Field name="phone" label="Phone (optional)" errors={errors?.phone}>
+        <Field name="phone" label={f.phone} errors={errors?.phone}>
           {(a) => (
             <input
               {...a}
               type="tel"
               inputMode="tel"
-              defaultValue={d?.phone ?? ""}
+              defaultValue={defaults?.phone ?? ""}
               className={fieldClass}
               maxLength={20}
             />
@@ -167,36 +180,38 @@ export function MemberForm(props: Props) {
       {props.canSetAccess ? (
         <Field
           name="accessLevel"
-          label="PI-CORE access"
+          label={f.access}
           errors={errors?.accessLevel}
-          hint={ACCESS_HELP[d?.accessLevel ?? "member"]}
+          hint={f.accessHelp[defaults?.accessLevel ?? "member"]}
         >
           {(a) => (
-            <select {...a} defaultValue={d?.accessLevel ?? "member"} className={fieldClass}>
-              <option value="member">Member</option>
-              <option value="admin">Admin</option>
-              <option value="super_admin">Super admin</option>
+            <select {...a} defaultValue={defaults?.accessLevel ?? "member"} className={selectClass}>
+              <option value="member">{d.access.member}</option>
+              <option value="admin">{d.access.admin}</option>
+              <option value="super_admin">{d.access.super_admin}</option>
             </select>
           )}
         </Field>
       ) : (
         <div className="space-y-1">
-          <p className="text-sm font-medium text-pmk-ink">PI-CORE access</p>
+          <p className="text-sm font-semibold text-pmk-ink">{f.access}</p>
           <p className="text-sm text-pmk-body">
-            {d ? ACCESS_LABEL[d.accessLevel] : "Member"}. {ACCESS_NOTE}
+            {defaults ? d.access[defaults.accessLevel] : d.access.member}. {f.accessNote}
           </p>
-          {errors?.accessLevel ? <p className="text-sm font-medium text-destructive">{errors.accessLevel[0]}</p> : null}
+          <FieldError id="field-accessLevel-error" messages={errors?.accessLevel} />
         </div>
       )}
-      <div className="flex items-center gap-3 pt-2">
-        <SubmitButton pendingText={props.mode === "create" ? "Creating…" : "Saving…"}>
-          {props.mode === "create" ? "Create member" : "Save changes"}
+      {props.mode === "create" ? (
+        <InfoBanner icon={<KeyIcon />} pulse>
+          {f.tempNote}
+        </InfoBanner>
+      ) : null}
+      <div className="flex flex-wrap items-center gap-3 pt-2">
+        <SubmitButton pendingText={props.mode === "create" ? f.creating : d.common.saving}>
+          {props.mode === "create" ? f.create : d.common.saveChanges}
         </SubmitButton>
-        <Link
-          href="/members"
-          className="inline-flex h-11 items-center rounded-full px-4 text-sm font-medium text-pmk-muted hover:bg-pmk-tint hover:text-pmk-ink"
-        >
-          Cancel
+        <Link href="/members" className={cancelLinkClass}>
+          {d.common.cancel}
         </Link>
       </div>
     </form>

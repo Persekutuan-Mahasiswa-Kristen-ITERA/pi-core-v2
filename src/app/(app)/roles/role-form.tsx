@@ -2,7 +2,15 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
-import { Field, FormMessage, SubmitButton, fieldClass } from "@/components/common/form-controls";
+import {
+  Field,
+  FormMessage,
+  SubmitButton,
+  cancelLinkClass,
+  choiceCardClass,
+  fieldClass,
+} from "@/components/common/form-controls";
+import { useDict } from "@/lib/i18n/client";
 import { useActionFeedback } from "@/components/common/use-action-feedback";
 import { initialActionState, type ActionResult } from "@/lib/action-result";
 import { cn } from "@/lib/utils";
@@ -18,29 +26,26 @@ export function RoleForm({ action, defaults, submitLabel, cancelHref }: Props) {
   const [state, formAction] = useActionState(action, initialActionState as ActionResult<{ id: string }>);
   useActionFeedback(state, state.ok && state.data ? `/roles/${state.data.id}` : undefined);
   const errors = state.ok ? undefined : state.fieldErrors;
+  const d = useDict();
+  const r = d.roles;
   return (
     <form action={formAction} className="space-y-4" noValidate>
       <FormMessage state={state} />
-      <Field
-        name="name"
-        label="Role name"
-        errors={errors?.name}
-        hint="A group of positions with the same responsibilities, e.g. BPH or Sekretaris."
-      >
+      <Field name="name" label={r.name} errors={errors?.name} hint={r.nameHint}>
         {(a) => <input {...a} defaultValue={defaults?.name} className={fieldClass} required maxLength={60} />}
       </Field>
-      <Field name="description" label="Description (optional)" errors={errors?.description}>
+      <Field name="description" label={r.descriptionLabel} errors={errors?.description}>
         {(a) => (
           <textarea
             {...a}
             defaultValue={defaults?.description ?? ""}
             rows={3}
             maxLength={280}
-            className={cn(fieldClass, "h-auto py-3")}
+            className={cn(fieldClass, "h-auto min-h-24 py-3")}
           />
         )}
       </Field>
-      <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl bg-pmk-tint px-4 py-3">
+      <label className={choiceCardClass}>
         <input
           type="checkbox"
           name="grantsAdmin"
@@ -48,19 +53,14 @@ export function RoleForm({ action, defaults, submitLabel, cancelHref }: Props) {
           className="mt-0.5 size-5 shrink-0 accent-pmk-brown"
         />
         <span className="text-sm">
-          <span className="block font-semibold text-pmk-ink">Gives admin access</span>
-          <span className="text-pmk-body">
-            Members holding a position with this role in the active period can manage members, periods and assignments.
-          </span>
+          <span className="block font-bold text-pmk-ink">{r.grants}</span>
+          <span className="text-[13px] text-pmk-muted">{r.grantsBody}</span>
         </span>
       </label>
-      <div className="flex items-center gap-3 pt-2">
+      <div className="flex flex-wrap items-center gap-3 pt-2">
         <SubmitButton>{submitLabel}</SubmitButton>
-        <Link
-          href={cancelHref}
-          className="inline-flex h-11 items-center rounded-full px-4 text-sm font-medium text-pmk-muted hover:bg-pmk-tint hover:text-pmk-ink"
-        >
-          Cancel
+        <Link href={cancelHref} className={cancelLinkClass}>
+          {d.common.cancel}
         </Link>
       </div>
     </form>

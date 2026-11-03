@@ -1,25 +1,40 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SquarePen, Trash2 } from "lucide-react";
+import { AssignmentsIcon, DeleteIcon, EditIcon } from "@/components/icons";
 import { requireAdminPage } from "@/lib/auth";
+import { getI18n } from "@/lib/i18n/server";
 import { listAssignments } from "@/lib/queries";
 import { idSchema } from "@/lib/validation";
 import { ConfirmAction } from "@/components/common/confirm-action";
 import { EmptyState, ForbiddenState } from "@/components/common/states";
-import { PageHeader, RowList, SectionHeader } from "@/components/common/surfaces";
+import {
+  Avatar,
+  PageHeader,
+  RowList,
+  RowListHead,
+  SectionHeader,
+  Tag,
+  iconActionClass,
+} from "@/components/common/surfaces";
 import { FormCard } from "@/components/common/form-controls";
 import { AssignmentForm } from "./assignment-form";
 import { PeriodFilter } from "./period-filter";
 import { getAssignmentFormOptions } from "./form-options";
 import { createAssignment, deleteAssignment } from "./actions";
 
-export const metadata: Metadata = { title: "Assignments" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { d } = await getI18n();
+  return { title: d.assignments.title };
+}
+
+const COLS = "md:grid-cols-[2.75rem_minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1.3fr)_5.5rem_5.75rem]";
 
 export default async function AssignmentsPage({ searchParams }: PageProps<"/assignments">) {
   const { allowed } = await requireAdminPage();
   if (!allowed) return <ForbiddenState />;
   const sp = await searchParams;
-  const options = await getAssignmentFormOptions();
+  const [options, { d }] = await Promise.all([getAssignmentFormOptions(), getI18n()]);
+  const t = d.assignments;
   const activePeriodId = options.activePeriodId ?? null;
 
   const requestedPeriod = typeof sp.period === "string" ? sp.period : undefined;
@@ -27,20 +42,14 @@ export default async function AssignmentsPage({ searchParams }: PageProps<"/assi
   const assignments = await listAssignments(listPeriodId);
   const preselectedMember = idSchema.safeParse(typeof sp.member === "string" ? sp.member : undefined).data;
 
-  const listPeriodLabel = options.periods.find((p) => p.id === listPeriodId)?.label.replace(" (active)", "");
-  const iconButton =
-    "grid size-10 place-items-center rounded-full text-pmk-muted transition-colors hover:bg-pmk-tint hover:text-pmk-ink focus-visible:outline-2 focus-visible:outline-pmk-accent";
+  const listPeriodLabel = options.periods.find((p) => p.id === listPeriodId)?.plainLabel;
 
   return (
     <div className="space-y-8">
-      <PageHeader
-        title="Assignments"
-        description="Who holds which position, in which unit, for which period."
-        className="mb-0 lg:mb-0"
-      />
+      <PageHeader title={t.title} description={t.description} className="mb-0 lg:mb-0" />
       <section aria-labelledby="new-assignment">
         <h2 id="new-assignment" className="sr-only">
-          New assignment
+          {t.newAssignment}
         </h2>
         <FormCard>
           <AssignmentForm
@@ -58,70 +67,66 @@ export default async function AssignmentsPage({ searchParams }: PageProps<"/assi
       <section aria-labelledby="assignment-list">
         <SectionHeader
           id="assignment-list"
-          title={listPeriodLabel ? `Pengurus ${listPeriodLabel}` : "All assignments"}
+          title={listPeriodLabel ? t.listTitle(listPeriodLabel) : t.all}
           meta={assignments.length}
           action={
             <PeriodFilter
               value={requestedPeriod === "all" ? "all" : (listPeriodId ?? "all")}
-              periods={options.periods.map((p) => ({ id: p.id, label: p.label.replace(" (active)", "") }))}
+              periods={options.periods.map((p) => ({ id: p.id, label: p.plainLabel }))}
             />
           }
         />
         {assignments.length === 0 ? (
-          <EmptyState title="No assignments in this period">
-            Use the form above to give a member a position in a unit.
+          <EmptyState icon={<AssignmentsIcon />} title={t.emptyTitle}>
+            {t.emptyBody}
           </EmptyState>
         ) : (
           <>
-            <div
-              className="hidden grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.3fr)_5.5rem_5.5rem] gap-4 px-4 pb-2 text-xs text-pmk-muted md:grid"
-              aria-hidden
-            >
-              <span>Member</span>
-              <span>Position</span>
-              <span>Unit</span>
-              <span>Period</span>
+            <RowListHead className={`gap-4 ${COLS}`}>
               <span />
-            </div>
+              <span>{t.colMember}</span>
+              <span>{t.colPosition}</span>
+              <span>{t.colUnit}</span>
+              <span>{t.colPeriod}</span>
+              <span />
+            </RowListHead>
             <RowList>
               {assignments.map((a) => (
                 <li
                   key={a.id}
-                  className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 py-2.5 pl-4 pr-2 text-sm md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.3fr)_5.5rem_5.5rem] md:gap-x-4"
+                  className={`grid grid-cols-[2.75rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 py-3 pl-4 pr-2 text-sm md:gap-x-4 md:py-2.5 ${COLS}`}
                 >
-                  <div className="min-w-0 md:contents">
-                    <p className="truncate font-medium text-pmk-ink" title={a.memberName}>
-                      {a.memberName}
-                      {!a.memberActive ? <span className="text-xs font-normal text-pmk-muted"> (inactive)</span> : null}
-                    </p>
-                    <p className="mt-0.5 truncate text-xs text-pmk-muted md:hidden">
-                      {a.position} · {a.unit} · {a.period}
-                    </p>
-                    <span className="hidden truncate text-pmk-body md:block" title={a.position}>
+                  <Avatar name={a.memberName} className="row-span-2 self-start md:row-span-1 md:self-center" />
+                  <p className="min-w-0 truncate text-base font-bold text-pmk-ink" title={a.memberName}>
+                    {a.memberName}
+                    {!a.memberActive ? (
+                      <span className="text-[13px] font-normal text-pmk-muted"> {t.inactiveMember}</span>
+                    ) : null}
+                  </p>
+                  <div className="col-start-2 row-start-2 flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 md:contents">
+                    <span className="min-w-0 truncate font-semibold text-pmk-body md:block" title={a.position}>
                       {a.position}
                     </span>
-                    <span className="hidden truncate text-pmk-body md:block" title={a.unit}>
-                      {a.unit}
+                    <span className="min-w-0 max-w-full md:block" title={a.unit}>
+                      <Tag tone="gold" className="max-w-full">
+                        <span className="truncate">{a.unit}</span>
+                      </Tag>
                     </span>
-                    <span className="tnum hidden text-pmk-body md:block">{a.period}</span>
+                    <span className="tnum text-[13px] text-pmk-muted md:text-sm md:text-pmk-body">{a.period}</span>
                   </div>
-                  <div className="flex justify-end">
-                    <Link
-                      href={`/assignments/${a.id}`}
-                      className={iconButton}
-                      aria-label={`Edit assignment of ${a.memberName}`}
-                    >
-                      <SquarePen className="size-4" aria-hidden />
+                  <div className="row-span-2 flex justify-end self-start md:row-span-1 md:self-center">
+                    <Link href={`/assignments/${a.id}`} className={iconActionClass} aria-label={t.edit(a.memberName)}>
+                      <EditIcon aria-hidden />
                     </Link>
                     <ConfirmAction
                       action={deleteAssignment.bind(null, a.id)}
-                      title="Remove this assignment?"
-                      description={`${a.memberName} will no longer hold ${a.position} · ${a.unit} in ${a.period}.`}
-                      confirmLabel="Remove"
+                      title={t.removeTitle}
+                      description={t.removeBody(a.memberName, a.position, a.unit, a.period)}
+                      confirmLabel={t.removeConfirm}
                       destructive
                     >
-                      <button type="button" className={iconButton} aria-label={`Remove assignment of ${a.memberName}`}>
-                        <Trash2 className="size-4" aria-hidden />
+                      <button type="button" className={iconActionClass} aria-label={t.remove(a.memberName)}>
+                        <DeleteIcon aria-hidden />
                       </button>
                     </ConfirmAction>
                   </div>
