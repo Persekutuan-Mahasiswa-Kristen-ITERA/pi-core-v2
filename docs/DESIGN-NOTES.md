@@ -69,3 +69,28 @@ Profile screen.
 
 Screenshots from the last run (390×844 and 1280×800) were compared by eye with the exported frames; no pixel diff was
 run.
+
+## 2026-11 redesign: the Stitch prototype
+
+The UI follows the owner's final prototype (built from their Google Stitch project; the HTML lives outside the
+repo). What changed and where:
+
+- **Tokens** (`src/app/globals.css`): cream canvas `#F8F6F2`, white cards with a warm `#E9E2D3` edge, ink and primary
+  `#5A3E1B`, muted `#76614A`, gold `#C9A227` for marks only (`#8A6A12` when gold must be text), deep brown `#3D2A13` for
+  the sign-in band and toasts. Font: Plus Jakarta Sans (self-hosted by `next/font`). Every text pair was measured for
+  AA; the input edge `#A08B68` reaches 3:1 against the canvas.
+- **Shell** (`src/components/shell/app-shell.tsx`): white sidebar with grouped navigation and the language switch on
+  desktop; a frosted top bar (search, active period, bell, viewer); on phones a floating frosted tab bar (Beranda,
+  Direktori, Penugasan, Profil) and a sliding segmented control above Anggota, Struktur, Role and Periode. Settings is
+  reached from Profil on phones.
+- **Components** (`src/components/common/surfaces.tsx`, `form-controls.tsx`): rows are cards on phones and join into
+  one table-like card from `md`; chips, a status mark with a pulsing dot, key/value lists, initials avatars, and a
+  confirmation sheet that rises from the bottom on phones and is a centred modal on desktop.
+- **Motion**: every Stitch animation, kept in one block of `globals.css` (`pmk-*` keyframes): staggered fade-up of page
+  content, sliding segment pill, count-up figures, hero light sweep, bell wiggle, pulsing status dots, breathing FAB,
+  shake on invalid fields and error banners (`motion-observer.tsx`), and the sign-in band's drifting light, breathing
+  seal and button shimmer. All of it stops under `prefers-reduced-motion`.
+- **Icons**: Phosphor (`src/components/icons.ts`, imported from its `ssr` build, one file per icon), replacing lucide.
+  Navigation uses the `fill` weight for the current item.
+- **Bell**: still no notification feature; it opens an honest "no notifications yet" popover.
+- **Google sign-in and Integrations** stay visible as "coming later" and cannot be pressed.

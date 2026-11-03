@@ -148,6 +148,20 @@ mahasiswa). Dosen can hold any access level, typically super admin, but **no pos
 rejects them (`member_lecturer`) and the assignment form does not list them. Super admin access never depends on a
 position, so this costs the pembina nothing.
 
+### D-12 Language: Indonesian by default, English on request (2026-11-03, owner)
+
+- One switch (`LanguageSwitch`, on Profile, the desktop sidebar, sign-in and the forced password change) calls the
+  Server Action `setLocale`, which stores `pi-lang` (`id` | `en`, one year, `SameSite=Lax`) for the device. No URL
+  prefix: every screen is per-user and dynamic already (D-03), so locale routing would add nothing.
+- Copy lives in `src/lib/i18n/en.ts` and `id.ts`; `en` defines the shape and TypeScript rejects a missing key.
+  Server Components read it with `getI18n()`, Client Components with `useDict()`.
+- Server Actions, validation and database errors still answer in English (tests and logs depend on it).
+  `translateMessage` turns them into Indonesian where they are shown (form errors, banners, toasts).
+- The static, precached `/offline` page carries both languages; a tiny inline script picks one from the cookie, so it
+  works even when the app's JavaScript is not cached.
+- The E2E suite sets the `pi-lang=en` cookie and reduced motion in `playwright.config.ts`, so its English locators and
+  counts stay stable.
+
 ## Audit log
 
 `audit_log` gets one row per INSERT/UPDATE/DELETE on members, org_units, roles, positions, position_roles, periods,

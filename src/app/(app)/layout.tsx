@@ -1,8 +1,8 @@
 import { AppShell } from "@/components/shell/app-shell";
 import { isAdminAccess, requireMember } from "@/lib/auth";
+import { getI18n } from "@/lib/i18n/server";
+import { getActivePeriod } from "@/lib/queries";
 import { createClient } from "@/lib/supabase/server";
-
-const ACCESS_LABEL = { super_admin: "Super admin", admin: "Admin", member: "Member" } as const;
 
 async function getOrgName() {
   const supabase = await createClient();
@@ -12,13 +12,19 @@ async function getOrgName() {
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   // Independent reads, fetched together.
-  const [member, orgName] = await Promise.all([requireMember(), getOrgName()]);
+  const [member, orgName, period, { d }] = await Promise.all([
+    requireMember(),
+    getOrgName(),
+    getActivePeriod(),
+    getI18n(),
+  ]);
   return (
     <AppShell
       isAdmin={isAdminAccess(member.access)}
       isSuperAdmin={member.access === "super_admin"}
       orgName={orgName}
-      viewer={{ fullName: member.fullName, accessLabel: ACCESS_LABEL[member.access] }}
+      activePeriod={period?.label ?? null}
+      viewer={{ fullName: member.fullName, accessLabel: d.access[member.access] }}
     >
       {children}
     </AppShell>

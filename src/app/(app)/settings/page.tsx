@@ -1,89 +1,94 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { IntegrationsIcon, KeyIcon, LockIcon, ProfileIcon } from "@/components/icons";
 import { requireAdminPage } from "@/lib/auth";
+import { getI18n } from "@/lib/i18n/server";
 import { getOrgSettings } from "@/lib/queries";
 import { AUTH_METHODS } from "@/lib/app-config";
 import { ForbiddenState } from "@/components/common/states";
-import { PageHeader, Tag } from "@/components/common/surfaces";
+import { Card, IconBadge, PageHeader, SectionHeader, Tag } from "@/components/common/surfaces";
 import { OrgForm } from "./org-form";
 
-export const metadata: Metadata = { title: "Settings" };
-
-/** One settings row: what it is on the left, the panel on the right (stacked on phones). */
-function SettingsRow({
-  id,
-  title,
-  description,
-  children,
-}: {
-  id: string;
-  title: string;
-  description: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <section
-      aria-labelledby={id}
-      className="grid gap-4 border-t border-pmk-tint-border py-8 first:border-t-0 first:pt-0 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-10"
-    >
-      <div className="md:pt-1">
-        <h2 id={id} className="text-base font-medium text-pmk-ink">
-          {title}
-        </h2>
-        <div className="mt-1 text-sm text-pmk-muted">{description}</div>
-      </div>
-      <div className="rounded-2xl bg-pmk-tint p-4 sm:p-5">{children}</div>
-    </section>
-  );
+export async function generateMetadata(): Promise<Metadata> {
+  const { d } = await getI18n();
+  return { title: d.settings.title };
 }
 
 export default async function SettingsPage() {
   const { allowed, isSuperAdmin } = await requireAdminPage();
   if (!allowed) return <ForbiddenState />;
-  const settings = await getOrgSettings();
+  const [settings, { d }] = await Promise.all([getOrgSettings(), getI18n()]);
+  const t = d.settings;
 
   return (
     <div className="max-w-5xl">
-      <PageHeader title="Settings" description="How PI-CORE presents PMK ITERA and how people log in." />
+      <PageHeader title={t.title} description={t.description} />
 
-      <SettingsRow
-        id="org-title"
-        title="Organization"
-        description={
-          isSuperAdmin
-            ? "The name in the sidebar and on every screen. The logo is bundled with the app; replacing it is a code change (see README)."
-            : "Only a super admin can change the organization name."
-        }
-      >
-        <div className="flex items-start gap-4">
-          <Image src="/brand/pmk-logo-192.png" alt="PMK ITERA logo" width={56} height={56} className="shrink-0" />
-          <div className="min-w-0 flex-1">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-6">
+        <section aria-labelledby="org-title" className="lg:row-span-2">
+          <SectionHeader id="org-title" title={t.org} />
+          <Card className="p-5">
+            <div className="mb-4 flex items-center gap-4">
+              <Image src="/brand/pmk-logo-192.png" alt={t.logoAlt} width={60} height={60} className="shrink-0" />
+              <p className="text-sm text-pmk-muted">{isSuperAdmin ? t.orgSuper : t.orgOther}</p>
+            </div>
             {isSuperAdmin ? (
               <OrgForm orgName={settings?.org_name ?? ""} />
             ) : (
-              <p className="pt-3 text-sm font-medium text-pmk-ink">{settings?.org_name}</p>
+              <p className="text-[17px] font-bold text-pmk-ink">{settings?.org_name}</p>
             )}
-          </div>
-        </div>
-      </SettingsRow>
+          </Card>
+        </section>
 
-      <SettingsRow
-        id="auth-config"
-        title="Authentication"
-        description="Read-only in this version. Public sign-up is disabled; only admins create accounts."
-      >
-        <ul className="divide-y divide-pmk-tint-border">
-          {AUTH_METHODS.map((m) => (
-            <li key={m.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
-              <div>
-                <p className="text-sm font-medium text-pmk-ink">{m.label}</p>
-                <p className="text-sm text-pmk-muted">{m.note}</p>
-              </div>
-              {m.enabled ? <Tag tone="positive">Enabled</Tag> : <Tag>Not yet</Tag>}
-            </li>
-          ))}
-        </ul>
-      </SettingsRow>
+        <section aria-labelledby="auth-config">
+          <SectionHeader id="auth-config" title={t.auth} />
+          <Card className="px-4">
+            <ul className="divide-y divide-pmk-rule">
+              {AUTH_METHODS.map((m) => (
+                <li key={m.id} className="flex min-h-[68px] items-center gap-3 py-3">
+                  <IconBadge className="size-10 rounded-xl bg-pmk-tint [&_svg]:size-5">
+                    {m.id === "email_password" ? <KeyIcon /> : <ProfileIcon />}
+                  </IconBadge>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[15px] font-semibold text-pmk-ink">{t.methods[m.id].label}</p>
+                    <p className="text-[13px] text-pmk-muted">{t.methods[m.id].note}</p>
+                  </div>
+                  {m.enabled ? (
+                    <span className="flex items-center gap-2">
+                      {/* Locked on: the main method cannot be switched off. */}
+                      <span
+                        role="switch"
+                        aria-checked="true"
+                        aria-disabled="true"
+                        aria-label={`${t.methods[m.id].label}: ${t.enabled}`}
+                        className="relative h-7 w-12 rounded-full bg-pmk-positive after:absolute after:right-[3px] after:top-[3px] after:size-[22px] after:rounded-full after:bg-white"
+                      />
+                      <LockIcon className="size-4 text-pmk-muted" aria-hidden />
+                    </span>
+                  ) : (
+                    <Tag>{t.notYet}</Tag>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </Card>
+          <p className="mt-2.5 px-1 text-[13px] text-pmk-muted">{t.authBody}</p>
+        </section>
+
+        <section aria-labelledby="other-title">
+          <SectionHeader id="other-title" title={t.integrations} />
+          <Card className="flex min-h-[68px] items-center gap-3 px-4 py-3">
+            <IconBadge className="size-10 rounded-xl bg-pmk-tint [&_svg]:size-5">
+              <IntegrationsIcon />
+            </IconBadge>
+            <p className="min-w-0 flex-1 text-[13px] text-pmk-muted">{t.integrationsNote}</p>
+            <Tag>{d.common.soon}</Tag>
+          </Card>
+        </section>
+      </div>
+      <p className="mt-10 text-center text-[13px] text-pmk-muted">
+        {d.nav.version} <span className="tnum">0.1.0</span>
+      </p>
     </div>
   );
 }

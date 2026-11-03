@@ -4,8 +4,10 @@ import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { FieldError } from "@/components/common/states";
-import { FormMessage, SubmitButton, fieldClass } from "@/components/common/form-controls";
+import { CheckIcon, InfoIcon } from "@/components/icons";
+import { FieldError } from "@/components/common/field-error";
+import { FormMessage, InfoBanner, SubmitButton, cancelLinkClass, selectClass } from "@/components/common/form-controls";
+import { useDict, useTranslateMessage } from "@/lib/i18n/client";
 import { initialActionState, type ActionResult } from "@/lib/action-result";
 import type { OrgUnitType } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
@@ -25,8 +27,7 @@ type Props = {
   mode: "create" | "edit";
 };
 
-const pillClass = fieldClass;
-const labelClass = "mb-2 block text-sm font-medium text-pmk-ink";
+const labelClass = "mb-1.5 block text-sm font-semibold text-pmk-ink";
 
 /** Keeps tree order; one group per top-level unit. */
 function groupUnits(units: UnitOption[]) {
@@ -36,6 +37,9 @@ function groupUnits(units: UnitOption[]) {
 }
 
 export function AssignmentForm({ action, members, units, positions, periods, defaults, mode }: Props) {
+  const d = useDict();
+  const t = d.assignments;
+  const tr = useTranslateMessage();
   const [unitId, setUnitId] = useState(defaults.orgUnitId ?? "");
   const [positionId, setPositionId] = useState(defaults.positionId ?? "");
   const [state, formAction] = useActionState(async (prev: ActionResult, formData: FormData) => {
@@ -54,9 +58,11 @@ export function AssignmentForm({ action, members, units, positions, periods, def
 
   useEffect(() => {
     if (!state.ok) return;
-    toast.success(state.message ?? "Saved.");
+    toast.success(tr(state.message ?? "Saved."));
     if (mode === "edit") router.push("/assignments");
     router.refresh();
+    // `tr` only changes with the language; a language switch must not replay the toast.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state, mode, router]);
 
   const a11y = (name: string) => ({
@@ -68,16 +74,16 @@ export function AssignmentForm({ action, members, units, positions, periods, def
 
   return (
     <form action={formAction} className="grid gap-4 sm:grid-cols-2" noValidate>
-      <div className="sm:col-span-2 empty:hidden">
+      <div className="empty:hidden sm:col-span-2">
         <FormMessage state={state} />
       </div>
       <div>
         <label htmlFor="field-memberId" className={labelClass}>
-          Member
+          {t.member}
         </label>
-        <select {...a11y("memberId")} defaultValue={defaults.memberId ?? ""} className={pillClass} required>
+        <select {...a11y("memberId")} defaultValue={defaults.memberId ?? ""} className={selectClass} required>
           <option value="" disabled>
-            Choose a member
+            {t.chooseMember}
           </option>
           {members.map((m) => (
             <option key={m.id} value={m.id}>
@@ -89,7 +95,7 @@ export function AssignmentForm({ action, members, units, positions, periods, def
       </div>
       <div>
         <label htmlFor="field-orgUnitId" className={labelClass}>
-          Unit
+          {t.unit}
         </label>
         <select
           {...a11y("orgUnitId")}
@@ -98,11 +104,11 @@ export function AssignmentForm({ action, members, units, positions, periods, def
             setUnitId(e.target.value);
             setPositionId("");
           }}
-          className={pillClass}
+          className={selectClass}
           required
         >
           <option value="" disabled>
-            Choose a unit
+            {t.chooseUnit}
           </option>
           {groupUnits(units).map(([group, list]) => (
             <optgroup key={group} label={group}>
@@ -110,7 +116,7 @@ export function AssignmentForm({ action, members, units, positions, periods, def
                 // Inactive units stay selectable only when this assignment already uses one.
                 <option key={u.id} value={u.id} disabled={!u.isActive && u.id !== defaults.orgUnitId}>
                   {u.label}
-                  {u.isActive ? "" : " (inactive)"}
+                  {u.isActive ? "" : t.inactiveSuffix}
                 </option>
               ))}
             </optgroup>
@@ -120,18 +126,18 @@ export function AssignmentForm({ action, members, units, positions, periods, def
       </div>
       <div>
         <label htmlFor="field-positionId" className={labelClass}>
-          Position
+          {t.position}
         </label>
         <select
           {...a11y("positionId")}
           value={positionId}
           onChange={(e) => setPositionId(e.target.value)}
-          className={cn(pillClass, !unitId && "text-pmk-muted")}
+          className={cn(selectClass, !unitId && "text-pmk-muted")}
           disabled={!unitId}
           required
         >
           <option value="" disabled>
-            {unitId ? "Choose a position" : "Choose a unit first"}
+            {unitId ? t.choosePosition : t.chooseUnitFirst}
           </option>
           {unitPositions.map((p) => (
             <option key={p.id} value={p.id}>
@@ -143,11 +149,11 @@ export function AssignmentForm({ action, members, units, positions, periods, def
       </div>
       <div>
         <label htmlFor="field-periodId" className={labelClass}>
-          Period
+          {t.period}
         </label>
-        <select {...a11y("periodId")} defaultValue={defaults.periodId ?? ""} className={pillClass} required>
+        <select {...a11y("periodId")} defaultValue={defaults.periodId ?? ""} className={selectClass} required>
           <option value="" disabled>
-            Choose a period
+            {t.choosePeriod}
           </option>
           {periods.map((p) => (
             <option key={p.id} value={p.id}>
@@ -157,14 +163,16 @@ export function AssignmentForm({ action, members, units, positions, periods, def
         </select>
         <FieldError id="field-periodId-error" messages={errors?.periodId} />
       </div>
-      <div className="flex items-center gap-3 pt-1 sm:col-span-2">
-        <SubmitButton className="px-8">Save</SubmitButton>
+      <InfoBanner icon={<InfoIcon />} className="sm:col-span-2">
+        {t.formHint}
+      </InfoBanner>
+      <div className="flex flex-wrap items-center gap-3 pt-1 sm:col-span-2">
+        <SubmitButton className="px-8">
+          <CheckIcon aria-hidden /> {d.common.save}
+        </SubmitButton>
         {mode === "edit" ? (
-          <Link
-            href="/assignments"
-            className="inline-flex h-11 items-center rounded-full px-4 text-sm font-medium text-pmk-muted hover:bg-pmk-tint hover:text-pmk-ink"
-          >
-            Cancel
+          <Link href="/assignments" className={cancelLinkClass}>
+            {d.common.cancel}
           </Link>
         ) : null}
       </div>

@@ -1,85 +1,96 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Plus, SquarePen } from "lucide-react";
+import { CheckIcon, ChevronRightIcon, EditIcon, PeriodsIcon, PlusIcon } from "@/components/icons";
 import { requireAdminPage } from "@/lib/auth";
+import { getI18n } from "@/lib/i18n/server";
 import { listPeriods } from "@/lib/queries";
-import { LinkButton, PageHeader, RowList, Tag } from "@/components/common/surfaces";
+import { LinkButton, PageHeader, actionClass, iconActionClass } from "@/components/common/surfaces";
 import { EmptyState, ForbiddenState } from "@/components/common/states";
 import { ConfirmAction } from "@/components/common/confirm-action";
+import { cn } from "@/lib/utils";
 import { setActivePeriod } from "./actions";
 
-export const metadata: Metadata = { title: "Periods" };
-
-const dateFmt = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" });
-const fmtDate = (d: string | null) => (d ? dateFmt.format(new Date(`${d}T00:00:00`)) : null);
+export async function generateMetadata(): Promise<Metadata> {
+  const { d } = await getI18n();
+  return { title: d.periods.title };
+}
 
 export default async function PeriodsPage() {
   const { allowed } = await requireAdminPage();
   if (!allowed) return <ForbiddenState />;
-  const periods = await listPeriods();
+  const [periods, { d, date }] = await Promise.all([listPeriods(), getI18n()]);
+  const t = d.periods;
   const active = periods.find((p) => p.is_active);
+  const fmtDate = (v: string | null) => (v ? date.format(new Date(`${v}T00:00:00`)) : null);
 
   return (
     <>
       <PageHeader
-        title="Periods"
-        description={
-          active
-            ? `${active.label} is active. Dashboard numbers, roles and new assignments use it.`
-            : "No active period. Set one so assignments and role counts have a year to belong to."
-        }
+        title={t.title}
+        description={active ? t.descriptionActive(active.label) : t.descriptionNone}
         actions={
           <LinkButton href="/periods/new">
-            <Plus aria-hidden /> Create Period
+            <PlusIcon aria-hidden /> {t.create}
           </LinkButton>
         }
       />
       {periods.length === 0 ? (
-        <EmptyState title="No periods yet">
-          Create the first academic year. It becomes the active period automatically.
+        <EmptyState icon={<PeriodsIcon />} title={t.emptyTitle}>
+          {t.emptyBody}
         </EmptyState>
       ) : (
-        <RowList className="max-w-3xl">
+        <ul className="pmk-stagger grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-4">
           {periods.map((p) => {
             const from = fmtDate(p.starts_on);
             const to = fmtDate(p.ends_on);
             return (
-              <li key={p.id} className="flex items-center gap-3 py-2.5 pl-4 pr-2">
-                <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-2">
-                    <span className="tnum text-sm font-medium text-pmk-ink">{p.label}</span>
-                    {p.is_active ? <Tag tone="gold">Active</Tag> : null}
-                  </p>
-                  <p className="tnum mt-0.5 text-xs text-pmk-muted">
-                    {from || to ? `${from ?? "—"} – ${to ?? "—"}` : "No dates set"}
-                  </p>
-                </div>
-                {p.is_active ? null : (
-                  <ConfirmAction
-                    action={setActivePeriod.bind(null, p.id)}
-                    title={`Set ${p.label} as the active period?`}
-                    description="Dashboard numbers and role member counts will use this period. Only one period can be active."
-                    confirmLabel="Set Active"
-                  >
-                    <button
-                      type="button"
-                      className="inline-flex h-9 items-center rounded-full border border-pmk-control px-3.5 text-sm font-medium text-pmk-ink hover:bg-pmk-tint"
-                    >
-                      Set Active
-                    </button>
-                  </ConfirmAction>
+              <li
+                key={p.id}
+                className={cn(
+                  "flex flex-col gap-2.5 rounded-[20px] border bg-white px-[18px] pb-3.5 pt-[18px] shadow-[var(--pmk-shadow-card)]",
+                  p.is_active ? "border-[#e6cf85] bg-pmk-on-deep" : "border-pmk-tint-border",
                 )}
-                <Link
-                  href={`/periods/${p.id}`}
-                  className="grid size-10 place-items-center rounded-full text-pmk-muted hover:bg-pmk-tint hover:text-pmk-ink"
-                  aria-label={`Edit ${p.label}`}
-                >
-                  <SquarePen className="size-4" aria-hidden />
-                </Link>
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="tnum text-[22px] font-extrabold tracking-[-0.01em] text-pmk-ink">{p.label}</p>
+                    <p className="tnum text-sm text-pmk-muted">
+                      {from || to ? `${from ?? "—"} – ${to ?? "—"}` : t.noDates}
+                    </p>
+                  </div>
+                  {p.is_active ? (
+                    <span className="inline-flex h-[30px] items-center gap-1 rounded-full bg-pmk-positive-soft px-3 text-[13px] font-bold text-pmk-positive">
+                      <CheckIcon className="size-4" weight="bold" aria-hidden />
+                      {d.common.active}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="flex items-center justify-between gap-2 border-t border-pmk-rule pt-2.5">
+                  {p.is_active ? (
+                    <LinkButton href="/assignments" variant="ghost" className="-ml-3">
+                      {t.viewAssignments}
+                      <ChevronRightIcon className="pmk-arrow" aria-hidden />
+                    </LinkButton>
+                  ) : (
+                    <ConfirmAction
+                      action={setActivePeriod.bind(null, p.id)}
+                      title={t.setActiveTitle(p.label)}
+                      description={t.setActiveBody}
+                      confirmLabel={t.setActive}
+                    >
+                      <button type="button" className={actionClass("secondary", "h-10 px-4 text-sm")}>
+                        {t.setActive}
+                      </button>
+                    </ConfirmAction>
+                  )}
+                  <Link href={`/periods/${p.id}`} className={iconActionClass} aria-label={t.edit(p.label)}>
+                    <EditIcon aria-hidden />
+                  </Link>
+                </div>
               </li>
             );
           })}
-        </RowList>
+        </ul>
       )}
     </>
   );

@@ -1,15 +1,23 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
-import { Loader2, LogOut } from "lucide-react";
+import { LogoutIcon, SpinnerIcon } from "@/components/icons";
 import { signOut } from "@/app/actions/auth";
+import { useDict } from "@/lib/i18n/client";
+import { actionClass } from "@/components/common/surfaces";
 import { cn } from "@/lib/utils";
 
 /**
- * Log out with visible feedback: the button disables itself and says "Logging out…" the moment it
- * is pressed, so it is never pressed twice wondering whether it worked.
+ * Log out with visible feedback: the button disables itself and says so the moment it is pressed,
+ * so it is never pressed twice wondering whether it worked.
  */
-export function LogoutButton({ variant = "row", className }: { variant?: "row" | "block"; className?: string }) {
+export function LogoutButton({
+  variant = "row",
+  className,
+}: {
+  variant?: "row" | "block" | "menu";
+  className?: string;
+}) {
   return (
     <form action={signOut} className={className}>
       <LogoutSubmit variant={variant} />
@@ -17,23 +25,40 @@ export function LogoutButton({ variant = "row", className }: { variant?: "row" |
   );
 }
 
-function LogoutSubmit({ variant }: { variant: "row" | "block" }) {
+function LogoutSubmit({ variant }: { variant: "row" | "block" | "menu" }) {
   const { pending } = useFormStatus();
+  const d = useDict();
+  const icon = pending ? (
+    <SpinnerIcon className="size-5 animate-spin" aria-hidden />
+  ) : (
+    <LogoutIcon className="size-5" aria-hidden />
+  );
+  if (variant === "menu") {
+    return (
+      <button
+        type="submit"
+        disabled={pending}
+        aria-disabled={pending}
+        className="pmk-press flex min-h-[60px] w-full items-center gap-3.5 rounded-2xl px-2.5 py-2.5 text-left text-[15px] font-semibold text-pmk-negative hover:bg-pmk-negative-soft focus-visible:outline-2 focus-visible:outline-pmk-accent disabled:cursor-wait"
+      >
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-pmk-negative-soft">{icon}</span>
+        {pending ? d.nav.loggingOut : d.nav.logout}
+      </button>
+    );
+  }
   return (
     <button
       type="submit"
       disabled={pending}
       aria-disabled={pending}
       className={cn(
-        "inline-flex items-center gap-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pmk-accent disabled:cursor-wait",
         variant === "row" &&
-          "min-h-10 w-full rounded-lg px-2.5 text-pmk-body hover:bg-pmk-active hover:text-pmk-ink disabled:bg-pmk-active",
-        variant === "block" &&
-          "h-11 w-full justify-center rounded-full border border-pmk-control bg-white text-pmk-ink hover:bg-pmk-tint disabled:bg-pmk-tint",
+          "pmk-press inline-flex min-h-11 w-full items-center gap-2.5 rounded-xl px-3 text-sm font-semibold text-pmk-muted hover:bg-pmk-negative-soft hover:text-pmk-negative focus-visible:outline-2 focus-visible:outline-pmk-accent disabled:cursor-wait",
+        variant === "block" && actionClass("danger-outline", "h-12 w-full disabled:cursor-wait"),
       )}
     >
-      {pending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <LogOut className="size-4" aria-hidden />}
-      {pending ? "Logging out…" : "Log out"}
+      {icon}
+      {pending ? d.nav.loggingOut : d.nav.logout}
     </button>
   );
 }

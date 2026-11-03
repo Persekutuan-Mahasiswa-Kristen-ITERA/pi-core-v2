@@ -1,24 +1,40 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Plus, SquarePen, UserRoundX, RotateCcw } from "lucide-react";
+import { AddMemberIcon, DeactivateIcon, EditIcon, ReactivateIcon, SearchIcon } from "@/components/icons";
 import { requireAdminPage } from "@/lib/auth";
+import { getI18n } from "@/lib/i18n/server";
 import { MEMBERS_PAGE_SIZE, listMembers, listPeriods, listRoleOverview } from "@/lib/queries";
 import { idSchema } from "@/lib/validation";
-import { LinkButton, PageHeader, RowList, Tag } from "@/components/common/surfaces";
+import {
+  Avatar,
+  LinkButton,
+  PageHeader,
+  RowList,
+  RowListHead,
+  Status,
+  Tag,
+  iconActionClass,
+} from "@/components/common/surfaces";
 import { EmptyState, ForbiddenState } from "@/components/common/states";
 import { ConfirmAction } from "@/components/common/confirm-action";
 import { MemberFilters } from "./member-filters";
 import { deactivateMember, reactivateMember } from "./actions";
 
-export const metadata: Metadata = { title: "Members" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { d } = await getI18n();
+  return { title: d.members.title };
+}
 
 function param(value: string | string[] | undefined) {
   return typeof value === "string" ? value : undefined;
 }
 
+const COLS = "md:grid-cols-[2.75rem_minmax(0,1.3fr)_minmax(0,1.4fr)_6.5rem_6.5rem_5.75rem]";
+
 export default async function MembersPage({ searchParams }: PageProps<"/members">) {
   const { allowed, member: actor, isSuperAdmin } = await requireAdminPage();
   if (!allowed) return <ForbiddenState />;
+  const { d } = await getI18n();
 
   const sp = await searchParams;
   const roleId = idSchema.safeParse(param(sp.role)).data;
@@ -44,17 +60,16 @@ export default async function MembersPage({ searchParams }: PageProps<"/members"
   };
 
   const filtered = Boolean(q || roleId || periodId);
-  const iconButton =
-    "grid size-10 place-items-center rounded-full text-pmk-muted transition-colors hover:bg-pmk-tint hover:text-pmk-ink focus-visible:outline-2 focus-visible:outline-pmk-accent";
+  const kind = status === "inactive" ? "deactivated" : filtered ? "matching" : "active";
 
   return (
     <>
       <PageHeader
-        title="Members"
-        description={`${result.total} ${status === "inactive" ? "deactivated" : filtered ? "matching" : "active"} member${result.total === 1 ? "" : "s"}`}
+        title={d.members.title}
+        description={d.members.count(result.total, kind)}
         actions={
-          <LinkButton href="/members/new">
-            <Plus aria-hidden /> Create Member
+          <LinkButton href="/members/new" className="hidden sm:inline-flex">
+            <AddMemberIcon aria-hidden /> {d.members.create}
           </LinkButton>
         }
       />
@@ -63,91 +78,96 @@ export default async function MembersPage({ searchParams }: PageProps<"/members"
         periods={periods.map((p) => ({ id: p.id, label: p.label }))}
       />
       <p className="sr-only" aria-live="polite">
-        {result.total} member{result.total === 1 ? "" : "s"}
+        {d.members.srCount(result.total)}
       </p>
       {result.rows.length === 0 ? (
         <EmptyState
-          title={filtered ? "No members match" : status === "inactive" ? "No deactivated members" : "No members yet"}
+          icon={<SearchIcon />}
+          title={
+            filtered ? d.members.emptyMatch : status === "inactive" ? d.members.emptyDeactivated : d.members.emptyNone
+          }
         >
-          {filtered
-            ? "Try another name or clear the filters."
-            : status === "inactive"
-              ? null
-              : "Create the first member account."}
+          {filtered ? d.members.emptyMatchBody : status === "inactive" ? null : d.members.emptyNoneBody}
         </EmptyState>
       ) : (
         <>
-          <div
-            className="hidden grid-cols-[minmax(0,1.3fr)_minmax(0,1.4fr)_6rem_5.5rem] gap-4 px-4 pb-2 text-xs text-pmk-muted md:grid"
-            aria-hidden
-          >
-            <span>Name</span>
-            <span>Position · Unit</span>
-            <span>Period</span>
+          <RowListHead className={`gap-4 ${COLS}`}>
             <span />
-          </div>
+            <span>{d.members.colName}</span>
+            <span>{d.members.colPosition}</span>
+            <span>{d.members.colPeriod}</span>
+            <span>{d.members.status}</span>
+            <span />
+          </RowListHead>
           <RowList>
             {result.rows.map((m) => (
               <li
                 key={m.id}
-                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 py-2.5 pl-4 pr-2 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1.4fr)_6rem_5.5rem] md:gap-x-4"
+                className={`grid grid-cols-[2.75rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 py-3 pl-4 pr-2 md:gap-x-4 md:py-2.5 ${COLS}`}
               >
-                <div className="min-w-0 md:contents">
+                <Avatar name={m.fullName} className="row-span-2 self-start md:row-span-1 md:self-center" />
+                <div className="min-w-0">
                   <div className="flex min-w-0 items-center gap-2">
                     <Link
                       href={`/members/${m.id}`}
-                      className="truncate text-sm font-medium text-pmk-ink hover:underline"
+                      className="truncate text-base font-bold text-pmk-ink hover:underline focus-visible:outline-2 focus-visible:outline-pmk-accent"
                       title={m.email}
                     >
                       {m.fullName}
                     </Link>
                     {m.accessLevel === "super_admin" ? (
-                      <Tag tone="gold">Super admin</Tag>
+                      <Tag tone="gold">{d.access.super_admin}</Tag>
                     ) : m.isAdmin ? (
-                      <Tag>Admin</Tag>
+                      <Tag>{d.access.admin}</Tag>
                     ) : null}
                   </div>
-                  <p
-                    className="mt-0.5 truncate text-xs text-pmk-muted md:mt-0 md:text-sm md:text-pmk-body"
-                    title={m.assignment ?? undefined}
-                  >
-                    {m.assignment ?? (m.isLecturer ? "Dosen" : "No assignment")}
-                    {m.extraAssignments ? <span className="text-pmk-muted"> +{m.extraAssignments}</span> : null}
-                    <span className="md:hidden"> · {m.period ?? "—"}</span>
-                  </p>
-                  <span className="tnum hidden text-sm text-pmk-body md:block">{m.period ?? "—"}</span>
+                  <p className="truncate text-[13px] text-pmk-muted">{m.email}</p>
                 </div>
-                <div className="flex items-center justify-end">
-                  <Link href={`/members/${m.id}`} className={iconButton} aria-label={`Edit ${m.fullName}`}>
-                    <SquarePen className="size-4" aria-hidden />
+                <div className="col-start-2 row-start-2 flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 md:contents">
+                  <span className="min-w-0 max-w-full md:block" title={m.assignment ?? undefined}>
+                    {m.assignment ? (
+                      <Tag tone="gold" className="max-w-full">
+                        <span className="truncate">{m.assignment}</span>
+                        {m.extraAssignments ? <span className="text-pmk-muted">+{m.extraAssignments}</span> : null}
+                      </Tag>
+                    ) : (
+                      <Tag>{m.isLecturer ? d.memberType.lecturer : d.members.noAssignment}</Tag>
+                    )}
+                  </span>
+                  <span className="tnum text-[13px] text-pmk-muted md:text-sm md:text-pmk-body">{m.period ?? "—"}</span>
+                  <Status active={m.isActive}>{m.isActive ? d.common.active : d.common.deactivated}</Status>
+                </div>
+                <div className="row-span-2 flex items-center justify-end self-start md:row-span-1 md:self-center">
+                  <Link href={`/members/${m.id}`} className={iconActionClass} aria-label={d.members.edit(m.fullName)}>
+                    <EditIcon aria-hidden />
                   </Link>
                   {m.accessLevel === "super_admin" && !isSuperAdmin ? (
-                    <span className="size-10" aria-hidden />
+                    <span className="size-11" aria-hidden />
                   ) : m.isActive ? (
                     m.id === actor.id ? (
-                      <span className="size-10" aria-hidden />
+                      <span className="size-11" aria-hidden />
                     ) : (
                       <ConfirmAction
                         action={deactivateMember.bind(null, m.id)}
-                        title={`Deactivate ${m.fullName}?`}
-                        description="They will no longer be able to log in. Their profile and assignment history are kept and can be restored later."
-                        confirmLabel="Deactivate"
+                        title={d.members.deactivateTitle(m.fullName)}
+                        description={d.members.deactivateBody}
+                        confirmLabel={d.members.deactivateConfirm}
                         destructive
                       >
-                        <button type="button" className={iconButton} aria-label={`Deactivate ${m.fullName}`}>
-                          <UserRoundX className="size-4" aria-hidden />
+                        <button type="button" className={iconActionClass} aria-label={d.members.deactivate(m.fullName)}>
+                          <DeactivateIcon aria-hidden />
                         </button>
                       </ConfirmAction>
                     )
                   ) : (
                     <ConfirmAction
                       action={reactivateMember.bind(null, m.id)}
-                      title={`Reactivate ${m.fullName}?`}
-                      description="They will be able to log in again with their existing password."
-                      confirmLabel="Reactivate"
+                      title={d.members.reactivateTitle(m.fullName)}
+                      description={d.members.reactivateBody}
+                      confirmLabel={d.members.reactivateConfirm}
                     >
-                      <button type="button" className={iconButton} aria-label={`Reactivate ${m.fullName}`}>
-                        <RotateCcw className="size-4" aria-hidden />
+                      <button type="button" className={iconActionClass} aria-label={d.members.reactivate(m.fullName)}>
+                        <ReactivateIcon aria-hidden />
                       </button>
                     </ConfirmAction>
                   )}
@@ -158,27 +178,36 @@ export default async function MembersPage({ searchParams }: PageProps<"/members"
         </>
       )}
       {result.pageCount > 1 ? (
-        <nav aria-label="Pagination" className="mt-4 flex items-center justify-between text-sm">
+        <nav aria-label={d.members.pagination} className="mt-5 flex items-center justify-between gap-3 text-sm">
           {result.page > 1 ? (
             <LinkButton href={pageHref(result.page - 1)} variant="secondary">
-              Previous
+              {d.common.previous}
             </LinkButton>
           ) : (
             <span />
           )}
           <span className="tnum text-pmk-muted">
-            {(result.page - 1) * MEMBERS_PAGE_SIZE + 1}–{Math.min(result.page * MEMBERS_PAGE_SIZE, result.total)} of{" "}
-            {result.total}
+            {d.common.rangeOf(
+              (result.page - 1) * MEMBERS_PAGE_SIZE + 1,
+              Math.min(result.page * MEMBERS_PAGE_SIZE, result.total),
+              result.total,
+            )}
           </span>
           {result.page < result.pageCount ? (
             <LinkButton href={pageHref(result.page + 1)} variant="secondary">
-              Next
+              {d.common.next}
             </LinkButton>
           ) : (
             <span />
           )}
         </nav>
       ) : null}
+      <LinkButton
+        href="/members/new"
+        className="pmk-fab fixed bottom-[calc(92px+var(--safe-bottom))] right-5 z-30 h-12 sm:hidden"
+      >
+        <AddMemberIcon aria-hidden /> {d.members.create}
+      </LinkButton>
     </>
   );
 }

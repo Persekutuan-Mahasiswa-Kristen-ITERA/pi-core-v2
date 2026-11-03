@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireSuperAdminPage } from "@/lib/auth";
+import { getI18n } from "@/lib/i18n/server";
 import { getRoleDetail } from "@/lib/queries";
 import { idSchema } from "@/lib/validation";
 import { ForbiddenState } from "@/components/common/states";
@@ -10,20 +11,23 @@ import { FormCard } from "@/components/common/form-controls";
 import { updateRole } from "../../actions";
 import { RoleForm } from "../../role-form";
 
-export const metadata: Metadata = { title: "Edit role" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { d } = await getI18n();
+  return { title: d.roles.edit };
+}
 
 export default async function EditRolePage({ params }: PageProps<"/roles/[id]/edit">) {
   const { allowed } = await requireSuperAdminPage();
   if (!allowed) return <ForbiddenState superAdmin />;
   const id = idSchema.safeParse((await params).id);
   if (!id.success) notFound();
-  const detail = await getRoleDetail(id.data);
+  const [detail, { d }] = await Promise.all([getRoleDetail(id.data), getI18n()]);
   if (!detail) notFound();
   const { role } = detail;
   return (
     <div className="max-w-2xl space-y-4">
       <PageHeader
-        title={`Edit ${role.name}`}
+        title={d.roles.editTitle(role.name!)}
         back={{ href: `/roles/${role.id}`, label: role.name! }}
         className="mb-0 lg:mb-2"
       />
@@ -31,14 +35,14 @@ export default async function EditRolePage({ params }: PageProps<"/roles/[id]/ed
         <RoleForm
           action={updateRole.bind(null, role.id!)}
           defaults={{ name: role.name!, description: role.description, grantsAdmin: role.grants_admin! }}
-          submitLabel="Save changes"
+          submitLabel={d.common.saveChanges}
           cancelHref={`/roles/${role.id}`}
         />
       </FormCard>
       <p className="text-sm text-pmk-muted">
-        Which positions carry this role is set on each position under{" "}
+        {d.roles.editNote}{" "}
         <Link href="/structure" className="font-semibold text-pmk-accent hover:underline">
-          Structure
+          {d.nav.structure}
         </Link>
         .
       </p>

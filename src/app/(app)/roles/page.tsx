@@ -1,71 +1,77 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight, Plus } from "lucide-react";
+import { ChevronRightIcon, CrownIcon, PlusIcon, RolesIcon } from "@/components/icons";
 import { requireAdminPage } from "@/lib/auth";
+import { getI18n } from "@/lib/i18n/server";
 import { getActivePeriod, listRoleOverview } from "@/lib/queries";
-import { LinkButton, PageHeader, RowList, Tag } from "@/components/common/surfaces";
+import { IconBadge, LinkButton, PageHeader, Tag } from "@/components/common/surfaces";
 import { EmptyState, ForbiddenState } from "@/components/common/states";
 
-export const metadata: Metadata = { title: "Roles" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { d } = await getI18n();
+  return { title: d.roles.title };
+}
 
 export default async function RolesPage() {
   const { allowed, isSuperAdmin } = await requireAdminPage();
   if (!allowed) return <ForbiddenState />;
-  const [roles, activePeriod] = await Promise.all([listRoleOverview(), getActivePeriod()]);
+  const [roles, activePeriod, { d }] = await Promise.all([listRoleOverview(), getActivePeriod(), getI18n()]);
+  const r = d.roles;
 
   return (
     <>
       <PageHeader
-        title="Roles"
-        description={`What a position lets its holder do. Holders are counted in ${activePeriod ? `the active period, ${activePeriod.label}` : "the active period"}.`}
+        title={r.title}
+        description={r.description(activePeriod?.label ?? null)}
         actions={
           isSuperAdmin ? (
             <LinkButton href="/roles/new">
-              <Plus aria-hidden /> Create Role
+              <PlusIcon aria-hidden /> {r.create}
             </LinkButton>
           ) : null
         }
       />
       {roles.length === 0 ? (
-        <EmptyState title="No roles yet">Roles come from the migrations; a super admin can add more.</EmptyState>
+        <EmptyState icon={<RolesIcon />} title={r.emptyTitle}>
+          {r.emptyBody}
+        </EmptyState>
       ) : (
-        <div className="max-w-3xl">
-          <div
-            className="hidden grid-cols-[minmax(0,1fr)_6rem_6rem_1rem] gap-4 px-4 pb-2 text-xs text-pmk-muted sm:grid"
-            aria-hidden
-          >
-            <span>Role</span>
-            <span className="text-right">Positions</span>
-            <span className="text-right">Holders</span>
-            <span />
-          </div>
-          <RowList>
-            {roles.map((role) => (
-              <li key={role.id}>
-                <Link
-                  href={`/roles/${role.id}`}
-                  className="grid grid-cols-[minmax(0,1fr)_auto_1rem] items-center gap-x-4 px-4 py-3 transition-colors hover:bg-pmk-tint focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-pmk-accent sm:grid-cols-[minmax(0,1fr)_6rem_6rem_1rem]"
-                >
-                  <span className="min-w-0">
-                    <span className="flex items-center gap-2">
-                      <span className="truncate text-sm font-medium text-pmk-ink">{role.name}</span>
-                      {role.grants_admin ? <Tag tone="gold">Admin access</Tag> : null}
-                    </span>
-                    {role.description ? (
-                      <span className="mt-0.5 block truncate text-xs text-pmk-muted">{role.description}</span>
-                    ) : null}
+        <ul className="pmk-stagger grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
+          {roles.map((role) => (
+            <li key={role.id}>
+              <Link
+                href={`/roles/${role.id}`}
+                className="pmk-lift flex h-full flex-col gap-1.5 rounded-[20px] border border-pmk-tint-border bg-white p-[18px] shadow-[var(--pmk-shadow-card)] focus-visible:outline-2 focus-visible:outline-pmk-accent"
+              >
+                <span className="mb-1.5 flex items-start justify-between gap-2">
+                  <IconBadge>{role.grants_admin ? <CrownIcon /> : <RolesIcon />}</IconBadge>
+                  {role.grants_admin ? <Tag tone="gold">{r.adminAccess}</Tag> : null}
+                </span>
+                <span className="text-lg font-extrabold leading-snug text-pmk-ink">{role.name}</span>
+                {role.description ? (
+                  <span className="line-clamp-2 text-sm text-pmk-muted">{role.description}</span>
+                ) : null}
+                <span className="mt-auto flex items-center justify-between gap-2 border-t border-pmk-rule pt-3 text-[13px] font-semibold text-pmk-ink">
+                  <span className="tnum">
+                    {r.holders(role.active_member_count ?? 0)}
+                    <span className="font-normal text-pmk-muted"> · {r.positions(role.position_count ?? 0)}</span>
                   </span>
-                  <span className="tnum hidden text-right text-sm text-pmk-body sm:block">{role.position_count}</span>
-                  <span className="tnum text-right text-sm text-pmk-ink">
-                    {role.active_member_count}
-                    <span className="text-pmk-muted sm:hidden"> holders</span>
-                  </span>
-                  <ChevronRight className="size-4 text-pmk-muted" aria-hidden />
-                </Link>
-              </li>
-            ))}
-          </RowList>
-        </div>
+                  <ChevronRightIcon className="size-[18px] text-pmk-muted" aria-hidden />
+                </span>
+              </Link>
+            </li>
+          ))}
+          {isSuperAdmin ? (
+            <li>
+              <Link
+                href="/roles/new"
+                className="pmk-press flex h-full min-h-[132px] items-center justify-center gap-2 rounded-[20px] border-[1.5px] border-dashed border-[#dccb9e] text-[15px] font-semibold text-pmk-ink hover:bg-pmk-tint focus-visible:outline-2 focus-visible:outline-pmk-accent"
+              >
+                <PlusIcon className="size-5" aria-hidden /> {r.create}
+              </Link>
+            </li>
+          ) : null}
+        </ul>
       )}
     </>
   );

@@ -1,20 +1,24 @@
 import {
-  CalendarRange,
-  CircleUserRound,
-  House,
-  Network,
-  Plug,
-  Settings,
-  ShieldHalf,
-  UserRoundCheck,
-  UsersRound,
-  type LucideIcon,
-} from "lucide-react";
+  AssignmentsIcon,
+  HomeIcon,
+  IntegrationsIcon,
+  MembersIcon,
+  PeriodsIcon,
+  ProfileIcon,
+  RolesIcon,
+  SettingsIcon,
+  StructureIcon,
+  type Icon,
+} from "@/components/icons";
+import type { Dict } from "@/lib/i18n/dictionaries";
+
+/** Keys of the nav copy whose value is plain text (not a function such as profileOf). */
+type NavKey = { [K in keyof Dict["nav"]]: Dict["nav"][K] extends string ? K : never }[keyof Dict["nav"]];
 
 export type NavItem = {
   href: string;
-  label: string;
-  icon: LucideIcon;
+  label: NavKey;
+  icon: Icon;
   adminOnly?: boolean;
   superAdminOnly?: boolean;
   comingSoon?: boolean;
@@ -22,40 +26,53 @@ export type NavItem = {
   match?: string[];
 };
 
-export type NavGroup = { label: string | null; items: NavItem[] };
+export type NavGroup = { label: NavKey | null; items: NavItem[] };
 
-/** Sidebar (desktop) and menu sheet (phone). */
+/** Sidebar (desktop). */
 export const NAV_GROUPS: NavGroup[] = [
   {
     label: null,
-    items: [{ href: "/", label: "Home", icon: House }],
+    items: [{ href: "/", label: "home", icon: HomeIcon }],
   },
   {
-    label: "Organization",
+    label: "groupOrganization",
     items: [
-      { href: "/members", label: "Members", icon: UsersRound, adminOnly: true },
-      { href: "/assignments", label: "Assignments", icon: UserRoundCheck, adminOnly: true },
-      { href: "/structure", label: "Structure", icon: Network, adminOnly: true },
-      { href: "/roles", label: "Roles", icon: ShieldHalf, adminOnly: true },
-      { href: "/periods", label: "Periods", icon: CalendarRange, adminOnly: true },
+      { href: "/members", label: "members", icon: MembersIcon, adminOnly: true },
+      { href: "/assignments", label: "assignments", icon: AssignmentsIcon, adminOnly: true },
+      { href: "/structure", label: "structure", icon: StructureIcon, adminOnly: true },
+      { href: "/roles", label: "roles", icon: RolesIcon, adminOnly: true },
+      { href: "/periods", label: "periods", icon: PeriodsIcon, adminOnly: true },
     ],
   },
   {
-    label: "Admin",
+    label: "groupAdmin",
     items: [
-      { href: "/settings", label: "Settings", icon: Settings, adminOnly: true },
-      { href: "/integrations", label: "Integrations", icon: Plug, adminOnly: true, comingSoon: true },
+      { href: "/settings", label: "settings", icon: SettingsIcon, adminOnly: true },
+      { href: "/integrations", label: "integrations", icon: IntegrationsIcon, adminOnly: true, comingSoon: true },
     ],
   },
 ];
 
-/** Bottom bar on phones: the screens used most. Everything else is in the menu sheet. */
+/** The four screens grouped under Direktori on phones (a segmented control above the page). */
+export const DIRECTORY_ITEMS: NavItem[] = [
+  { href: "/members", label: "members", icon: MembersIcon, adminOnly: true },
+  { href: "/structure", label: "structure", icon: StructureIcon, adminOnly: true },
+  { href: "/roles", label: "roles", icon: RolesIcon, adminOnly: true },
+  { href: "/periods", label: "periods", icon: PeriodsIcon, adminOnly: true },
+];
+
+/** Floating tab bar on phones: the screens used most. Directory covers the four lists above. */
 export const BOTTOM_ITEMS: NavItem[] = [
-  { href: "/", label: "Home", icon: House },
-  { href: "/members", label: "Members", icon: UsersRound, adminOnly: true },
-  { href: "/assignments", label: "Assign", icon: UserRoundCheck, adminOnly: true },
-  { href: "/structure", label: "Structure", icon: Network, adminOnly: true },
-  { href: "/profile", label: "Profile", icon: CircleUserRound },
+  { href: "/", label: "home", icon: HomeIcon },
+  {
+    href: "/members",
+    label: "directory",
+    icon: MembersIcon,
+    adminOnly: true,
+    match: ["/structure", "/roles", "/periods"],
+  },
+  { href: "/assignments", label: "assignments", icon: AssignmentsIcon, adminOnly: true },
+  { href: "/profile", label: "profile", icon: ProfileIcon, match: ["/settings", "/integrations"] },
 ];
 
 export function isActivePath(pathname: string, item: Pick<NavItem, "href" | "match">) {
