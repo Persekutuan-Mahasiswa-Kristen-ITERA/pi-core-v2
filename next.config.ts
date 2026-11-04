@@ -13,6 +13,14 @@ const nextConfig: NextConfig = {
   // Login/Offline is per-user and authorization-dependent, so all rendering stays dynamic and no
   // user data can end up in a shared cache.
   poweredByHeader: false,
+  experimental: {
+    // Off for `next build` only. Vercel restores `.next/cache` between deployments, and with the
+    // custom Tailwind loader below a restored Turbopack cache shipped the previous globals.css:
+    // production of e45174e served old tokens and a `--font-sans` pointing at a font that no
+    // longer loads (serif fallback on every device). A cold build costs a few seconds; stale CSS
+    // costs the whole look. `next dev` keeps its cache.
+    turbopackFileSystemCacheForBuild: false,
+  },
   turbopack: {
     rules: {
       "*.css": {
