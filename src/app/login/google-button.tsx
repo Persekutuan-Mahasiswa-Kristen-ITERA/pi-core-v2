@@ -2,43 +2,25 @@
 
 import { useState } from "react";
 import { SpinnerIcon } from "@/components/icons";
-import { createClient } from "@/lib/supabase/browser";
 import { useDict } from "@/lib/i18n/client";
 
 /**
- * "Log in with Google" (D-13). Starts the OAuth flow in the browser; the PKCE verifier is kept in a
- * cookie by the Supabase browser client and /auth/callback finishes the sign-in on the server.
- * Google is only a second way into an account an admin created: sign-up stays closed.
+ * "Log in with Google" (D-13). A plain navigation to /auth/google, which runs the OpenID Connect flow
+ * on PI-CORE's own domain and ends in a normal Supabase session. Only for accounts an admin created.
  */
 export function GoogleButton({ next }: { next: string }) {
   const d = useDict();
   const [pending, setPending] = useState(false);
-  const [failed, setFailed] = useState(false);
-
-  async function onClick() {
-    setPending(true);
-    setFailed(false);
-    const redirectTo = new URL("/auth/callback", window.location.origin);
-    if (next !== "/") redirectTo.searchParams.set("next", next);
-    const { error } = await createClient().auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: redirectTo.toString(), queryParams: { prompt: "select_account" } },
-    });
-    // On success the browser is already navigating to Google; only a failure lands here.
-    if (error) {
-      setPending(false);
-      setFailed(true);
-    }
-  }
+  const href = next === "/" ? "/auth/google" : `/auth/google?next=${encodeURIComponent(next)}`;
 
   return (
     <div>
-      <button
-        type="button"
-        onClick={onClick}
-        disabled={pending}
+      {/* An <a>, not router navigation: the route answers with a redirect to Google. */}
+      <a
+        href={href}
+        onClick={() => setPending(true)}
         aria-busy={pending || undefined}
-        className="flex h-12 w-full items-center justify-center gap-2.5 rounded-full border-[1.5px] border-pmk-tint-border bg-white px-5 text-[15px] font-semibold text-pmk-ink transition-[border-color,background-color] hover:border-pmk-muted hover:bg-pmk-tint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pmk-accent disabled:cursor-progress disabled:opacity-70"
+        className="flex h-12 w-full items-center justify-center gap-2.5 rounded-full border-[1.5px] border-pmk-tint-border bg-white px-5 text-[15px] font-semibold text-pmk-ink transition-[border-color,background-color] hover:border-pmk-muted hover:bg-pmk-tint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pmk-accent aria-busy:cursor-progress aria-busy:opacity-70"
       >
         {pending ? (
           <SpinnerIcon className="size-5 animate-spin" aria-hidden />
@@ -57,14 +39,8 @@ export function GoogleButton({ next }: { next: string }) {
           </svg>
         )}
         {pending ? d.login.googleRedirecting : d.login.google}
-      </button>
-      {failed ? (
-        <p role="alert" className="mt-2 text-center text-[13px] font-medium text-pmk-negative-ink">
-          {d.login.googleFailed}
-        </p>
-      ) : (
-        <p className="mt-2 text-center text-[13px] leading-relaxed text-pmk-muted">{d.login.googleHint}</p>
-      )}
+      </a>
+      <p className="mt-2 text-center text-[13px] leading-relaxed text-pmk-muted">{d.login.googleHint}</p>
     </div>
   );
 }

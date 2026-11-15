@@ -7,21 +7,19 @@ request. No other PMK app references this project (checked 2026-11-01: PI-ARK, P
 
 ### 2026-11-16 — Google sign-in (D-13), owner applies on the hosted project
 
-Code: login button, `/auth/callback`, temporary-password rotation. Nothing changes in the database schema.
-To switch it on (hosted project `jegddvztnjfvtbbyyutb`):
+Code: login button, `/auth/google` + `/auth/google/callback`, temporary-password rotation. No database change, and
+Supabase's own Google provider is **not** used. To switch it on:
 
-1. Google Cloud Console → APIs & Services → Credentials → **Create OAuth client ID** → Web application.
+1. Google Cloud Console → APIs & Services → **OAuth consent screen**: External, app name "PI-CORE PMK ITERA", support
+   email of Biro IT, authorized domain `pmkitera.web.id`, scopes `openid`, `email`, `profile`; then **Publish app**
+   (In production) so every member's Google account can use it.
+2. Credentials → **Create OAuth client ID** → Web application:
    - Authorized JavaScript origins: `https://core.pmkitera.web.id`
-   - Authorized redirect URIs: `https://jegddvztnjfvtbbyyutb.supabase.co/auth/v1/callback`
-   - OAuth consent screen: app name PI-CORE, support email of Biro IT, scopes `email`, `profile`, `openid`; publish it
-     (External, "In production") so any PMK member's Google account can use it.
-2. Supabase Dashboard → Authentication → Sign In / Providers → **Google**: enable, paste Client ID and Client Secret.
-3. Supabase Dashboard → Authentication → Settings: **"Allow new users to sign up" stays OFF.** This is what keeps
-   Google from creating accounts.
-4. Supabase Dashboard → Authentication → URL Configuration: `https://core.pmkitera.web.id/**` must be in Redirect URLs
-   (it is since 2026-11-15).
-5. Check: log in with Google using the email of an existing member → lands on Home; with an unknown Gmail → "This Google
-   account has no PI-CORE login".
+   - Authorized redirect URIs: `https://core.pmkitera.web.id/auth/google/callback`
+3. Vercel → pi-core-v2 → Environment Variables (Production): `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (secret), then
+   redeploy. Without them the Google button stays hidden.
+4. Supabase Dashboard: nothing to change. "Allow new users to sign up" stays **OFF**; the Google provider stays off.
+5. Check: Google with an existing member's email → Home; an unknown Gmail → "This Google account has no PI-CORE login".
 
 ### 2026-11-01 — v1 schema archived, v2 migrations applied
 

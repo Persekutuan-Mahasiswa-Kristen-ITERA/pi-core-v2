@@ -5,7 +5,7 @@ import { safeRedirectPath } from "@/lib/safe-redirect";
 import type { Database } from "./types";
 
 /** Paths reachable without a session. Everything else requires one. */
-const PUBLIC_PATHS = ["/login", "/offline", "/auth/callback"];
+const PUBLIC_PATHS = ["/login", "/offline", "/auth/google"];
 
 function isPublic(pathname: string) {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));

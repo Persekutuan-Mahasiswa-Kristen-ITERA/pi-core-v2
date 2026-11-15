@@ -5,6 +5,7 @@ import { getSessionState } from "@/lib/auth";
 import { getI18n } from "@/lib/i18n/server";
 import { safeRedirectPath } from "@/lib/safe-redirect";
 import { LanguageSwitch } from "@/components/common/language-switch";
+import { googleConfigured } from "@/lib/google-oauth";
 import { isGoogleLoginError } from "@/lib/google-sign-in";
 import { GoogleButton } from "./google-button";
 import { LoginForm } from "./login-form";
@@ -55,10 +56,14 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           <h1 className="text-[26px] font-extrabold tracking-[-0.02em] text-pmk-ink">{d.login.heading}</h1>
           <p className="mb-6 mt-1 text-[15px] text-pmk-muted">{d.login.lead}</p>
           <LoginForm next={next} inactive={reason === "inactive"} googleError={googleError} />
-          <div className="my-5 flex items-center gap-3 text-[13px] text-pmk-muted before:h-px before:flex-1 before:bg-pmk-tint-border after:h-px after:flex-1 after:bg-pmk-tint-border">
-            {d.login.or}
-          </div>
-          <GoogleButton next={next} />
+          {googleConfigured() ? (
+            <>
+              <div className="my-5 flex items-center gap-3 text-[13px] text-pmk-muted before:h-px before:flex-1 before:bg-pmk-tint-border after:h-px after:flex-1 after:bg-pmk-tint-border">
+                {d.login.or}
+              </div>
+              <GoogleButton next={next} />
+            </>
+          ) : null}
           <p className="mt-8 text-center text-[13px] text-pmk-muted">{d.login.footer}</p>
         </div>
       </main>

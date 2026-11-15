@@ -164,21 +164,31 @@ position, so this costs the pembina nothing.
 
 ### D-13 Google sign-in for existing accounts only (2026-11-16, owner)
 
-"Log in with Google" is a second way **into** an account a PI-CORE admin already created. It never creates accounts:
-sign-up stays disabled on the Supabase project, so a Google account whose email has no PI-CORE login is refused
-(`error_code=signup_disabled` → "This Google account has no PI-CORE login").
+"Log in with Google" is a second way **into** an account a PI-CORE admin already created. It never creates accounts.
 
-- Flow: the browser starts `signInWithOAuth` (PKCE, verifier in a cookie); `/auth/callback` exchanges the code on the
-  server, then requires an **active** member row (else the session is dropped), and re-issues the cookies as in D-09.
-- Supabase links the Google identity to the existing user with the same verified email.
-- A member still on a temporary password who signs in with Google gets a **random password** and the forced change is
-  cleared (owner decision): Google proved who they are, and the admin-known temporary password must stop working. To use
-  a password later they ask an admin for a reset.
-- Deactivated members are banned in Auth, so Google sign-in fails for them (one generic message, no email probing).
+**PI-CORE runs the Google OpenID Connect flow itself** (not Supabase's Google provider), so Google's consent screen
+names `core.pmkitera.web.id` instead of the Supabase project domain (owner choice; a Supabase custom domain is paid).
+
+1. `/auth/google` creates state, nonce and a PKCE verifier, keeps them in a 10-minute httpOnly cookie scoped to
+   `/auth/google`, and redirects to Google.
+2. `/auth/google/callback` checks the state (CSRF), exchanges the code with the PKCE verifier and the client secret,
+   and verifies the ID token with `jose`: Google's signing keys, issuer, audience = our client id, expiry, nonce, and
+   `email_verified`.
+3. The verified email must be an **active member with a login** (`members.email`, `user_id` set). Unknown Google
+   accounts get "This Google account has no PI-CORE login"; a deactivated member gets the inactive message (Google
+   proved they own the email, so this reveals nothing).
+4. The Supabase session is minted server-side: the Auth admin API generates a one-time magic-link token (no email is
+   sent) and the callback redeems it immediately with `verifyOtp`, which writes the usual session cookies. RLS, NEXUS
+   and pmk-form see an ordinary Supabase session; Supabase's own Google provider stays **off** and sign-up stays closed.
+5. A member still on a temporary password gets a **random password** and the forced change cleared (owner decision):
+   Google proved who they are and the admin-known temporary password must stop working. Cookies are re-issued (D-09).
+
+- Without `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` the button is hidden.
+- `GOOGLE_OAUTH_DEV_ENDPOINTS` points the flow at a fake provider for local tests; ignored when `NODE_ENV=production`.
+- Preview deployments cannot use Google unless their exact callback URL is registered in Google Cloud Console.
 - Shared organisation Gmail accounts are not members and cannot sign in (owner chose personal accounts).
-- Other apps on the project (pmk-form, NEXUS) can offer the same button; each needs its own `/auth/callback` and its
-  URL in Supabase Auth → Redirect URLs.
-- Setup: `docs/OPERATIONS.md` → "Google sign-in".
+- Other apps (pmk-form, NEXUS) can offer Google later by sending people to PI-CORE or by reusing this module.
+- Setup: `docs/OPERATIONS.md`, entry 2026-11-16.
 
 ## Audit log
 
