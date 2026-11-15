@@ -162,6 +162,24 @@ position, so this costs the pembina nothing.
 - The E2E suite sets the `pi-lang=en` cookie and reduced motion in `playwright.config.ts`, so its English locators and
   counts stay stable.
 
+### D-13 Google sign-in for existing accounts only (2026-11-16, owner)
+
+"Log in with Google" is a second way **into** an account a PI-CORE admin already created. It never creates accounts:
+sign-up stays disabled on the Supabase project, so a Google account whose email has no PI-CORE login is refused
+(`error_code=signup_disabled` → "This Google account has no PI-CORE login").
+
+- Flow: the browser starts `signInWithOAuth` (PKCE, verifier in a cookie); `/auth/callback` exchanges the code on the
+  server, then requires an **active** member row (else the session is dropped), and re-issues the cookies as in D-09.
+- Supabase links the Google identity to the existing user with the same verified email.
+- A member still on a temporary password who signs in with Google gets a **random password** and the forced change is
+  cleared (owner decision): Google proved who they are, and the admin-known temporary password must stop working. To use
+  a password later they ask an admin for a reset.
+- Deactivated members are banned in Auth, so Google sign-in fails for them (one generic message, no email probing).
+- Shared organisation Gmail accounts are not members and cannot sign in (owner chose personal accounts).
+- Other apps on the project (pmk-form, NEXUS) can offer the same button; each needs its own `/auth/callback` and its
+  URL in Supabase Auth → Redirect URLs.
+- Setup: `docs/OPERATIONS.md` → "Google sign-in".
+
 ## Audit log
 
 `audit_log` gets one row per INSERT/UPDATE/DELETE on members, org_units, roles, positions, position_roles, periods,
@@ -175,4 +193,4 @@ the Supabase dashboard).
 - Logo is a bundled asset (`public/brand/pmk-logo.png`); Settings edits only the organization name.
 - Password change via the admin API does not revoke the member's other sessions.
 - The member picker in the assignment form lists every active member in one native select; past a few hundred members it needs search-as-you-type.
-- Reports, Events, Integrations, notifications, Google Sign-In: not built (out of scope).
+- Reports, Events, Integrations, notifications: not built (out of scope). Google sign-in: D-13 (existing accounts only).

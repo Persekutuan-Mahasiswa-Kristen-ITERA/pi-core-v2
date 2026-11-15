@@ -394,7 +394,10 @@ export const id: Dict = {
     notYet: "Segera hadir",
     methods: {
       email_password: { label: "Email & kata sandi", note: "Akun dibuat oleh admin." },
-      google: { label: "Masuk dengan Google", note: "Direncanakan untuk versi berikutnya." },
+      google: {
+        label: "Masuk dengan Google",
+        note: "Untuk akun yang sudah dibuat admin (email sama). Tanpa pendaftaran.",
+      },
     },
     orgName: "Nama organisasi",
     saveName: "Simpan nama",
@@ -451,7 +454,11 @@ export const id: Dict = {
     inactive: "Akun ini tidak aktif. Hubungi admin PMK ITERA.",
     or: "atau",
     google: "Masuk dengan Google",
-    soon: "Segera hadir",
+    googleRedirecting: "Membuka Google…",
+    googleHint: "Hanya untuk akun yang sudah dibuat admin PMK ITERA, dengan email yang sama.",
+    googleNotRegistered:
+      "Akun Google ini belum punya akun PI-CORE. Pakai email yang didaftarkan admin PMK ITERA, atau minta admin membuatkan akunmu.",
+    googleFailed: "Masuk dengan Google tidak selesai. Coba lagi, atau masuk dengan kata sandi.",
     footer: "Akun dibuat oleh admin PMK ITERA.",
   },
 };

@@ -5,6 +5,24 @@
 PI-CORE v2 uses the Supabase project that v1 used (`jegddvztnjfvtbbyyutb`, region ap-southeast-1), at the owner's
 request. No other PMK app references this project (checked 2026-11-01: PI-ARK, PI-LYNK, website, pmk-form, pemira).
 
+### 2026-11-16 — Google sign-in (D-13), owner applies on the hosted project
+
+Code: login button, `/auth/callback`, temporary-password rotation. Nothing changes in the database schema.
+To switch it on (hosted project `jegddvztnjfvtbbyyutb`):
+
+1. Google Cloud Console → APIs & Services → Credentials → **Create OAuth client ID** → Web application.
+   - Authorized JavaScript origins: `https://core.pmkitera.web.id`
+   - Authorized redirect URIs: `https://jegddvztnjfvtbbyyutb.supabase.co/auth/v1/callback`
+   - OAuth consent screen: app name PI-CORE, support email of Biro IT, scopes `email`, `profile`, `openid`; publish it
+     (External, "In production") so any PMK member's Google account can use it.
+2. Supabase Dashboard → Authentication → Sign In / Providers → **Google**: enable, paste Client ID and Client Secret.
+3. Supabase Dashboard → Authentication → Settings: **"Allow new users to sign up" stays OFF.** This is what keeps
+   Google from creating accounts.
+4. Supabase Dashboard → Authentication → URL Configuration: `https://core.pmkitera.web.id/**` must be in Redirect URLs
+   (it is since 2026-11-15).
+5. Check: log in with Google using the email of an existing member → lands on Home; with an unknown Gmail → "This Google
+   account has no PI-CORE login".
+
 ### 2026-11-01 — v1 schema archived, v2 migrations applied
 
 1. Backup of v1 (`public` + `drizzle` schemas, schema and data) taken with `pg_dump` 17.11 to the owner's machine:
@@ -66,7 +84,6 @@ production URL.
 - Functions ran in **iad1 (Washington, US)** while the database is in **ap-southeast-1 (Singapore)**: every query
   crossed the Pacific (about 200 ms a round trip, several per page). `vercel.json` now pins `"regions": ["sin1"]`, next
   to the database. Check after a deploy: the deployment's Functions tab shows region `sin1`.
-
 
 ### 2026-11-01 — organization structure, super admins (branch `feat/org-structure-v1`)
 
