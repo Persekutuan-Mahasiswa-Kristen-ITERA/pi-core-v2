@@ -47,7 +47,7 @@ export default async function AppAccessPage({ params }: PageProps<"/integrations
   const [access, { d }] = await Promise.all([getAppAccess(appKey), getI18n()]);
   if (!access) notFound();
   const t = d.integrations;
-  const { app, roles, rules, holders } = access;
+  const { app, roles, rules, holders, pending } = access;
   const roleName = (key: string) => roles.find((r) => r.key === key)?.name ?? key;
 
   const options = isSuperAdmin
@@ -198,6 +198,35 @@ export default async function AppAccessPage({ params }: PageProps<"/integrations
               <p className="mt-2.5 px-1 text-[13px] text-pmk-muted">{t.periodNote}</p>
             </>
           )}
+
+          {pending.length > 0 ? (
+            <div className="mt-8">
+              <SectionHeader id="pending" title={t.pendingTitle} meta={t.pendingMeta(pending.length)} />
+              <p className="-mt-1 mb-3 px-1 text-[13px] text-pmk-muted">{t.pendingBody}</p>
+              <RowList>
+                {pending.map((p) => (
+                  <li key={p.memberId} className="flex items-center gap-3 px-4 py-3 text-sm">
+                    <Avatar name={p.fullName} />
+                    <span className="min-w-0 flex-1">
+                      <Link href={`/members/${p.memberId}`} className="block truncate text-[15px] font-bold text-pmk-ink hover:underline">
+                        {p.fullName}
+                      </Link>
+                      <span className="block truncate text-[13px] text-pmk-muted">
+                        {p.neverSignedIn ? t.neverSignedIn : t.temporaryPassword}
+                      </span>
+                    </span>
+                    <span className="flex max-w-[45%] flex-wrap justify-end gap-1">
+                      {p.appRoleKeys.map((k) => (
+                        <Tag key={k}>
+                          <span className="truncate">{roleName(k)}</span>
+                        </Tag>
+                      ))}
+                    </span>
+                  </li>
+                ))}
+              </RowList>
+            </div>
+          ) : null}
         </section>
       </div>
     </div>

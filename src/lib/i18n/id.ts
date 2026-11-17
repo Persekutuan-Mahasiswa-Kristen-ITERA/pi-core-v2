@@ -451,6 +451,12 @@ export const id: Dict = {
     add: "Tambah aturan",
     holdersTitle: "Yang punya akses sekarang",
     holdersMeta: (n) => `${n} orang`,
+    pendingTitle: "Menunggu login pertama",
+    pendingMeta: (n) => `${n} orang`,
+    pendingBody:
+      "Mereka cocok dengan aturan, tapi masih memakai kata sandi sementara, jadi belum mendapat akses. Akses aktif begitu mereka masuk ke PI-CORE sekali (lewat Google, atau dengan mengganti kata sandi sementara).",
+    neverSignedIn: "Belum pernah masuk",
+    temporaryPassword: "Kata sandi sementara belum diganti",
     noHolders: "Belum ada yang mendapat akses.",
     periodNote:
       "Aturan role, posisi dan unit dihitung dari penugasan di periode aktif. Anggota nonaktif dan yang masih memakai kata sandi sementara tidak mendapat akses.",

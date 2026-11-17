@@ -97,6 +97,17 @@ describe("baseline rules", () => {
     expect(ids).not.toContain(gone.memberId);
   });
 
+  it("lists a temporary-password member as pending (admins only), not as a holder", async () => {
+    const { data: pending } = await admin.client.rpc("app_access_pending", { p_app: "ark" });
+    const mine = (pending ?? []).filter((p) => p.member_id === temp.memberId);
+    expect(mine.map((p) => p.app_role_key)).toEqual(["pengurus"]);
+    expect(mine[0].never_signed_in).toBe(false); // createUser signs in once
+    expect((pending ?? []).map((p) => p.member_id)).not.toContain(gone.memberId); // deactivated: not pending either
+    expect((pending ?? []).map((p) => p.member_id)).not.toContain(musik.memberId); // already has access
+    const { data: asMember } = await musik.client.rpc("app_access_pending", { p_app: "ark" });
+    expect(asMember ?? []).toEqual([]);
+  });
+
   it("returns nothing for an unknown app", async () => {
     expect(await roles(musik, "nope")).toEqual([]);
   });

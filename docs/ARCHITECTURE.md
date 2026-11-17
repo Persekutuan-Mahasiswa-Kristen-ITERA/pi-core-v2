@@ -235,7 +235,9 @@ Other PMK apps do not keep their own admin lists; PI-CORE decides who gets which
   **position**, or an **org unit** (optionally with its child units). The last three match assignments in the
   **active period**, so access moves with the seats. Same shape as PMK-NEXUS `access_rules`; role rules use
   `roles.id` because custom roles have no key.
-- Deactivated members and members on a temporary password match nothing.
+- Deactivated members and members on a temporary password match nothing. The Integrations page lists the latter
+  under "Waiting for their first login" (`public.app_access_pending()`, admins only; migration
+  `20261118400000_app_access_pending.sql`), so a missing person has a visible reason.
 - **Super admins** add, disable and delete rules; admins can read them and see who has access; members see
   nothing. Every change goes to `audit_log`.
 - Apps call `public.my_app_roles('<app>')` with the signed-in user's PI-CORE session and get the caller's roles
