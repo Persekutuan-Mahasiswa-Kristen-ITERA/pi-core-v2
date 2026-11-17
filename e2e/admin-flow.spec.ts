@@ -4,9 +4,9 @@ import { ADMIN_EMAIL, PASSWORD, POSITION_ADMIN_EMAIL, RUN, login, logout } from 
 async function totalMembers(page: Page) {
   await page.goto("/");
   const figure = page.locator("div", { has: page.locator("dt", { hasText: "Total Members" }) }).last();
-  // "7 2 dosen": the count, then a note.
-  const text = await figure.locator("dd").innerText();
-  return Number(text.trim().split(/\s+/)[0].replace(/[.,]/g, ""));
+  // <dd><span>count</span><span>note, e.g. "2 dosen"</span></dd>: read the count only.
+  const text = await figure.locator("dd > span").first().innerText();
+  return Number(text.trim().replace(/[.,]/g, ""));
 }
 
 test("super admin: role → position → member → assignment, reflected on dashboard and role detail", async ({ page }) => {
