@@ -52,7 +52,7 @@ function PeriodTag({ label, d }: { label: string | null | undefined; d: Dict }) 
 
 /*
  * Admin home. Question: "Is this period's kepengurusan complete, and where are the gaps?"
- * Hero with the two most frequent jobs, the four figures, then the leadership seats per BPH /
+ * Hero with the two most frequent jobs, the four figures, then the leadership seats per Kesekjenan /
  * department / bureau beside the quick actions.
  */
 async function AdminHome({ firstName }: { firstName: string }) {

@@ -39,7 +39,7 @@ export async function getDashboardStats() {
   };
 }
 
-/** Leadership seats of the active period, grouped by BPH / department / bureau (dashboard). */
+/** Leadership seats of the active period, grouped by Kesekjenan / department / bureau (dashboard). */
 export async function getStructureCoverage(periodId: string) {
   const supabase = await createClient();
   const [units, positions, assignments] = await Promise.all([
@@ -230,7 +230,7 @@ export async function listRolesForPicker() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("roles")
-    .select("id, name, grants_admin")
+    .select("id, key, name, grants_admin")
     .order("sort_order")
     .order("name");
   if (error) fail("roles", error);

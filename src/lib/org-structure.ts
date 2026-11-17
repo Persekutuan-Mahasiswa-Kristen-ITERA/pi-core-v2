@@ -15,7 +15,7 @@ export type FlatUnit = UnitRow & { depth: number; parentName: string | null; ord
 
 export const UNIT_TYPE_LABEL: Record<OrgUnitType, string> = {
   organization: "Organization",
-  bph: "BPH",
+  bph: "Kesekjenan", // enum value stays `bph` (used by PMK-NEXUS); see migration 20261117100000
   department: "Department",
   bureau: "Bureau",
   division: "Division",
@@ -87,7 +87,7 @@ export type CoverageGroup = {
 };
 
 /**
- * Leadership seats per top-level unit (BPH, each department with its divisions, each bureau) for one
+ * Leadership seats per top-level unit (Kesekjenan, each department with its divisions, each bureau) for one
  * period. A seat is a "one per unit" position in an active unit of its kind; it is filled when the
  * period has an assignment to it. Other assignments (staff) are counted, not listed.
  */

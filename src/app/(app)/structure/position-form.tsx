@@ -23,12 +23,14 @@ type Props = {
   action: (prev: Result, formData: FormData) => Promise<Result>;
   roles: { id: string; name: string; grants_admin: boolean }[];
   defaults?: { name: string; unitType: OrgUnitType; rank: number; isUniquePerUnit: boolean; roleIds: string[] };
+  /** Roles ticked on a NEW position (BPH: every pengurus position, D-15). Ignored when `defaults` is set. */
+  initialRoleIds?: string[];
   /** Edit mode: the unit type is fixed after creation. */
   fixedUnitType?: boolean;
   submitLabel: string;
 };
 
-export function PositionForm({ action, roles, defaults, fixedUnitType, submitLabel }: Props) {
+export function PositionForm({ action, roles, defaults, initialRoleIds = [], fixedUnitType, submitLabel }: Props) {
   const [state, formAction] = useActionState(action, initialActionState as Result);
   useActionFeedback(state, "/structure");
   const errors = state.ok ? undefined : state.fieldErrors;
@@ -94,7 +96,7 @@ export function PositionForm({ action, roles, defaults, fixedUnitType, submitLab
                 type="checkbox"
                 name="roleIds"
                 value={r.id}
-                defaultChecked={defaults?.roleIds.includes(r.id)}
+                defaultChecked={(defaults?.roleIds ?? initialRoleIds).includes(r.id)}
                 className="size-5 shrink-0 accent-pmk-brown"
               />
               <span className="text-sm text-pmk-ink">
