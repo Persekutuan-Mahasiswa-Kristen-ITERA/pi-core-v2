@@ -413,6 +413,125 @@ export async function listActiveMembersForPicker() {
   return data;
 }
 
+// ---------------------------------------------------------------------------------------------
+// App access (D-16)
+// ---------------------------------------------------------------------------------------------
+
+/** Apps that read their access from PI-CORE, with their roles and rule counts (admins only). */
+export async function listApps() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("apps")
+    .select("key, name, description, url, app_roles(key, name, sort_order, app_access_rules(id, is_enabled))")
+    .order("sort_order");
+  if (error) fail("apps", error);
+  return data.map((a) => ({
+    key: a.key,
+    name: a.name,
+    description: a.description,
+    url: a.url,
+    roles: [...a.app_roles].sort((x, y) => x.sort_order - y.sort_order),
+    enabledRules: a.app_roles.flatMap((r) => r.app_access_rules).filter((r) => r.is_enabled).length,
+  }));
+}
+
+export type AccessSubject =
+  | { type: "member"; id: string; label: string }
+  | { type: "role"; id: string; label: string }
+  | { type: "position"; id: string; label: string; unitType: string }
+  | { type: "org_unit"; id: string; label: string; includeChildUnits: boolean };
+
+/** One app's roles, rules (with readable subjects) and who has access right now. */
+export async function getAppAccess(appKey: string) {
+  const supabase = await createClient();
+  const [app, rules, holders] = await Promise.all([
+    supabase
+      .from("apps")
+      .select("key, name, description, url, app_roles(key, name, description, sort_order)")
+      .eq("key", appKey)
+      .maybeSingle(),
+    supabase
+      .from("app_access_rules")
+      .select(
+        "id, app_role_key, subject_type, include_child_units, is_enabled, note, created_at, " +
+          "members(id, full_name), roles(id, name), positions(id, name, unit_type), org_units(id, name)",
+      )
+      .eq("app_key", appKey)
+      .order("created_at"),
+    supabase.rpc("app_access_holders", { p_app: appKey }),
+  ]);
+  if (app.error) fail("app", app.error);
+  if (!app.data) return null;
+  if (rules.error) fail("app rules", rules.error);
+  if (holders.error) fail("app holders", holders.error);
+
+  type RuleRow = {
+    id: string;
+    app_role_key: string;
+    subject_type: "member" | "role" | "position" | "org_unit";
+    include_child_units: boolean;
+    is_enabled: boolean;
+    note: string | null;
+    members: { id: string; full_name: string } | null;
+    roles: { id: string; name: string } | null;
+    positions: { id: string; name: string; unit_type: string } | null;
+    org_units: { id: string; name: string } | null;
+  };
+  const subjectOf = (r: RuleRow): AccessSubject | null => {
+    switch (r.subject_type) {
+      case "member":
+        return r.members ? { type: "member", id: r.members.id, label: r.members.full_name } : null;
+      case "role":
+        return r.roles ? { type: "role", id: r.roles.id, label: r.roles.name } : null;
+      case "position":
+        return r.positions
+          ? { type: "position", id: r.positions.id, label: r.positions.name, unitType: r.positions.unit_type }
+          : null;
+      case "org_unit":
+        return r.org_units
+          ? { type: "org_unit", id: r.org_units.id, label: r.org_units.name, includeChildUnits: r.include_child_units }
+          : null;
+    }
+  };
+
+  const ruleRows = (rules.data as unknown as RuleRow[]).map((r) => ({
+    id: r.id,
+    appRoleKey: r.app_role_key,
+    isEnabled: r.is_enabled,
+    note: r.note,
+    subject: subjectOf(r),
+  }));
+
+  // One row per member and app role; a member matched by several rules is listed once per role.
+  const holderRows: { memberId: string; fullName: string; email: string; appRoleKey: string; ruleIds: string[] }[] = [];
+  for (const h of holders.data ?? []) {
+    const key = `${h.member_id}:${h.app_role_key}`;
+    const existing = holderRows.find((x) => `${x.memberId}:${x.appRoleKey}` === key);
+    if (existing) existing.ruleIds.push(h.rule_id);
+    else {
+      holderRows.push({
+        memberId: h.member_id,
+        fullName: h.full_name,
+        email: h.email,
+        appRoleKey: h.app_role_key,
+        ruleIds: [h.rule_id],
+      });
+    }
+  }
+
+  return {
+    app: {
+      key: app.data.key,
+      name: app.data.name,
+      description: app.data.description,
+      url: app.data.url,
+    },
+    roles: [...app.data.app_roles].sort((x, y) => x.sort_order - y.sort_order),
+    rules: ruleRows,
+    holders: holderRows,
+  };
+}
+
 export async function getOrgSettings() {
   const supabase = await createClient();
   const { data, error } = await supabase.from("org_settings").select("org_name, updated_at").maybeSingle();

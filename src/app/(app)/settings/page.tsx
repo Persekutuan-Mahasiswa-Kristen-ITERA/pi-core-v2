@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { IntegrationsIcon, KeyIcon, LockIcon, ProfileIcon } from "@/components/icons";
+import Link from "next/link";
+import { ChevronRightIcon, IntegrationsIcon, KeyIcon, LockIcon, ProfileIcon } from "@/components/icons";
 import { requireAdminPage } from "@/lib/auth";
 import { getI18n } from "@/lib/i18n/server";
 import { getOrgSettings } from "@/lib/queries";
@@ -77,13 +78,16 @@ export default async function SettingsPage() {
 
         <section aria-labelledby="other-title">
           <SectionHeader id="other-title" title={t.integrations} />
-          <Card className="flex min-h-[68px] items-center gap-3 px-4 py-3">
+          <Link
+            href="/integrations"
+            className="pmk-lift flex min-h-[68px] items-center gap-3 rounded-[20px] border border-pmk-tint-border bg-white px-4 py-3 shadow-[var(--pmk-shadow-card)] focus-visible:outline-2 focus-visible:outline-pmk-accent"
+          >
             <IconBadge className="size-10 rounded-xl bg-pmk-tint [&_svg]:size-5">
               <IntegrationsIcon />
             </IconBadge>
             <p className="min-w-0 flex-1 text-[13px] text-pmk-muted">{t.integrationsNote}</p>
-            <Tag>{d.common.soon}</Tag>
-          </Card>
+            <ChevronRightIcon className="size-[18px] text-pmk-muted" aria-hidden />
+          </Link>
         </section>
       </div>
       <p className="mt-10 text-center text-[13px] text-pmk-muted">

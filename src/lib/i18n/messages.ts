@@ -126,6 +126,16 @@ const EXACT_ID: Record<string, string> = {
   "You cannot change your own access.": "Kamu tidak bisa mengubah hak aksesmu sendiri.",
   "You cannot deactivate your own account.": "Kamu tidak bisa menonaktifkan akunmu sendiri.",
   "Your session has ended. Log in again.": "Sesimu sudah berakhir. Masuk lagi.",
+  // integrations (D-16)
+  "Access rule added.": "Aturan akses ditambahkan.",
+  "Access rule enabled.": "Aturan akses diaktifkan.",
+  "Access rule disabled.": "Aturan akses dinonaktifkan.",
+  "Access rule deleted.": "Aturan akses dihapus.",
+  "Access rule not found.": "Aturan akses tidak ditemukan.",
+  "This rule already exists.": "Aturan ini sudah ada.",
+  "Choose an app role.": "Pilih peran di aplikasi.",
+  "Choose who gets access.": "Pilih siapa yang mendapat akses.",
+  "Invalid app.": "Aplikasi tidak dikenali.",
   // client fallbacks
   "Done.": "Selesai.",
   "Saved.": "Tersimpan.",

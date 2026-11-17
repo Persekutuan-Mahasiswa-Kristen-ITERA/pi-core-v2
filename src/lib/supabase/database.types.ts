@@ -23,7 +23,91 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "assignments": {
+            "app_access_rules": {
+                  Row: {
+                    "app_key": string,"app_role_key": string,"created_at": string,"created_by": string | null,"id": string,"include_child_units": boolean,"is_enabled": boolean,"member_id": string | null,"note": string | null,"org_unit_id": string | null,"position_id": string | null,"role_id": string | null,"subject_type": string,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "app_key": string,"app_role_key": string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"include_child_units"?: boolean,"is_enabled"?: boolean,"member_id"?: string | null,"note"?: string | null,"org_unit_id"?: string | null,"position_id"?: string | null,"role_id"?: string | null,"subject_type": string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "app_key"?: string,"app_role_key"?: string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"include_child_units"?: boolean,"is_enabled"?: boolean,"member_id"?: string | null,"note"?: string | null,"org_unit_id"?: string | null,"position_id"?: string | null,"role_id"?: string | null,"subject_type"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "app_access_rules_app_key_app_role_key_fkey"
+      columns: ["app_key","app_role_key"]
+isOneToOne: false
+      referencedRelation: "app_roles"
+      referencedColumns: ["app_key","key"]
+    },{
+      foreignKeyName: "app_access_rules_member_id_fkey"
+      columns: ["member_id"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "app_access_rules_org_unit_id_fkey"
+      columns: ["org_unit_id"]
+isOneToOne: false
+      referencedRelation: "org_units"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "app_access_rules_position_id_fkey"
+      columns: ["position_id"]
+isOneToOne: false
+      referencedRelation: "positions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "app_access_rules_role_id_fkey"
+      columns: ["role_id"]
+isOneToOne: false
+      referencedRelation: "role_overview"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "app_access_rules_role_id_fkey"
+      columns: ["role_id"]
+isOneToOne: false
+      referencedRelation: "roles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"app_roles": {
+                  Row: {
+                    "app_key": string,"description": string | null,"key": string,"name": string,"sort_order": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "app_key": string,"description"?: string | null,"key": string,"name": string,"sort_order"?: number
+                  }
+                  Update: {
+                    "app_key"?: string,"description"?: string | null,"key"?: string,"name"?: string,"sort_order"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "app_roles_app_key_fkey"
+      columns: ["app_key"]
+isOneToOne: false
+      referencedRelation: "apps"
+      referencedColumns: ["key"]
+    }
+                  ]
+                },"apps": {
+                  Row: {
+                    "description": string | null,"key": string,"name": string,"sort_order": number,"url": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "description"?: string | null,"key": string,"name": string,"sort_order"?: number,"url"?: string | null
+                  }
+                  Update: {
+                    "description"?: string | null,"key"?: string,"name"?: string,"sort_order"?: number,"url"?: string | null
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"assignments": {
                   Row: {
                     "created_at": string,"created_by": string | null,"id": string,"is_unique_per_unit": boolean,"member_id": string,"org_unit_id": string,"period_id": string,"position_id": string,"unit_type": Database["public"]['Enums']["org_unit_type"],"updated_at": string,"updated_by": string | null
                   }
@@ -223,8 +307,16 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "current_access":
+            "app_access_holders":
+{ Args: { "p_app": string }; Returns: {
+              "app_role_key": string,"email": string,"full_name": string,"member_id": string,"rule_id": string
+            }[]
+                           },
+"current_access":
 { Args: Record<PropertyKey, never>; Returns: string
+                           },
+"my_app_roles":
+{ Args: { "p_app": string }; Returns: (string)[]
                            },
 "set_active_period":
 { Args: { "p_period_id": string }; Returns: undefined
