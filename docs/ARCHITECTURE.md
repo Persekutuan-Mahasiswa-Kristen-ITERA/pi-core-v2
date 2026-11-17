@@ -187,8 +187,28 @@ names `core.pmkitera.web.id` instead of the Supabase project domain (owner choic
 - `GOOGLE_OAUTH_DEV_ENDPOINTS` points the flow at a fake provider for local tests; ignored when `NODE_ENV=production`.
 - Preview deployments cannot use Google unless their exact callback URL is registered in Google Cloud Console.
 - Shared organisation Gmail accounts are not members and cannot sign in (owner chose personal accounts).
-- Other apps (pmk-form, NEXUS) can offer Google later by sending people to PI-CORE or by reusing this module.
+- Other apps offer Google through PI-CORE: D-14.
 - Setup: `docs/OPERATIONS.md`, entry 2026-11-16.
+
+### D-14 Google sign-in for other PMK apps (2026-11-17)
+
+Each app keeps its own session cookies on its own domain; nothing is shared across `*.pmkitera.web.id`
+(a parent-domain cookie would hand the session to every subdomain, including ones PI-CORE does not control).
+Google is only ever talked to by PI-CORE, so there is one OAuth client and one redirect URI.
+
+1. The app's `/auth/google` makes a random `handoff` value, keeps it in its own httpOnly cookie, and sends the browser
+   to `core…/auth/google?app=<id>&handoff=<value>`. PI-CORE refuses unknown apps and malformed values before Google.
+2. PI-CORE runs D-13 steps 1-3 unchanged (state, PKCE, ID token checks, active member with a login), and replaces a
+   temporary password **before** minting the token (a password change voids outstanding tokens).
+3. No PI-CORE session is made. PI-CORE generates the one-time magic-link token and redirects to the app's fixed
+   finish URL with `handoff` and `token_hash` (or `handoff` and `error=notRegistered|inactive|failed`).
+4. The app's finish route requires `handoff` to equal its cookie (stops login CSRF: someone else's token cannot be
+   planted in a victim's browser), then redeems the token with `verifyOtp` on its own domain. The token works once.
+5. The app still does its own authorisation (pmk-form: `form.admin_members` + active PI-CORE member).
+
+- Allowed apps are a fixed list in `src/lib/google-handoff.ts` (`form` → `https://form.pmkitera.web.id/auth/google/finish`).
+  Adding an app = one line there plus the two routes in the app (copy pmk-form's `app/auth/google/`).
+- `GOOGLE_HANDOFF_DEV_APPS` replaces the list for local tests; ignored when `NODE_ENV=production`.
 
 ## Audit log
 
@@ -203,4 +223,4 @@ the Supabase dashboard).
 - Logo is a bundled asset (`public/brand/pmk-logo.png`); Settings edits only the organization name.
 - Password change via the admin API does not revoke the member's other sessions.
 - The member picker in the assignment form lists every active member in one native select; past a few hundred members it needs search-as-you-type.
-- Reports, Events, Integrations, notifications: not built (out of scope). Google sign-in: D-13 (existing accounts only).
+- Reports, Events, Integrations, notifications: not built (out of scope). Google sign-in: D-13 (existing accounts only), D-14 (other apps).
