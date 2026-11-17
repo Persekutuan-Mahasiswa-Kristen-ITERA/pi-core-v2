@@ -9,10 +9,11 @@ describe("handoffTarget", () => {
     delete process.env.GOOGLE_HANDOFF_DEV_APPS;
   });
 
-  it("knows pmk-form, ARK and PI-LYNK, nothing else", () => {
+  it("knows pmk-form, ARK, PI-LYNK and the website, nothing else", () => {
     expect(handoffTarget("form")).toBe("https://form.pmkitera.web.id/auth/google/finish");
     expect(handoffTarget("ark")).toBe("https://ark.pmkitera.web.id/auth/google/finish");
     expect(handoffTarget("lynk")).toBe("https://s.pmkitera.web.id/auth/google/finish");
+    expect(handoffTarget("web")).toBe("https://www.pmkitera.web.id/auth/google/finish");
     expect(handoffTarget("evil")).toBeNull();
     expect(handoffTarget("constructor")).toBeNull();
     expect(handoffTarget("__proto__")).toBeNull();

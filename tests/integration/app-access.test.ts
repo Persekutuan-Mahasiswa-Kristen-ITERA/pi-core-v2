@@ -113,6 +113,19 @@ describe("PI-LYNK baseline", () => {
   });
 });
 
+describe("website baseline (per menu)", () => {
+  it("gives Pelayanan Khusus nothing, Internal acara, CMIT admin", async () => {
+    expect(await roles(musik, "web")).toEqual([]);
+    expect(await roles(eo, "web")).toEqual(["acara"]);
+    const rohani = await createUser("aa-doa", "member");
+    await assign(rohani.memberId, s.unit("Doa"), s.position("division", "Staff"), s.activePeriodId);
+    expect(await roles(rohani, "web")).toEqual(["artikel", "renungan"]);
+    const desain = await createUser("aa-desain", "member");
+    await assign(desain.memberId, s.unit("Desain"), s.position("division", "Staff"), s.activePeriodId);
+    expect(await roles(desain, "web")).toEqual(["admin"]);
+  });
+});
+
 describe("rule kinds", () => {
   it("member rule: holds without any assignment; disabling it removes the role", async () => {
     const id = await addRule({ app_role_key: "admin", subject_type: "member", member_id: outsider.memberId });
