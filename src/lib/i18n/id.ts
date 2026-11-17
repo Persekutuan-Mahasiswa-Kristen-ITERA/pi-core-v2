@@ -56,7 +56,7 @@ export const id: Dict = {
   access: { super_admin: "Super admin", admin: "Admin", member: "Anggota" },
   unitType: {
     organization: "Organisasi",
-    bph: "BPH",
+    bph: "Kesekjenan",
     department: "Departemen",
     bureau: "Biro",
     division: "Divisi",
@@ -102,7 +102,7 @@ export const id: Dict = {
     noPeriodTitle: "Belum ada periode aktif",
     noPeriodBody: "Kursi pimpinan dihitung untuk periode aktif. Buat atau aktifkan periode di menu Periode.",
     noUnitsTitle: "Belum ada unit",
-    noUnitsBody: "Tambahkan BPH, departemen dan biro di menu Struktur.",
+    noUnitsBody: "Tambahkan Kesekjenan, departemen dan biro di menu Struktur.",
     noLeadership: "Unit ini belum punya posisi pimpinan.",
     allFilled: (staff) => `Semua kursi terisi${staff ? ` · ${staff} staf` : ""}`,
     open: (names, more) => `Kosong: ${names}${more ? ` +${more} lagi` : ""}`,
@@ -256,7 +256,7 @@ export const id: Dict = {
   structure: {
     title: "Struktur",
     description: (root, departments, divisions, isSuperAdmin) =>
-      `${root}: BPH, ${departments} departemen dengan ${divisions} divisi, serta biro. ${
+      `${root}: Kesekjenan, ${departments} departemen dengan ${divisions} divisi, serta biro. ${
         isSuperAdmin ? "Penugasan memilih unit dan salah satu posisinya." : "Hanya super admin yang bisa mengubahnya."
       }`,
     units: "Unit",
@@ -347,7 +347,7 @@ export const id: Dict = {
     noPositions: "Belum ada posisi yang membawa role ini. Super admin mengaturnya per posisi di menu Struktur.",
     system: "Role sistem · tidak bisa dihapus",
     name: "Nama role",
-    nameHint: "Kelompok posisi dengan tanggung jawab yang sama, mis. BPH atau Sekretaris.",
+    nameHint: "Kelompok posisi dengan tanggung jawab yang sama, mis. Kesekjenan atau Sekretaris.",
     descriptionLabel: "Deskripsi (opsional)",
     grants: "Memberi akses admin",
     grantsBody:

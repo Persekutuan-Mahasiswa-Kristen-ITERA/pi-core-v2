@@ -41,7 +41,7 @@ const insertAssignment = (memberId: string, unit: string, position: string, peri
     .select("id");
 
 describe("baseline structure from PI-CORE v1", () => {
-  it("has 1 root, 1 BPH, 7 departments, 1 bureau and 16 divisions", async () => {
+  it("has 1 root, 1 Kesekjenan (type bph), 7 departments, 1 bureau and 16 divisions", async () => {
     const { data } = await serviceClient().from("org_units").select("type").not("name", "like", `%${RUN}%`);
     const count = (t: string) => data!.filter((u) => u.type === t).length;
     expect([count("organization"), count("bph"), count("department"), count("bureau"), count("division")]).toEqual([
@@ -62,6 +62,45 @@ describe("baseline structure from PI-CORE v1", () => {
       "Sekretaris Umum 1",
       "Sekretaris Umum 2",
     ]);
+  });
+
+  it("names the six top positions Kesekjenan and puts BPH (every pengurus) on every position (D-15)", async () => {
+    const db = serviceClient();
+    const { data: roles } = await db.from("roles").select("key, name, grants_admin").in("key", ["bph", "pengurus"]);
+    expect(roles!.sort((a, b) => a.key!.localeCompare(b.key!))).toEqual([
+      { key: "bph", name: "Kesekjenan", grants_admin: false },
+      { key: "pengurus", name: "BPH", grants_admin: false },
+    ]);
+    const { data: kesekjenan } = await db.from("position_roles").select("positions(name), roles!inner(key)").eq("roles.key", "bph");
+    expect(kesekjenan!.map((r) => r.positions.name).sort()).toEqual([
+      "Bendahara Umum 1",
+      "Bendahara Umum 2",
+      "Ketua Umum",
+      "Sekretaris Jenderal",
+      "Sekretaris Umum 1",
+      "Sekretaris Umum 2",
+    ]);
+    const { count: positions } = await db.from("positions").select("id", { count: "exact", head: true });
+    const { count: bph } = await db
+      .from("position_roles")
+      .select("position_id, roles!inner(key)", { count: "exact", head: true })
+      .eq("roles.key", "pengurus");
+    expect(bph).toBe(positions);
+  });
+
+  it("gives a new position the BPH role automatically", async () => {
+    const { data, error } = await superAdmin.client
+      .from("positions")
+      .insert({ name: `Koordinator ${RUN}`, unit_type: "division", rank: 65, is_unique_per_unit: false } as never)
+      .select("id")
+      .single();
+    expect(error).toBeNull();
+    const { data: roles } = await serviceClient()
+      .from("position_roles")
+      .select("roles(key)")
+      .eq("position_id", data!.id);
+    expect(roles!.map((r) => r.roles.key)).toEqual(["pengurus"]);
+    await serviceClient().from("positions").delete().eq("id", data!.id);
   });
 });
 

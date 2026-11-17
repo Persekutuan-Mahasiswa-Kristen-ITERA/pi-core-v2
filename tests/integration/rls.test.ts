@@ -111,7 +111,8 @@ describe("regular member", () => {
     const { data: assignments } = await alice.client.from("assignments").select("member_id");
     expect(assignments).toEqual([{ member_id: alice.memberId }]);
     const { data: roles } = await alice.client.from("roles").select("id");
-    expect(roles!.map((r) => r.id)).toEqual([s.role("staff")]);
+    // Staff carries Staff and BPH (role key `pengurus`, every position: D-15).
+    expect(roles!.map((r) => r.id).sort()).toEqual([s.role("staff"), s.role("pengurus")].sort());
   });
 
   it("reads the organization structure (units and positions)", async () => {

@@ -39,7 +39,7 @@ export async function getDashboardStats() {
   };
 }
 
-/** Leadership seats of the active period, grouped by BPH / department / bureau (dashboard). */
+/** Leadership seats of the active period, grouped by Kesekjenan / department / bureau (dashboard). */
 export async function getStructureCoverage(periodId: string) {
   const supabase = await createClient();
   const [units, positions, assignments] = await Promise.all([

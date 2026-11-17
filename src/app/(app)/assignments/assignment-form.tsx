@@ -13,7 +13,7 @@ import type { OrgUnitType } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
 
 type Option = { id: string; label: string };
-/** `group` = the top-level unit (BPH, a department with its divisions, the bureau). */
+/** `group` = the top-level unit (Kesekjenan, a department with its divisions, the bureau). */
 export type UnitOption = { id: string; label: string; type: OrgUnitType; group: string; isActive: boolean };
 export type PositionOption = { id: string; name: string; unitType: OrgUnitType };
 

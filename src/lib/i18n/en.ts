@@ -58,7 +58,7 @@ export const en = {
   access: { super_admin: "Super admin", admin: "Admin", member: "Member" },
   unitType: {
     organization: "Organization",
-    bph: "BPH",
+    bph: "Kesekjenan",
     department: "Department",
     bureau: "Bureau",
     division: "Division",
@@ -107,7 +107,7 @@ export const en = {
     noPeriodTitle: "No active period",
     noPeriodBody: "Leadership seats are counted for the active period. Create or activate one under Periods.",
     noUnitsTitle: "No units yet",
-    noUnitsBody: "Add BPH, departments and bureaus under Structure.",
+    noUnitsBody: "Add the Kesekjenan, departments and bureaus under Structure.",
     noLeadership: "No leadership positions defined for this unit.",
     allFilled: (staff: number) => `All seats filled${staff ? ` · ${staff} staff` : ""}`,
     open: (names: string, more: number) => `Open: ${names}${more ? ` +${more} more` : ""}`,
@@ -262,7 +262,7 @@ export const en = {
   structure: {
     title: "Structure",
     description: (root: string, departments: number, divisions: number, isSuperAdmin: boolean) =>
-      `${root}: BPH, ${departments} departments with ${divisions} divisions, and the bureaus. ${
+      `${root}: the Kesekjenan, ${departments} departments with ${divisions} divisions, and the bureaus. ${
         isSuperAdmin ? "Assignments pick a unit and one of its positions." : "Only a super admin can change them."
       }`,
     units: "Units",
@@ -353,7 +353,7 @@ export const en = {
     noPositions: "No position carries this role yet. A super admin sets this per position under Structure.",
     system: "System role · cannot be deleted",
     name: "Role name",
-    nameHint: "A group of positions with the same responsibilities, e.g. BPH or Sekretaris.",
+    nameHint: "A group of positions with the same responsibilities, e.g. Kesekjenan or Sekretaris.",
     descriptionLabel: "Description (optional)",
     grants: "Gives admin access",
     grantsBody:

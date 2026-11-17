@@ -210,6 +210,20 @@ Google is only ever talked to by PI-CORE, so there is one OAuth client and one r
   Adding an app = one line there plus the two routes in the app (copy pmk-form's `app/auth/google/`).
 - `GOOGLE_HANDOFF_DEV_APPS` replaces the list for local tests; ignored when `NODE_ENV=production`.
 
+### D-15 "BPH" = all pengurus; the top group is the Kesekjenan (2026-11-17, owner)
+
+At PMK ITERA **BPH means every pengurus** (Kesekjenan, department and bureau heads and secretaries, division heads,
+staff). Ketua Umum, Sekretaris Jenderal, Sekretaris Umum 1/2 and Bendahara Umum 1/2 form the **Kesekjenan**.
+Migration `20261117100000_kesekjenan_and_bph.sql`:
+
+- The unit "BPH PMK ITERA" is renamed "Kesekjenan"; the unit type is labelled "Kesekjenan" in the UI.
+- Role key `bph` (the six Kesekjenan positions) is renamed "Kesekjenan".
+- New system role key `pengurus`, named **"BPH"**, on every position. A trigger adds it to every new position;
+  an admin can still remove it from one. It grants nothing (no `grants_admin`, no NEXUS rule).
+- **Technical keys are unchanged**: enum value `bph` and role key `bph` now mean "Kesekjenan". PMK-NEXUS uses both
+  (access rules by role key, unit filters, SQL functions); renaming them would break NEXUS, and putting role key
+  `bph` on every position would give every staff member the Kesekjenan's NEXUS permissions.
+
 ## Audit log
 
 `audit_log` gets one row per INSERT/UPDATE/DELETE on members, org_units, roles, positions, position_roles, periods,

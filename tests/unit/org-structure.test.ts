@@ -27,7 +27,7 @@ const UNITS: UnitRow[] = [
   unit("d2", "root", "department", "Departemen CMIT", 70),
   unit("div-it", "d2", "division", "IT", 30),
   unit("root", null, "organization", "PMK ITERA", 0),
-  unit("bph", "root", "bph", "BPH PMK ITERA", 10),
+  unit("bph", "root", "bph", "Kesekjenan", 10),
   unit("div-pubdok", "d2", "division", "Pubdok", 10),
   unit("d1", "root", "department", "Departemen Pelayanan Khusus", 40),
   unit("div-musik", "d1", "division", "Musik", 30),
@@ -37,7 +37,7 @@ describe("flattenUnitTree", () => {
   it("walks depth-first with children in sort order", () => {
     expect(flattenUnitTree(UNITS).map((u) => [u.name, u.depth])).toEqual([
       ["PMK ITERA", 0],
-      ["BPH PMK ITERA", 1],
+      ["Kesekjenan", 1],
       ["Departemen Pelayanan Khusus", 1],
       ["Musik", 2],
       ["Departemen CMIT", 1],
@@ -62,7 +62,7 @@ describe("unitLabel", () => {
   it("adds the department to division names, which repeat across departments", () => {
     const flat = flattenUnitTree(UNITS);
     expect(unitLabel(flat.find((u) => u.id === "div-musik")!)).toBe("Musik · Departemen Pelayanan Khusus");
-    expect(unitLabel(flat.find((u) => u.id === "bph")!)).toBe("BPH PMK ITERA");
+    expect(unitLabel(flat.find((u) => u.id === "bph")!)).toBe("Kesekjenan");
   });
 });
 
@@ -90,7 +90,7 @@ describe("buildCoverage", () => {
       { org_unit_id: "div-musik", position_id: "staff", holder: "Maria" },
       { org_unit_id: "div-musik", position_id: "staff", holder: "Ruth" },
     ]);
-    expect(groups.map((g) => g.name)).toEqual(["BPH PMK ITERA", "Departemen Pelayanan Khusus", "Departemen CMIT"]);
+    expect(groups.map((g) => g.name)).toEqual(["Kesekjenan", "Departemen Pelayanan Khusus", "Departemen CMIT"]);
     const [bph, pk, cmit] = groups;
     expect(bph.seats).toHaveLength(1);
     expect(bph.filled).toBe(0);
@@ -112,7 +112,7 @@ describe("buildCoverage", () => {
       UNITS.map((u) => (u.id === "d2" || u.id === "div-musik" ? { ...u, is_active: false } : u)),
     );
     const groups = buildCoverage(withInactive, POSITIONS, []);
-    expect(groups.map((g) => g.name)).toEqual(["BPH PMK ITERA", "Departemen Pelayanan Khusus"]);
+    expect(groups.map((g) => g.name)).toEqual(["Kesekjenan", "Departemen Pelayanan Khusus"]);
     expect(groups[1].seats.map((s) => s.position)).toEqual(["Kepala Departemen", "Sekretaris Departemen"]);
   });
 });
