@@ -7,5 +7,5 @@ export const BACKGROUND_COLOR = "#f8f6f2";
 /** Authentication methods shown on Settings (labels in the i18n dictionaries). Read-only in the MVP. */
 export const AUTH_METHODS = [
   { id: "email_password", label: "Email & Password", enabled: true, note: "Accounts are created by an admin." },
-  { id: "google", label: "Google Sign-In", enabled: false, note: "Planned for a later version." },
+  { id: "google", label: "Google Sign-In", enabled: true, note: "For accounts an admin already created (same email)." },
 ] as const;

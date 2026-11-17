@@ -6,23 +6,32 @@ import { ErrorIcon, EyeIcon, EyeOffIcon, InfoIcon, LockIcon, MailIcon, SpinnerIc
 import { actionClass } from "@/components/common/surfaces";
 import { createClient } from "@/lib/supabase/browser";
 import { useDict } from "@/lib/i18n/client";
+import type { GoogleLoginError } from "@/lib/google-sign-in";
 import { loginSchema } from "@/lib/validation";
 import { cn } from "@/lib/utils";
 import { reissueSessionCookies } from "./actions";
 
-type ErrorKey = "generic" | "tooMany" | "enterBoth" | "inactive";
+type ErrorKey = "generic" | "tooMany" | "enterBoth" | "inactive" | GoogleLoginError;
 
 const inputClass =
   "h-[52px] w-full rounded-[14px] border border-pmk-control bg-white pl-12 pr-4 text-base text-pmk-ink outline-none transition-[border-color,box-shadow] placeholder:text-[#84735c] hover:border-pmk-muted focus-visible:border-pmk-gold focus-visible:ring-3 focus-visible:ring-pmk-gold/20 aria-invalid:border-pmk-negative";
 
-export function LoginForm({ next, inactive }: { next: string; inactive: boolean }) {
+export function LoginForm({
+  next,
+  inactive,
+  googleError = null,
+}: {
+  next: string;
+  inactive: boolean;
+  googleError?: GoogleLoginError | null;
+}) {
   const router = useRouter();
   const d = useDict();
   const [pending, setPending] = useState(false);
   const [reveal, setReveal] = useState(false);
   const [forgot, setForgot] = useState(false);
   // The key, not the text, so a language switch re-renders the message in the new language.
-  const [error, setError] = useState<ErrorKey | null>(inactive ? "inactive" : null);
+  const [error, setError] = useState<ErrorKey | null>(inactive ? "inactive" : googleError);
 
   useEffect(() => {
     // A deactivated account may still hold a session cookie; drop it locally.

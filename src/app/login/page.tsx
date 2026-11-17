@@ -5,6 +5,9 @@ import { getSessionState } from "@/lib/auth";
 import { getI18n } from "@/lib/i18n/server";
 import { safeRedirectPath } from "@/lib/safe-redirect";
 import { LanguageSwitch } from "@/components/common/language-switch";
+import { googleConfigured } from "@/lib/google-oauth";
+import { isGoogleLoginError } from "@/lib/google-sign-in";
+import { GoogleButton } from "./google-button";
 import { LoginForm } from "./login-form";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -16,6 +19,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const params = await searchParams;
   const next = safeRedirectPath(typeof params.next === "string" ? params.next : null);
   const reason = typeof params.reason === "string" ? params.reason : null;
+  const googleError = isGoogleLoginError(params.error) ? params.error : null;
 
   const state = await getSessionState();
   if (state.status === "member" && reason !== "inactive") redirect(next);
@@ -51,37 +55,15 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           </div>
           <h1 className="text-[26px] font-extrabold tracking-[-0.02em] text-pmk-ink">{d.login.heading}</h1>
           <p className="mb-6 mt-1 text-[15px] text-pmk-muted">{d.login.lead}</p>
-          <LoginForm next={next} inactive={reason === "inactive"} />
-          <div className="my-5 flex items-center gap-3 text-[13px] text-pmk-muted before:h-px before:flex-1 before:bg-pmk-tint-border after:h-px after:flex-1 after:bg-pmk-tint-border">
-            {d.login.or}
-          </div>
-          {/* Not a button: Google sign-in is not built yet, so nothing here can be pressed. */}
-          <div
-            aria-disabled="true"
-            className="flex h-12 items-center justify-between gap-3 rounded-full border-[1.5px] border-pmk-tint-border bg-white px-5 text-[15px] font-semibold text-pmk-muted"
-          >
-            <span className="flex items-center gap-2.5">
-              <svg viewBox="0 0 24 24" aria-hidden className="size-5">
-                <path
-                  fill="#4285F4"
-                  d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3Z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22Z"
-                />
-                <path fill="#FBBC05" d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2L6.4 14Z" />
-                <path
-                  fill="#EA4335"
-                  d="M12 6c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.4L6.4 10C7.2 7.7 9.4 6 12 6Z"
-                />
-              </svg>
-              {d.login.google}
-            </span>
-            <span className="pmk-soft-pulse rounded-full border border-pmk-tint-border bg-pmk-tint px-2.5 py-0.5 text-xs font-semibold">
-              {d.login.soon}
-            </span>
-          </div>
+          <LoginForm next={next} inactive={reason === "inactive"} googleError={googleError} />
+          {googleConfigured() ? (
+            <>
+              <div className="my-5 flex items-center gap-3 text-[13px] text-pmk-muted before:h-px before:flex-1 before:bg-pmk-tint-border after:h-px after:flex-1 after:bg-pmk-tint-border">
+                {d.login.or}
+              </div>
+              <GoogleButton next={next} />
+            </>
+          ) : null}
           <p className="mt-8 text-center text-[13px] text-pmk-muted">{d.login.footer}</p>
         </div>
       </main>

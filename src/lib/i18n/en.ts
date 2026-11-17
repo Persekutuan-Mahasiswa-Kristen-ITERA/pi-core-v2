@@ -398,7 +398,7 @@ export const en = {
     notYet: "Not yet",
     methods: {
       email_password: { label: "Email & Password", note: "Accounts are created by an admin." },
-      google: { label: "Google Sign-In", note: "Planned for a later version." },
+      google: { label: "Google Sign-In", note: "For accounts an admin already created (same email). No sign-up." },
     },
     orgName: "Organization name",
     saveName: "Save name",
@@ -454,7 +454,11 @@ export const en = {
     inactive: "This account is not active. Contact a PMK ITERA admin.",
     or: "or",
     google: "Log in with Google",
-    soon: "Coming later",
+    googleRedirecting: "Opening Google…",
+    googleHint: "Only for accounts a PMK ITERA admin has created, with the same email.",
+    googleNotRegistered:
+      "This Google account has no PI-CORE login. Use the email your PMK ITERA admin registered, or ask them to create your account.",
+    googleFailed: "Google sign-in did not finish. Try again, or log in with your password.",
     footer: "Accounts are created by PMK ITERA admins.",
   },
 };

@@ -5,6 +5,22 @@
 PI-CORE v2 uses the Supabase project that v1 used (`jegddvztnjfvtbbyyutb`, region ap-southeast-1), at the owner's
 request. No other PMK app references this project (checked 2026-11-01: PI-ARK, PI-LYNK, website, pmk-form, pemira).
 
+### 2026-11-16 — Google sign-in (D-13), owner applies on the hosted project
+
+Code: login button, `/auth/google` + `/auth/google/callback`, temporary-password rotation. No database change, and
+Supabase's own Google provider is **not** used. To switch it on:
+
+1. Google Cloud Console → APIs & Services → **OAuth consent screen**: External, app name "PI-CORE PMK ITERA", support
+   email of Biro IT, authorized domain `pmkitera.web.id`, scopes `openid`, `email`, `profile`; then **Publish app**
+   (In production) so every member's Google account can use it.
+2. Credentials → **Create OAuth client ID** → Web application:
+   - Authorized JavaScript origins: `https://core.pmkitera.web.id`
+   - Authorized redirect URIs: `https://core.pmkitera.web.id/auth/google/callback`
+3. Vercel → pi-core-v2 → Environment Variables (Production): `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (secret), then
+   redeploy. Without them the Google button stays hidden.
+4. Supabase Dashboard: nothing to change. "Allow new users to sign up" stays **OFF**; the Google provider stays off.
+5. Check: Google with an existing member's email → Home; an unknown Gmail → "This Google account has no PI-CORE login".
+
 ### 2026-11-01 — v1 schema archived, v2 migrations applied
 
 1. Backup of v1 (`public` + `drizzle` schemas, schema and data) taken with `pg_dump` 17.11 to the owner's machine:
@@ -66,7 +82,6 @@ production URL.
 - Functions ran in **iad1 (Washington, US)** while the database is in **ap-southeast-1 (Singapore)**: every query
   crossed the Pacific (about 200 ms a round trip, several per page). `vercel.json` now pins `"regions": ["sin1"]`, next
   to the database. Check after a deploy: the deployment's Functions tab shows region `sin1`.
-
 
 ### 2026-11-01 — organization structure, super admins (branch `feat/org-structure-v1`)
 
