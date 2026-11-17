@@ -460,6 +460,8 @@ export async function getAppAccess(appKey: string) {
       .order("created_at"),
     supabase.rpc("app_access_holders", { p_app: appKey }),
   ]);
+  const pending = await supabase.rpc("app_access_pending", { p_app: appKey });
+  if (pending.error) fail("app pending", pending.error);
   if (app.error) fail("app", app.error);
   if (!app.data) return null;
   if (rules.error) fail("app rules", rules.error);
@@ -529,6 +531,22 @@ export async function getAppAccess(appKey: string) {
     roles: [...app.data.app_roles].sort((x, y) => x.sort_order - y.sort_order),
     rules: ruleRows,
     holders: holderRows,
+    // Match a rule but still on a temporary password: no access until their first login (D-16).
+    pending: (pending.data ?? []).reduce<
+      { memberId: string; fullName: string; email: string; appRoleKeys: string[]; neverSignedIn: boolean }[]
+    >((acc, p) => {
+      const row = acc.find((x) => x.memberId === p.member_id);
+      if (row) row.appRoleKeys.push(p.app_role_key);
+      else
+        acc.push({
+          memberId: p.member_id,
+          fullName: p.full_name,
+          email: p.email,
+          appRoleKeys: [p.app_role_key],
+          neverSignedIn: p.never_signed_in,
+        });
+      return acc;
+    }, []),
   };
 }
 

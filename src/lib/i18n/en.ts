@@ -452,6 +452,12 @@ export const en = {
     add: "Add rule",
     holdersTitle: "Who has access now",
     holdersMeta: (n: number) => `${n} ${n === 1 ? "person" : "people"}`,
+    pendingTitle: "Waiting for their first login",
+    pendingMeta: (n: number) => `${n} ${n === 1 ? "person" : "people"}`,
+    pendingBody:
+      "They match a rule but still have a temporary password, so they get no access yet. It starts as soon as they log in to PI-CORE once (with Google, or by changing the temporary password).",
+    neverSignedIn: "Never logged in",
+    temporaryPassword: "Temporary password not changed yet",
     noHolders: "Nobody has access yet.",
     periodNote:
       "Role, position and unit rules count assignments in the active period. Deactivated members and members on a temporary password get no access.",

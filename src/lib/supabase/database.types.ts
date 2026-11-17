@@ -312,6 +312,11 @@ isOneToOne: false
               "app_role_key": string,"email": string,"full_name": string,"member_id": string,"rule_id": string
             }[]
                            },
+"app_access_pending":
+{ Args: { "p_app": string }; Returns: {
+              "app_role_key": string,"email": string,"full_name": string,"member_id": string,"never_signed_in": boolean
+            }[]
+                           },
 "current_access":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
