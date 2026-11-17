@@ -102,6 +102,17 @@ describe("baseline rules", () => {
   });
 });
 
+describe("PI-LYNK baseline", () => {
+  it("makes CMIT admin and every department pengurus", async () => {
+    expect(await roles(musik, "lynk")).toEqual(["pengurus"]); // Pelayanan Khusus division
+    expect(await roles(eo, "lynk")).toEqual(["pengurus"]); // Departemen Internal division
+    expect(await roles(outsider, "lynk")).toEqual([]);
+    const cmit = await createUser("aa-pubdok", "member");
+    await assign(cmit.memberId, s.unit("Pubdok"), s.position("division", "Staff"), s.activePeriodId);
+    expect(await roles(cmit, "lynk")).toEqual(["admin", "pengurus"]);
+  });
+});
+
 describe("rule kinds", () => {
   it("member rule: holds without any assignment; disabling it removes the role", async () => {
     const id = await addRule({ app_role_key: "admin", subject_type: "member", member_id: outsider.memberId });

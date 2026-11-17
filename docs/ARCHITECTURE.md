@@ -243,8 +243,11 @@ Other PMK apps do not keep their own admin lists; PI-CORE decides who gets which
   (admins only). Both evaluate rules through one function, `private.app_rules_for_member()`.
 - Baseline (owner decision): ARK `pengurus` for Departemen CMIT and Departemen Pelayanan Khusus, divisions
   included. ARK `admin` is given to named members on the Integrations page.
+- Second app (migration `20261118200000_app_lynk.sql`): **PI-LYNK** (`lynk`). `admin` = Departemen CMIT,
+  `pengurus` = every department (divisions included); PI-LYNK keeps its own history of who did what.
 - The app enforces the meaning of its roles (ARK: `admin` includes everything `pengurus` may do).
-- ARK is in the Google handoff list (D-14) with `https://ark.pmkitera.web.id/auth/google/finish`.
+- ARK and PI-LYNK are in the Google handoff list (D-14) with `https://ark.pmkitera.web.id/auth/google/finish`
+  and `https://s.pmkitera.web.id/auth/google/finish`.
 
 ## Audit log
 

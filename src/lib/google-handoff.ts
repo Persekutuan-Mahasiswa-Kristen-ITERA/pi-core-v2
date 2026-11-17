@@ -16,6 +16,7 @@ import "server-only";
 const APPS: Record<string, string> = {
   form: "https://form.pmkitera.web.id/auth/google/finish",
   ark: "https://ark.pmkitera.web.id/auth/google/finish",
+  lynk: "https://s.pmkitera.web.id/auth/google/finish",
 };
 
 export type HandoffError = "notRegistered" | "inactive" | "failed";
