@@ -61,6 +61,17 @@ export const roleSchema = z.object({
 });
 export type RoleInput = z.infer<typeof roleSchema>;
 
+/** App access rule (D-16). One subject per rule; the form sends only the visible picker as subjectId. */
+export const ACCESS_SUBJECT_TYPES = ["member", "role", "position", "org_unit"] as const;
+export const accessRuleSchema = z.object({
+  appRoleKey: z.string().regex(/^[a-z][a-z0-9_]{1,30}$/, "Choose an app role."),
+  subjectType: z.enum(ACCESS_SUBJECT_TYPES, "Choose who gets access."),
+  subjectId: z.uuid("Choose who gets access."),
+  includeChildUnits: checkbox,
+  note: optionalText(z.string().max(280, "Use at most 280 characters.")),
+});
+export type AccessRuleInput = z.infer<typeof accessRuleSchema>;
+
 export const ORG_UNIT_TYPES = ["organization", "bph", "department", "bureau", "division"] as const;
 /** Unit types a position can belong to (the root holds no positions). */
 export const POSITION_UNIT_TYPES = ["bph", "department", "bureau", "division"] as const;

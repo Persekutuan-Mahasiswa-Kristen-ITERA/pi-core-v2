@@ -48,7 +48,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "groupAdmin",
     items: [
       { href: "/settings", label: "settings", icon: SettingsIcon, adminOnly: true },
-      { href: "/integrations", label: "integrations", icon: IntegrationsIcon, adminOnly: true, comingSoon: true },
+      { href: "/integrations", label: "integrations", icon: IntegrationsIcon, adminOnly: true },
     ],
   },
 ];

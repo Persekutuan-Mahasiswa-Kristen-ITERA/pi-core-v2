@@ -9,8 +9,9 @@ describe("handoffTarget", () => {
     delete process.env.GOOGLE_HANDOFF_DEV_APPS;
   });
 
-  it("knows pmk-form and nothing else", () => {
+  it("knows pmk-form and ARK, nothing else", () => {
     expect(handoffTarget("form")).toBe("https://form.pmkitera.web.id/auth/google/finish");
+    expect(handoffTarget("ark")).toBe("https://ark.pmkitera.web.id/auth/google/finish");
     expect(handoffTarget("evil")).toBeNull();
     expect(handoffTarget("constructor")).toBeNull();
     expect(handoffTarget("__proto__")).toBeNull();

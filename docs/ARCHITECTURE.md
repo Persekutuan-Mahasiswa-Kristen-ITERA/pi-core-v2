@@ -225,6 +225,27 @@ Migration `20261117100000_kesekjenan_and_bph.sql`:
   (access rules by role key, unit filters, SQL functions); renaming them would break NEXUS, and putting role key
   `bph` on every position would give every staff member the Kesekjenan's NEXUS permissions.
 
+### D-16 App access from PI-CORE (2026-11-18, owner)
+
+Other PMK apps do not keep their own admin lists; PI-CORE decides who gets which **app role**. Migration
+`20261118100000_app_access.sql`, screens under **Integrations** (`/integrations`, `/integrations/<app>`).
+
+- `apps` and `app_roles` are owned by migrations (first app: PMK ARK with `admin` and `pengurus`).
+- `app_access_rules`: "app role X goes to <subject>". Subject = a **member** (any period), a **PI-CORE role**, a
+  **position**, or an **org unit** (optionally with its child units). The last three match assignments in the
+  **active period**, so access moves with the seats. Same shape as PMK-NEXUS `access_rules`; role rules use
+  `roles.id` because custom roles have no key.
+- Deactivated members and members on a temporary password match nothing.
+- **Super admins** add, disable and delete rules; admins can read them and see who has access; members see
+  nothing. Every change goes to `audit_log`.
+- Apps call `public.my_app_roles('<app>')` with the signed-in user's PI-CORE session and get the caller's roles
+  only (sorted, no duplicates). `public.app_access_holders('<app>')` lists holders for the Integrations page
+  (admins only). Both evaluate rules through one function, `private.app_rules_for_member()`.
+- Baseline (owner decision): ARK `pengurus` for Departemen CMIT and Departemen Pelayanan Khusus, divisions
+  included. ARK `admin` is given to named members on the Integrations page.
+- The app enforces the meaning of its roles (ARK: `admin` includes everything `pengurus` may do).
+- ARK is in the Google handoff list (D-14) with `https://ark.pmkitera.web.id/auth/google/finish`.
+
 ## Audit log
 
 `audit_log` gets one row per INSERT/UPDATE/DELETE on members, org_units, roles, positions, position_roles, periods,
@@ -238,4 +259,4 @@ the Supabase dashboard).
 - Logo is a bundled asset (`public/brand/pmk-logo.png`); Settings edits only the organization name.
 - Password change via the admin API does not revoke the member's other sessions.
 - The member picker in the assignment form lists every active member in one native select; past a few hundred members it needs search-as-you-type.
-- Reports, Events, Integrations, notifications: not built (out of scope). Google sign-in: D-13 (existing accounts only), D-14 (other apps).
+- Reports, Events, notifications: not built (out of scope). Integrations: D-16 (app access). Google sign-in: D-13 (existing accounts only), D-14 (other apps).
