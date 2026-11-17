@@ -57,10 +57,19 @@ export interface OAuthAttempt {
   verifier: string;
   nonce: string;
   next: string;
+  /** Set when another app asked for the sign-in (D-14): its id and its random handoff value. */
+  app?: string;
+  handoff?: string;
 }
 
-export function newAttempt(next: string): OAuthAttempt {
-  return { state: b64url(randomBytes(32)), verifier: b64url(randomBytes(48)), nonce: b64url(randomBytes(32)), next };
+export function newAttempt(next: string, forApp?: { app: string; handoff: string }): OAuthAttempt {
+  return {
+    state: b64url(randomBytes(32)),
+    verifier: b64url(randomBytes(48)),
+    nonce: b64url(randomBytes(32)),
+    next,
+    ...forApp,
+  };
 }
 
 export function encodeAttempt(a: OAuthAttempt): string {
@@ -72,6 +81,8 @@ export function decodeAttempt(raw: string | undefined): OAuthAttempt | null {
   try {
     const a = JSON.parse(Buffer.from(raw, "base64url").toString("utf8")) as Partial<OAuthAttempt>;
     if (![a.state, a.verifier, a.nonce, a.next].every((v) => typeof v === "string" && v.length > 0)) return null;
+    if ((a.app === undefined) !== (a.handoff === undefined)) return null;
+    if (a.app !== undefined && (typeof a.app !== "string" || typeof a.handoff !== "string")) return null;
     return a as OAuthAttempt;
   } catch {
     return null;

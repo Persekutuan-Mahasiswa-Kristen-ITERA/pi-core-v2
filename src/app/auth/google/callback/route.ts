@@ -9,6 +9,7 @@ import {
   stateMatches,
   verifiedEmail,
 } from "@/lib/google-oauth";
+import { handoffTarget, handoffUrl, type HandoffError } from "@/lib/google-handoff";
 import { generateTemporaryPassword } from "@/lib/password";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -23,6 +24,9 @@ import { createClient } from "@/lib/supabase/server";
  * 4. A Supabase session for that member is minted server-side: the Auth admin API makes a one-time
  *    magic-link token (no email is sent) and it is redeemed at once, writing the normal session cookies.
  * 5. Temporary password → random password + flag cleared (owner decision), cookies re-issued (D-09).
+ *
+ * When another app started the sign-in (D-14), steps 1-3 and 5 are the same, but no PI-CORE session is made:
+ * the one-time token goes back to that app (with its handoff value) and the app redeems it on its own domain.
  */
 export async function GET(request: NextRequest) {
   const url = request.nextUrl;
@@ -32,14 +36,25 @@ export async function GET(request: NextRequest) {
   const store = await cookies();
   const finish = (target: string) => {
     store.set(OAUTH_COOKIE, "", { path: OAUTH_COOKIE_PATH, maxAge: 0 });
-    return NextResponse.redirect(new URL(target, url.origin));
+    const response = NextResponse.redirect(new URL(target, url.origin));
+    response.headers.set("Referrer-Policy", "no-referrer");
+    return response;
   };
+  const appTarget = attempt?.app && attempt.handoff ? handoffTarget(attempt.app) : null;
+  const LOGIN_ERRORS: Record<HandoffError, string> = {
+    notRegistered: "/login?error=googleNotRegistered",
+    inactive: "/login?reason=inactive",
+    failed: "/login?error=googleFailed",
+  };
+  const fail = (error: HandoffError) =>
+    finish(appTarget && attempt?.handoff ? handoffUrl(appTarget, attempt.handoff, { error }) : LOGIN_ERRORS[error]);
 
-  if (!attempt || !stateMatches(attempt.state, url.searchParams.get("state")))
-    return finish("/login?error=googleFailed");
+  if (!attempt || !stateMatches(attempt.state, url.searchParams.get("state"))) return fail("failed");
+  // The app was known when the attempt started; if it is not any more, stop rather than fall back.
+  if (attempt.app && !appTarget) return finish(LOGIN_ERRORS.failed);
   // Google reports a cancelled or failed consent as ?error=…; nothing to exchange then.
   const code = url.searchParams.get("code");
-  if (url.searchParams.get("error") || !code) return finish("/login?error=googleFailed");
+  if (url.searchParams.get("error") || !code) return fail("failed");
 
   let email: string;
   try {
@@ -47,7 +62,7 @@ export async function GET(request: NextRequest) {
     email = await verifiedEmail(idToken, attempt.nonce);
   } catch (error) {
     console.error("Google sign-in: token check failed", error instanceof Error ? error.message : error);
-    return finish("/login?error=googleFailed");
+    return fail("failed");
   }
 
   const admin = createAdminClient();
@@ -57,9 +72,12 @@ export async function GET(request: NextRequest) {
     .eq("email", email)
     .maybeSingle();
 
-  if (!member || !member.user_id) return finish("/login?error=googleNotRegistered");
+  if (!member || !member.user_id) return fail("notRegistered");
   // Google has proved this person owns the email, so telling them the account is inactive leaks nothing.
-  if (!member.is_active) return finish("/login?reason=inactive");
+  if (!member.is_active) return fail("inactive");
+  // For another app the token is redeemed later, and changing the password voids outstanding tokens, so the
+  // temporary password is replaced first. (PI-CORE's own sign-in redeems the token first, then rotates.)
+  if (appTarget) await rotateTemporaryPassword(admin, { ...member, user_id: member.user_id });
 
   const { data: link, error: linkError } = await admin.auth.admin.generateLink({
     type: "magiclink",
@@ -68,8 +86,13 @@ export async function GET(request: NextRequest) {
   const tokenHash = link?.properties?.hashed_token;
   if (linkError || !tokenHash) {
     console.error("Google sign-in: could not mint a session token", linkError?.message);
-    return finish("/login?error=googleFailed");
+    return fail("failed");
   }
+
+  if (appTarget && attempt.handoff) {
+    return finish(handoffUrl(appTarget, attempt.handoff, { tokenHash }));
+  }
+
   const supabase = await createClient();
   const { data: verified, error: verifyError } = await supabase.auth.verifyOtp({
     type: "magiclink",
@@ -78,17 +101,23 @@ export async function GET(request: NextRequest) {
   if (verifyError || verified.user?.id !== member.user_id) {
     if (!verifyError) await supabase.auth.signOut({ scope: "local" });
     console.error("Google sign-in: session token was not accepted", verifyError?.message);
-    return finish("/login?error=googleFailed");
+    return fail("failed");
   }
 
-  if (member.must_change_password) {
-    const { error: pwError } = await admin.auth.admin.updateUserById(member.user_id, {
-      password: generateTemporaryPassword(32),
-    });
-    if (!pwError) await admin.from("members").update({ must_change_password: false }).eq("id", member.id);
-    // If either step failed the flag stays set and the normal forced change-password flow applies.
-  }
-
+  await rotateTemporaryPassword(admin, { ...member, user_id: member.user_id });
   await reissueSessionCookies();
   return finish(attempt.next);
+}
+
+/** Owner decision: a Google sign-in ends a temporary password (random password, forced change cleared). */
+async function rotateTemporaryPassword(
+  admin: ReturnType<typeof createAdminClient>,
+  member: { id: string; user_id: string; must_change_password: boolean },
+) {
+  if (!member.must_change_password) return;
+  const { error } = await admin.auth.admin.updateUserById(member.user_id, {
+    password: generateTemporaryPassword(32),
+  });
+  if (!error) await admin.from("members").update({ must_change_password: false }).eq("id", member.id);
+  // If either step failed the flag stays set and the normal forced change-password flow applies.
 }
