@@ -230,7 +230,7 @@ export async function listRolesForPicker() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("roles")
-    .select("id, name, grants_admin")
+    .select("id, key, name, grants_admin")
     .order("sort_order")
     .order("name");
   if (error) fail("roles", error);

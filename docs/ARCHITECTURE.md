@@ -218,8 +218,9 @@ Migration `20261117100000_kesekjenan_and_bph.sql`:
 
 - The unit "BPH PMK ITERA" is renamed "Kesekjenan"; the unit type is labelled "Kesekjenan" in the UI.
 - Role key `bph` (the six Kesekjenan positions) is renamed "Kesekjenan".
-- New system role key `pengurus`, named **"BPH"**, on every position. A trigger adds it to every new position;
-  an admin can still remove it from one. It grants nothing (no `grants_admin`, no NEXUS rule).
+- New system role key `pengurus`, named **"BPH"**, on every position. New positions get it: the trigger for
+  inserts outside the app, and the "New position" form ticks it by default (the form saves exactly the ticked
+  roles). Untick it for a position that is not a pengurus, e.g. a department account. It grants nothing (no `grants_admin`, no NEXUS rule).
 - **Technical keys are unchanged**: enum value `bph` and role key `bph` now mean "Kesekjenan". PMK-NEXUS uses both
   (access rules by role key, unit filters, SQL functions); renaming them would break NEXUS, and putting role key
   `bph` on every position would give every staff member the Kesekjenan's NEXUS permissions.

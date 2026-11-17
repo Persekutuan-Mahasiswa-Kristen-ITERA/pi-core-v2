@@ -21,7 +21,12 @@ export default async function NewPositionPage() {
     <div className="max-w-2xl">
       <PageHeader title={d.structure.newPositionTitle} back={{ href: "/structure", label: d.nav.structure }} />
       <FormCard>
-        <PositionForm action={createPosition} roles={roles} submitLabel={d.structure.newPositionTitle} />
+        <PositionForm
+          action={createPosition}
+          roles={roles}
+          initialRoleIds={roles.filter((r) => r.key === "pengurus").map((r) => r.id)}
+          submitLabel={d.structure.newPositionTitle}
+        />
       </FormCard>
     </div>
   );
