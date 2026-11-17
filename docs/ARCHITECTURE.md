@@ -250,6 +250,9 @@ Other PMK apps do not keep their own admin lists; PI-CORE decides who gets which
 - Third app (migration `20261118300000_app_web.sql`): the **website admin** (`web`), one role per menu:
   `admin` (all + history) = CMIT, `renungan` = Pembinaan Rohani, `acara` = Internal + Eksternal,
   `artikel` = Eksternal + Pembinaan Rohani, `dokumentasi` = no rule yet.
+- Fourth app (migration `20261118500000_app_form.sql`): **pmk-form** (`form`), role `admin`. pmk-form accepts it
+  in addition to its legacy invite list; the migration gave every active invited admin with a PI-CORE account a
+  member rule, so nobody lost access.
 - The app enforces the meaning of its roles (ARK: `admin` includes everything `pengurus` may do).
 - ARK, PI-LYNK and the website are in the Google handoff list (D-14):
   `https://{ark,s,www}.pmkitera.web.id/auth/google/finish`.
