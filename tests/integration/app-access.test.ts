@@ -75,6 +75,11 @@ afterAll(async () => {
 });
 
 describe("baseline rules", () => {
+  it("registers pmk-form with one admin role", async () => {
+    const { data } = await serviceClient().from("app_roles").select("key").eq("app_key", "form");
+    expect(data!.map((r) => r.key)).toEqual(["admin"]);
+  });
+
   it("seeds PMK ARK with an admin and a pengurus role", async () => {
     const { data } = await serviceClient().from("app_roles").select("key").eq("app_key", "ark").order("key");
     expect(data!.map((r) => r.key)).toEqual(["admin", "pengurus"]);
