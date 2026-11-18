@@ -210,7 +210,10 @@ html[data-offline-lang="en"] [data-offline-text="id"] {
     radial-gradient(120% 140% at 100% 0%, rgba(230, 198, 92, 0.3), rgba(230, 198, 92, 0) 55%),
     linear-gradient(180deg, #fffdf7, #fbf5e4);
 }
-.pmk-hero > * {
+/* Children sit above the ambient glow. Skip children that position themselves
+   with Tailwind's `absolute`: this unlayered rule would otherwise override the
+   layered utility, which pushed the member avatar onto the period chip on phones. */
+.pmk-hero > :not(.absolute) {
   position: relative;
   z-index: 1;
 }

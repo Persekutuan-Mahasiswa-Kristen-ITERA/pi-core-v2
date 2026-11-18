@@ -136,6 +136,16 @@ const EXACT_ID: Record<string, string> = {
   "Choose an app role.": "Pilih peran di aplikasi.",
   "Choose who gets access.": "Pilih siapa yang mendapat akses.",
   "Invalid app.": "Aplikasi tidak dikenali.",
+  // auth.ts, members/structure/password actions
+  "Change your temporary password first.": "Ganti dulu kata sandi sementaramu.",
+  "Only a super admin can do that.": "Hanya super admin yang bisa melakukannya.",
+  "Ask another super admin to change this.": "Minta super admin lain untuk mengubahnya.",
+  "Email is already in use.": "Email ini sudah dipakai.",
+  "Some unit already has more than one holder of this position in a period. Fix those assignments first.":
+    "Ada unit yang punya lebih dari satu pemegang posisi ini dalam satu periode. Perbaiki penugasannya dulu.",
+  "Current password is incorrect.": "Kata sandi sekarang salah.",
+  "That password is too weak. Try a longer one.": "Kata sandi itu terlalu lemah. Coba yang lebih panjang.",
+  "Could not change the password. Try again.": "Kata sandi gagal diganti. Coba lagi.",
   // client fallbacks
   "Done.": "Selesai.",
   "Saved.": "Tersimpan.",
@@ -146,6 +156,9 @@ const PATTERNS_ID: [RegExp, (m: RegExpMatchArray) => string][] = [
   [/^Period (.+) saved\.$/, (m) => `Periode ${m[1]} disimpan.`],
   [/^Position (.+) created\.$/, (m) => `Posisi ${m[1]} dibuat.`],
   [/^Role (.+) created\.$/, (m) => `Role ${m[1]} dibuat.`],
+  // "<member name> was added." (members) and "<unit name> added." (structure)
+  [/^(.+) was added\.$/, (m) => `${m[1]} ditambahkan.`],
+  [/^(.+) added\.$/, (m) => `${m[1]} ditambahkan.`],
   [
     /^Position created, but its roles were not saved: (.+)$/,
     (m) => `Posisi dibuat, tapi role-nya gagal disimpan: ${translateMessage(m[1], "id")}`,
